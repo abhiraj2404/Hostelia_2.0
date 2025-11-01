@@ -1,14 +1,20 @@
+import { Route, Routes } from "react-router";
 import Navbar from "./components/layout/Navbar";
-import { Button } from "@/components/ui/button";
+import Footer from "./components/layout/Footer";
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
     <>
       <Navbar />
-      <h1>Home page of hostelia</h1>
-
-      {/* example of how to use the shadcn components */}
-      <Button variant="default">Click me</Button>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+      <Footer />
     </>
   );
 }
