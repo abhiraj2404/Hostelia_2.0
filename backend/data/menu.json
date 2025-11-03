@@ -1,0 +1,44 @@
+{
+  "Monday": {
+    "Breakfast": ["Poha", "Tea"],
+    "Lunch": ["Dal", "Rice", "Sabzi"],
+    "Snacks": ["Samosa"],
+    "Dinner": ["Roti", "Paneer", "Rice"]
+  },
+  "Tuesday": {
+    "Breakfast": ["Idli", "Sambar"],
+    "Lunch": ["Rajma", "Rice"],
+    "Snacks": ["Pasta"],
+    "Dinner": ["Chapati", "Veg Curry"]
+  },
+  "Wednesday": {
+    "Breakfast": ["Upma", "Tea"],
+    "Lunch": ["Chole", "Bhature"],
+    "Snacks": ["Bhel"],
+    "Dinner": ["Roti", "Mix Veg"]
+  },
+  "Thursday": {
+    "Breakfast": ["Paratha", "Curd"],
+    "Lunch": ["Kadhi", "Rice"],
+    "Snacks": ["Sandwich"],
+    "Dinner": ["Jeera Rice", "Dal Fry"]
+  },
+  "Friday": {
+    "Breakfast": ["Dosa", "Chutney"],
+    "Lunch": ["Paneer Butter Masala", "Naan"],
+    "Snacks": ["Pakoda"],
+    "Dinner": ["Veg Pulao", "Raita"]
+  },
+  "Saturday": {
+    "Breakfast": ["Aloo Puri"],
+    "Lunch": ["Veg Biryani", "Salad"],
+    "Snacks": ["Poha"],
+    "Dinner": ["Roti", "Dal Tadka"]
+  },
+  "Sunday": {
+    "Breakfast": ["Chole Kulche"],
+    "Lunch": ["Special Thali"],
+    "Snacks": ["Cutlet"],
+    "Dinner": ["Roti", "Kofta"]
+  }
+}

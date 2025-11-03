@@ -46,20 +46,4 @@ export const authMiddleware = (req, res, next) => {
     }
 };
 
-/**
- * Optional auth middleware - doesn't fail if no token, but adds user info if present
- */
-export const optionalAuth = (req, res, next) => {
-    try {
-        const token = req.cookies?.jwt;
-        if (token) {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            req.userId = decoded.userID;
-        }
-        next();
-    } catch (error) {
-        // Ignore errors in optional auth
-        next();
-    }
-};
 

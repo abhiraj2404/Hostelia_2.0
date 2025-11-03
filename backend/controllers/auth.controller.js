@@ -40,7 +40,13 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-    name: z.string().min(1, "Name is required"),
+    name: z.string()
+        .min(1, "Name is required")
+        .refine(
+            name => name.trim() !== "",
+            { message: "Name cannot be blank or only spaces" }
+        )
+        .regex(/^[A-Za-z\s]+$/, "Name must only contain letters and spaces (no numbers or special characters)"),
     rollNo: z.string().regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
     email: emailSchema,
     hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ], {
@@ -55,6 +61,7 @@ const signupSchema = z.object({
 
 const generateOTPSchema = z.object({
     email: emailSchema,
+    name: z.string()
 });
 
 const verifyOTPSchema = z.object({
@@ -81,11 +88,11 @@ export const generateOTP = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.errors,
+                errors: validationResult.error.message,
             });
         }
 
-        const { email } = validationResult.data;
+        const { email, name } = validationResult.data;
 
         // Check if email is already registered
         const existingUser = await User.findOne({ email });
@@ -125,7 +132,7 @@ export const generateOTP = async (req, res) => {
             html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">
           <h2 style="color: #4f46e5;">Hostelia - Email Verification</h2>
-          <p>Hello,</p>
+          <p>Hello ${name},</p>
           <p>Your One-Time Password (OTP) for email verification is:</p>
           <div style="background-color: #f3f4f6; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
             ${otp}
@@ -165,7 +172,7 @@ export const verifyOTP = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.errors,
+                errors: validationResult.error.message,
             });
         }
 
@@ -261,11 +268,12 @@ export const signup = async (req, res) => {
     try {
         // Validate input
         const validationResult = signupSchema.safeParse(req.body);
+
         if (!validationResult.success) {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.errors,
+                errors: validationResult.error.message
             });
         }
 
@@ -318,6 +326,7 @@ export const signup = async (req, res) => {
                 name: newUser.name,
                 email: newUser.email,
                 role: newUser.role,
+                rollNo: newUser.rollNo
             },
         });
     } catch (error) {
@@ -341,7 +350,7 @@ export const login = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.errors,
+                errors: validationResult.error.message,
             });
         }
 

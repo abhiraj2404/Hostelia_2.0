@@ -1,20 +1,10 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-// Define the schema for feedback
 const feedbackSchema = new mongoose.Schema(
   {
-    rating: {
-      type: String,
-      required: [true, "Rating is required"],
-      enum: ["1", "2", "3", "4", "5"],
-    },
-    comment: {
-      type: String,
-      default: "No comment provided",
-    },
+    date: { type: Date, required: true },
     day: {
       type: String,
-      required: [true, "Day is required"],
       enum: [
         "Sunday",
         "Monday",
@@ -27,25 +17,17 @@ const feedbackSchema = new mongoose.Schema(
     },
     mealType: {
       type: String,
-      required: [true, "Meal type is required"],
-      enum: ["Breakfast", "Lunch", "Snacks", "Dinner"],
+      required: true,
+      enum: [ "Breakfast", "Lunch", "Snacks", "Dinner" ],
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      // Not required since anonymous feedback is allowed
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, trim: true, default: "" },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Create the model from the schema
-const Feedback = mongoose.model("Feedback", feedbackSchema);
+feedbackSchema.index({ date: 1, mealType: 1 });
+feedbackSchema.index({ user: 1, date: 1 });
 
-module.exports = Feedback;
+export default mongoose.model("Feedback", feedbackSchema);
