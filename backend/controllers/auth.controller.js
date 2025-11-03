@@ -88,7 +88,7 @@ export const generateOTP = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.message,
+                errors: z.treeifyError(validationResult.error),
             });
         }
 
@@ -172,7 +172,7 @@ export const verifyOTP = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.message,
+                errors: z.treeifyError(validationResult.error),
             });
         }
 
@@ -273,7 +273,7 @@ export const signup = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.message
+                errors: z.treeifyError(validationResult.error)
             });
         }
 
@@ -350,7 +350,7 @@ export const login = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.message,
+                errors: z.treeifyError(validationResult.error),
             });
         }
 

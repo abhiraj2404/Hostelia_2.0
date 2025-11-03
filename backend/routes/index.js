@@ -1,13 +1,16 @@
 import { Router } from "express";
-// import userRouter from "./user.routes.js";
 import authRouter from "./auth.routes.js";
 import messRouter from "./mess.routes.js";
+import problemRouter from "./problem.routes.js";
+import announcementRouter from "./announcement.routes.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 // API routes
-// router.use("/user", userRouter);
 router.use("/auth", authRouter);
-router.use("/mess", messRouter);
+router.use("/mess", authMiddleware, messRouter);
+router.use("/problem", authMiddleware, problemRouter);
+router.use("/announcement", authMiddleware, announcementRouter);
 
 export default router;

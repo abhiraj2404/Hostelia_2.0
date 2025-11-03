@@ -1,5 +1,15 @@
 import mongoose from 'mongoose';
 
+const commentSubSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    role: { type: String, enum: [ 'student', 'warden', 'admin' ], required: true },
+    message: { type: String, required: true, trim: true, maxlength: 2000 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const problemSchema = new mongoose.Schema(
   {
     problemTitle: {
@@ -16,7 +26,9 @@ const problemSchema = new mongoose.Schema(
     },
     hostel: {
       type: String,
+      enum: [ 'BH-1', 'BH-2', 'BH-3', 'BH-4' ],
       required: true,
+      index: true,
     },
     roomNo: {
       type: String,
@@ -38,31 +50,39 @@ const problemSchema = new mongoose.Schema(
       required: true,
     },
     studentId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
+      index: true,
     },
     status: {
       type: String,
-      enum: ["Pending", "Resolved", "Rejected", "ToBeConfirmed"],
+      enum: [ "Pending", "Resolved", "Rejected", "ToBeConfirmed" ],
       default: "Pending",
     },
     studentStatus: {
       type: String,
-      enum: ["NotResolved", "Resolved", "Rejected"],
+      enum: [ "NotResolved", "Resolved", "Rejected" ],
       default: "NotResolved",
     },
-    timeResolved: {
+    studentVerifiedAt: {
       type: Date,
       default: null,
     },
-    timeCreated: {
+    comments: {
+      type: [ commentSubSchema ],
+      default: [],
+    },
+    resolvedAt: {
       type: Date,
-      default: Date.now,
+      default: null,
     },
   },
   {
     timestamps: true,
   }
 );
+
+problemSchema.index({ hostel: 1, status: 1, createdAt: -1 });
 
 export default mongoose.model("Problem", problemSchema);

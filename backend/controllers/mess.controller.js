@@ -34,7 +34,7 @@ export const submitFeedback = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Validation failed",
-                errors: validationResult.error.message,
+                errors: z.treeifyError(validationResult.error),
             });
         }
 
