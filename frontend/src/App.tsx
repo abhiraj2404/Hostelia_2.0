@@ -1,23 +1,43 @@
-import { Route, Routes } from "react-router";
-import Navbar from "./components/layout/Navbar";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Footer from "./components/layout/Footer";
-import Home from "./pages/Home";
+import Navbar from "./components/layout/Navbar";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
+import StudentComplaintDetailPage from "./pages/student/StudentComplaintDetailPage";
+import StudentComplaintsPage from "./pages/student/StudentComplaintsPage";
+import StudentNewComplaintPage from "./pages/student/StudentNewComplaintPage";
 
 function App() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+
+          <Route
+            path="/student/complaints"
+            element={<StudentComplaintsPage />}
+          />
+          <Route
+            path="/student/complaints/new"
+            element={<StudentNewComplaintPage />}
+          />
+          <Route
+            path="/student/complaints/:id"
+            element={<StudentComplaintDetailPage />}
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

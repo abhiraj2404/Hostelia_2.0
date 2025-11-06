@@ -1,7 +1,60 @@
-import React from "react";
+import { Link } from "react-router-dom";
+
+const footerLinks = [
+  { label: "Complaints", to: "/student/complaints" },
+  { label: "About", to: "/about" },
+  { label: "Support", to: "/contact" },
+];
 
 function Footer() {
-  return <div>Footer</div>;
+  return (
+    <footer className="border-t border-border bg-background">
+      <div className="mx-auto flex flex-col gap-8 px-6 py-12 lg:max-w-6xl lg:px-12">
+        <div className="flex flex-col gap-6 md:flex-row md:justify-between">
+          <div className="space-y-3">
+            <p className="text-xl font-semibold text-foreground">Hostelia</p>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              End-to-end hostel management with transparent complaint tracking, real-time updates, and actionable analytics.
+            </p>
+          </div>
+          <div className="flex gap-12 text-sm text-muted-foreground">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/80">Explore</p>
+              <div className="mt-3 space-y-2">
+                {footerLinks.map((link) => (
+                  <Link key={link.to} to={link.to} className="block hover:text-foreground">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/80">Contact</p>
+              <div className="mt-3 space-y-2">
+                <a href="mailto:team@hostelia.dev" className="block hover:text-foreground">
+                  team@hostelia.dev
+                </a>
+                <a href="tel:+919876543210" className="block hover:text-foreground">
+                  +91 98765 43210
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 border-t border-border/70 pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <p>© {new Date().getFullYear()} Hostelia. All rights reserved.</p>
+          <div className="flex gap-4">
+            <Link to="/privacy" className="hover:text-foreground">
+              Privacy
+            </Link>
+            <Link to="/terms" className="hover:text-foreground">
+              Terms
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }
 
 export default Footer;
