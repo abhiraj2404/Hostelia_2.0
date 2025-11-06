@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import StudentComplaintDetailPage from "./pages/student/StudentComplaintDetailPage";
 import StudentComplaintsPage from "./pages/student/StudentComplaintsPage";
 import StudentNewComplaintPage from "./pages/student/StudentNewComplaintPage";
+import MessPage from "./pages/student/MessPage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             path="/student/complaints/:id"
             element={<StudentComplaintDetailPage />}
           />
+          <Route path="/student/mess" element={<MessPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
