@@ -22,15 +22,17 @@ interface AuthState {
 const loadInitialState = (): AuthState => {
   try {
     const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
+    // const storedToken = localStorage.getItem("token");
 
-    if (storedUser && storedToken) {
+    // if (storedUser && storedToken) {
+    if (storedUser) {
       const user = JSON.parse(storedUser);
       return {
-        user: { ...user, token: storedToken },
+        // user: { ...user, token: storedToken },
+        user: user,
         isAuthenticated: true,
         isLoading: false,
-        error: null
+        error: null,
       };
     }
   } catch (error) {
@@ -41,7 +43,7 @@ const loadInitialState = (): AuthState => {
     user: null,
     isAuthenticated: false,
     isLoading: false,
-    error: null
+    error: null,
   };
 };
 
@@ -59,9 +61,9 @@ const authSlice = createSlice({
       state.error = null;
 
       // Persist to localStorage
-      if (action.payload.token) {
-        localStorage.setItem("token", action.payload.token);
-      }
+      // if (action.payload.token) {
+      //   localStorage.setItem("token", action.payload.token);
+      // }
       localStorage.setItem("user", JSON.stringify(action.payload));
     },
 
@@ -73,9 +75,9 @@ const authSlice = createSlice({
       state.error = null;
 
       // Persist to localStorage
-      if (action.payload.token) {
-        localStorage.setItem("token", action.payload.token);
-      }
+      // if (action.payload.token) {
+      //   localStorage.setItem("token", action.payload.token);
+      // }
       localStorage.setItem("user", JSON.stringify(action.payload));
     },
 
@@ -116,10 +118,18 @@ const authSlice = createSlice({
     // Action to clear error
     clearError: (state) => {
       state.error = null;
-    }
-  }
+    },
+  },
 });
 
-export const { loginSuccess, signupSuccess, authStart, authFailure, updateUser, logout, clearError } = authSlice.actions;
+export const {
+  loginSuccess,
+  signupSuccess,
+  authStart,
+  authFailure,
+  updateUser,
+  logout,
+  clearError,
+} = authSlice.actions;
 
 export default authSlice.reducer;

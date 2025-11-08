@@ -169,7 +169,7 @@ export default function Signup() {
           email: response.data.user.email,
           name: response.data.user.name,
           role: response.data.user.role,
-          token: localStorage.getItem("token") || "",
+          // token: localStorage.getItem("token") || "",
         };
 
         dispatch(signupSuccess(userData));

@@ -67,7 +67,7 @@ export default function Login() {
           roomNo: response.data.user.roomNo,
           year: response.data.user.year,
           role: response.data.user.role,
-          token: localStorage.getItem("token") || "", // Token is in httpOnly cookie, but we store a reference
+          // token: localStorage.getItem("token") || "", // Token is in httpOnly cookie, but we store a reference
         };
 
         dispatch(loginSuccess(userData));
