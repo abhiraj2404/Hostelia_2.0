@@ -7,10 +7,26 @@ import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { authStart, signupSuccess, authFailure } from "@/features/auth/authSlice";
+import {
+  authStart,
+  signupSuccess,
+  authFailure,
+} from "@/features/auth/authSlice";
 import { apiClient } from "@/lib/api-client";
 
 // Step 1 Validation Schema
@@ -20,12 +36,20 @@ const step1Schema = z
       .string()
       .min(1, "Name is required")
       .regex(/^[A-Za-z\s]+$/, "Name must only contain letters and spaces")
-      .refine((name) => name.trim() !== "", "Name cannot be blank or only spaces"),
-    rollNo: z.string().regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
+      .refine(
+        (name) => name.trim() !== "",
+        "Name cannot be blank or only spaces"
+      ),
+    rollNo: z
+      .string()
+      .regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
     email: z
       .string()
       .email("Invalid email format")
-      .refine((email) => email.endsWith("@iiits.in"), "Email must be a valid @iiits.in address"),
+      .refine(
+        (email) => email.endsWith("@iiits.in"),
+        "Email must be a valid @iiits.in address"
+      ),
     hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"], {
       errorMap: () => ({ message: "Invalid hostel selection" }),
     }),
@@ -54,7 +78,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isLoading: reduxLoading } = useAppSelector((state) => state.auth);
-  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -107,7 +131,10 @@ export default function Signup() {
         throw new Error(response.data.message || "Failed to send OTP");
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Network error. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Network error. Please try again.";
       setApiError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -144,7 +171,7 @@ export default function Signup() {
           role: response.data.user.role,
           token: localStorage.getItem("token") || "",
         };
-        
+
         dispatch(signupSuccess(userData));
         setSuccessMessage("Account created successfully!");
         setCurrentStep(3);
@@ -152,7 +179,10 @@ export default function Signup() {
         throw new Error(response.data.message || "OTP verification failed");
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Network error. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Network error. Please try again.";
       setApiError(errorMessage);
       dispatch(authFailure(errorMessage));
     } finally {
@@ -180,7 +210,10 @@ export default function Signup() {
         throw new Error(response.data.message || "Failed to resend OTP");
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Network error. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Network error. Please try again.";
       setApiError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -197,12 +230,19 @@ export default function Signup() {
           <>
             <CardHeader className="space-y-2">
               <CardTitle className="text-2xl">Create Account</CardTitle>
-              <CardDescription>Step 1 of 3 - Personal Information</CardDescription>
+              <CardDescription>
+                Step 1 of 3 - Personal Information
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={step1Form.handleSubmit(onStep1Submit)} className="space-y-4">
+              <form
+                onSubmit={step1Form.handleSubmit(onStep1Submit)}
+                className="space-y-4"
+              >
                 {apiError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">{apiError}</div>
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                    {apiError}
+                  </div>
                 )}
 
                 {/* Name */}
@@ -218,7 +258,9 @@ export default function Signup() {
                     {...step1Form.register("name")}
                   />
                   {step1Form.formState.errors.name && (
-                    <p className="text-xs text-red-600">{step1Form.formState.errors.name.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step1Form.formState.errors.name.message}
+                    </p>
                   )}
                 </div>
 
@@ -236,7 +278,9 @@ export default function Signup() {
                     {...step1Form.register("rollNo")}
                   />
                   {step1Form.formState.errors.rollNo && (
-                    <p className="text-xs text-red-600">{step1Form.formState.errors.rollNo.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step1Form.formState.errors.rollNo.message}
+                    </p>
                   )}
                 </div>
 
@@ -253,7 +297,9 @@ export default function Signup() {
                     {...step1Form.register("email")}
                   />
                   {step1Form.formState.errors.email && (
-                    <p className="text-xs text-red-600">{step1Form.formState.errors.email.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step1Form.formState.errors.email.message}
+                    </p>
                   )}
                 </div>
 
@@ -265,7 +311,12 @@ export default function Signup() {
                     </Label>
                     <Select
                       disabled={isFormLoading}
-                      onValueChange={(value) => step1Form.setValue("hostel", value as "BH-1" | "BH-2" | "BH-3" | "BH-4")}
+                      onValueChange={(value) =>
+                        step1Form.setValue(
+                          "hostel",
+                          value as "BH-1" | "BH-2" | "BH-3" | "BH-4"
+                        )
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select hostel" />
@@ -278,7 +329,9 @@ export default function Signup() {
                       </SelectContent>
                     </Select>
                     {step1Form.formState.errors.hostel && (
-                      <p className="text-xs text-red-600">{step1Form.formState.errors.hostel.message}</p>
+                      <p className="text-xs text-red-600">
+                        {step1Form.formState.errors.hostel.message}
+                      </p>
                     )}
                   </div>
 
@@ -294,7 +347,9 @@ export default function Signup() {
                       {...step1Form.register("roomNo")}
                     />
                     {step1Form.formState.errors.roomNo && (
-                      <p className="text-xs text-red-600">{step1Form.formState.errors.roomNo.message}</p>
+                      <p className="text-xs text-red-600">
+                        {step1Form.formState.errors.roomNo.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -306,7 +361,12 @@ export default function Signup() {
                   </Label>
                   <Select
                     disabled={isFormLoading}
-                    onValueChange={(value) => step1Form.setValue("year", value as "UG-1" | "UG-2" | "UG-3" | "UG-4")}
+                    onValueChange={(value) =>
+                      step1Form.setValue(
+                        "year",
+                        value as "UG-1" | "UG-2" | "UG-3" | "UG-4"
+                      )
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select year" />
@@ -319,7 +379,9 @@ export default function Signup() {
                     </SelectContent>
                   </Select>
                   {step1Form.formState.errors.year && (
-                    <p className="text-xs text-red-600">{step1Form.formState.errors.year.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step1Form.formState.errors.year.message}
+                    </p>
                   )}
                 </div>
 
@@ -343,17 +405,26 @@ export default function Signup() {
                       disabled={isFormLoading}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {step1Form.formState.errors.password && (
-                    <p className="text-xs text-red-600">{step1Form.formState.errors.password.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step1Form.formState.errors.password.message}
+                    </p>
                   )}
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  <Label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium"
+                  >
                     Confirm Password
                   </Label>
                   <div className="relative">
@@ -367,20 +438,32 @@ export default function Signup() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       disabled={isFormLoading}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {step1Form.formState.errors.confirmPassword && (
-                    <p className="text-xs text-red-600">{step1Form.formState.errors.confirmPassword.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step1Form.formState.errors.confirmPassword.message}
+                    </p>
                   )}
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isFormLoading} className="w-full">
+                <Button
+                  type="submit"
+                  disabled={isFormLoading}
+                  className="w-full"
+                >
                   {isFormLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -396,7 +479,10 @@ export default function Signup() {
               <div className="mt-6 text-center text-sm">
                 <p className="text-gray-600">
                   Already have an account?{" "}
-                  <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                  <Link
+                    to="/login"
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
                     Log in
                   </Link>
                 </p>
@@ -410,19 +496,29 @@ export default function Signup() {
           <>
             <CardHeader className="space-y-2">
               <CardTitle className="text-2xl">Verify Email</CardTitle>
-              <CardDescription>Step 2 of 3 - Enter the OTP sent to your email</CardDescription>
+              <CardDescription>
+                Step 2 of 3 - Enter the OTP sent to your email
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={step2Form.handleSubmit(onStep2Submit)} className="space-y-4">
+              <form
+                onSubmit={step2Form.handleSubmit(onStep2Submit)}
+                className="space-y-4"
+              >
                 {apiError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">{apiError}</div>
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                    {apiError}
+                  </div>
                 )}
                 {successMessage && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">{successMessage}</div>
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">
+                    {successMessage}
+                  </div>
                 )}
 
                 <p className="text-sm text-gray-600">
-                  We&apos;ve sent a 6-digit OTP to <span className="font-semibold">{step1Data?.email}</span>
+                  We&apos;ve sent a 6-digit OTP to{" "}
+                  <span className="font-semibold">{step1Data?.email}</span>
                 </p>
 
                 {/* OTP Input */}
@@ -440,12 +536,18 @@ export default function Signup() {
                     className="text-center text-2xl tracking-widest"
                   />
                   {step2Form.formState.errors.otp && (
-                    <p className="text-xs text-red-600">{step2Form.formState.errors.otp.message}</p>
+                    <p className="text-xs text-red-600">
+                      {step2Form.formState.errors.otp.message}
+                    </p>
                   )}
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isFormLoading} className="w-full">
+                <Button
+                  type="submit"
+                  disabled={isFormLoading}
+                  className="w-full"
+                >
                   {isFormLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -458,7 +560,9 @@ export default function Signup() {
 
                 {/* Resend OTP */}
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Didn&apos;t receive the OTP?</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Didn&apos;t receive the OTP?
+                  </p>
                   <Button
                     type="button"
                     variant="outline"
@@ -466,7 +570,9 @@ export default function Signup() {
                     onClick={handleResendOTP}
                     className="w-full"
                   >
-                    {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend OTP"}
+                    {resendCountdown > 0
+                      ? `Resend in ${resendCountdown}s`
+                      : "Resend OTP"}
                   </Button>
                 </div>
               </form>
@@ -488,7 +594,8 @@ export default function Signup() {
             </CardHeader>
             <CardContent className="text-center space-y-4">
               <p className="text-sm text-gray-600">
-                Your account has been successfully created. You can now log in with your email and password.
+                Your account has been successfully created. You can now log in
+                with your email and password.
               </p>
 
               {step1Data && (
@@ -497,13 +604,16 @@ export default function Signup() {
                     <span className="font-medium">Name:</span> {step1Data.name}
                   </p>
                   <p>
-                    <span className="font-medium">Email:</span> {step1Data.email}
+                    <span className="font-medium">Email:</span>{" "}
+                    {step1Data.email}
                   </p>
                   <p>
-                    <span className="font-medium">Roll No:</span> {step1Data.rollNo}
+                    <span className="font-medium">Roll No:</span>{" "}
+                    {step1Data.rollNo}
                   </p>
                   <p>
-                    <span className="font-medium">Hostel:</span> {step1Data.hostel}, Room {step1Data.roomNo}
+                    <span className="font-medium">Hostel:</span>{" "}
+                    {step1Data.hostel}, Room {step1Data.roomNo}
                   </p>
                 </div>
               )}
@@ -518,5 +628,3 @@ export default function Signup() {
     </div>
   );
 }
-
-
