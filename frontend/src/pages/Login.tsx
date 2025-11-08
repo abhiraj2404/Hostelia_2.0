@@ -10,7 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { authStart, loginSuccess, authFailure } from "@/features/auth/authSlice";
+import {
+  authStart,
+  loginSuccess,
+  authFailure,
+} from "@/features/auth/authSlice";
 import { apiClient } from "@/lib/api-client";
 
 // Validation schema for login
@@ -18,7 +22,10 @@ const loginSchema = z.object({
   email: z
     .string()
     .email("Invalid email format")
-    .refine((email) => email.endsWith("@iiits.in"), "Email must be a valid @iiits.in address"),
+    .refine(
+      (email) => email.endsWith("@iiits.in"),
+      "Email must be a valid @iiits.in address"
+    ),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -28,8 +35,10 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const { isLoading, error: reduxError } = useAppSelector((state) => state.auth);
-  
+  const { isLoading, error: reduxError } = useAppSelector(
+    (state) => state.auth
+  );
+
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string>("");
 
@@ -47,7 +56,7 @@ export default function Login() {
 
     try {
       const response = await apiClient.post("/auth/login", data);
-      
+
       if (response.data.success) {
         const userData = {
           id: response.data.user.userId,
@@ -60,9 +69,9 @@ export default function Login() {
           role: response.data.user.role,
           token: localStorage.getItem("token") || "", // Token is in httpOnly cookie, but we store a reference
         };
-        
+
         dispatch(loginSuccess(userData));
-        
+
         // Navigate to the intended destination or home
         const from = (location.state as { from?: string })?.from || "/";
         navigate(from, { replace: true });
@@ -70,7 +79,10 @@ export default function Login() {
         throw new Error(response.data.message || "Login failed");
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Network error. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Network error. Please try again.";
       setApiError(errorMessage);
       dispatch(authFailure(errorMessage));
     }
@@ -83,13 +95,15 @@ export default function Login() {
     <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
       <div className="w-full max-w-sm md:max-w-3xl">
         <div className={cn("flex flex-col gap-6")}>
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden border-2">
             <CardContent className="grid p-0 md:grid-cols-2">
               <form onSubmit={handleSubmit(onSubmit)} className="p-6 md:p-8">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col items-center text-center">
                     <h1 className="text-2xl font-bold">Welcome back</h1>
-                    <p className="text-balance text-muted-foreground">Login to your Hostelia account</p>
+                    <p className="text-balance text-muted-foreground">
+                      Login to your Hostelia account
+                    </p>
                   </div>
 
                   {/* API Error Message */}
@@ -109,14 +123,21 @@ export default function Login() {
                       disabled={isFormLoading}
                       {...register("email")}
                     />
-                    {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+                    {errors.email && (
+                      <p className="text-xs text-red-600">
+                        {errors.email.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Password Field */}
                   <div className="grid gap-2">
                     <div className="flex items-center">
                       <Label htmlFor="password">Password</Label>
-                      <a href="#" className="ml-auto text-sm underline-offset-2 hover:underline">
+                      <a
+                        href="#"
+                        className="ml-auto text-sm underline-offset-2 hover:underline"
+                      >
                         Forgot your password?
                       </a>
                     </div>
@@ -135,14 +156,26 @@ export default function Login() {
                         disabled={isFormLoading}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
-                    {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}
+                    {errors.password && (
+                      <p className="text-xs text-red-600">
+                        {errors.password.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Submit Button */}
-                  <Button type="submit" disabled={isFormLoading} className="w-full">
+                  <Button
+                    type="submit"
+                    disabled={isFormLoading}
+                    className="w-full"
+                  >
                     {isFormLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -157,7 +190,10 @@ export default function Login() {
                   <div className="text-center text-sm">
                     <p className="text-muted-foreground">
                       Don&apos;t have an account?{" "}
-                      <Link to="/signup" className="underline underline-offset-4 hover:text-primary">
+                      <Link
+                        to="/signup"
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                      >
                         Sign up
                       </Link>
                     </p>
@@ -166,7 +202,7 @@ export default function Login() {
               </form>
               <div className="relative hidden bg-muted md:block">
                 <img
-                  src="/placeholder.svg"
+                  src="/auth-pages/campus-image.webp"
                   alt="Login illustration"
                   className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                 />
@@ -174,7 +210,8 @@ export default function Login() {
             </CardContent>
           </Card>
           <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-            By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            By clicking continue, you agree to our{" "}
+            <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
           </div>
         </div>
       </div>
