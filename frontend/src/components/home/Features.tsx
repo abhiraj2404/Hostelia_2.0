@@ -83,7 +83,7 @@ const FeatureCard = ({
     <CardContent className="space-y-3 text-sm text-muted-foreground">
       {bullets.map((bullet) => (
         <div key={bullet} className="flex gap-2">
-          <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p>{bullet}</p>
         </div>
       ))}
