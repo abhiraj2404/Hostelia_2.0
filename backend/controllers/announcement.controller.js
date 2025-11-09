@@ -51,9 +51,15 @@ export async function createAnnouncement(req, res) {
 
         let fileUrl;
         if (req.file && req.file.buffer) {
+            // If the uploaded file is a PDF (or other non-image), explicitly upload as 'raw'
+            // Cloudinary serves PDFs correctly when stored as raw resources.
+            const mimetype = (req.file.mimetype || "").toLowerCase();
+            const isPdf = mimetype === "application/pdf" || mimetype.includes("pdf");
+            const resourceType = isPdf ? "raw" : "auto";
+
             const uploadRes = await uploadBufferToCloudinary(req.file.buffer, {
                 folder: "announcements",
-                resource_type: "auto",
+                resource_type: resourceType,
             });
             fileUrl = uploadRes.secure_url;
         }

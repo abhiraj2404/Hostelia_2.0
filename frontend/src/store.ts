@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
 import complaintsReducer from "./features/complaints/complaintsSlice";
 import messReducer from "./features/mess/messSlice";
+import announcementsReducer from "./features/announcements/announcementsSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     complaints: complaintsReducer,
     mess: messReducer,
+    announcements: announcementsReducer,
   },
 });
 

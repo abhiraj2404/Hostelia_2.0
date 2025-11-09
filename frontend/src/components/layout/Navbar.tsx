@@ -20,6 +20,7 @@ const navItems = [
   { label: "Contact", to: "/contact" },
   { label: "Complaints", to: "/student/complaints" },
   { label: "Mess", to: "/student/mess" },
+  { label: "Announcements", to: "/student/announcements" },
 ];
 
 function Navbar() {
