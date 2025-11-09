@@ -1,14 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
 import apiClient from "@/lib/api-client";
 import type { RootState } from "@/store";
-
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL ??
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:3000/api"
-    : "/api");
 
 // Types
 export interface MenuItem {
@@ -60,8 +53,8 @@ export const fetchMenu = createAsyncThunk(
   "mess/fetchMenu",
   async (_, { rejectWithValue }) => {
     try {
-      // Use axios directly without auth token for public menu access
-      const response = await axios.get(`${baseURL}/mess/menu`);
+      // Use apiClient to include auth token
+      const response = await apiClient.get("/mess/menu");
       return response.data.menu;
     } catch (error: any) {
       return rejectWithValue(

@@ -102,10 +102,10 @@ function MessPage() {
   const rating = watch("rating");
 
   useEffect(() => {
-    if (menuStatus === "idle") {
+    if (menuStatus === "idle" && isAuthenticated) {
       dispatch(fetchMenu());
     }
-  }, [menuStatus, dispatch]);
+  }, [menuStatus, dispatch, isAuthenticated]);
 
   useEffect(() => {
     if (feedbackStatus === "succeeded") {
@@ -191,6 +191,25 @@ function MessPage() {
               <CardDescription>{formatDate(selectedDate)}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
+              {!isAuthenticated ? (
+                <div className="text-center py-8 space-y-4">
+                  <AlertCircle className="size-12 mx-auto text-muted-foreground/50" />
+                  <div className="space-y-2">
+                    <p className="text-base font-medium text-foreground">
+                      Authentication Required
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Please login to view the mess menu
+                    </p>
+                  </div>
+                  <Link to="/login">
+                    <Button className="mt-2">
+                      Login to View Menu
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <>
               {menuStatus === "loading" && (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -231,6 +250,8 @@ function MessPage() {
                   ))}
                 </div>
               )}
+              </>
+              )}
             </CardContent>
           </Card>
 
@@ -241,6 +262,25 @@ function MessPage() {
               <CardDescription>Full week meal schedule</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
+              {!isAuthenticated ? (
+                <div className="text-center py-8 space-y-4">
+                  <AlertCircle className="size-12 mx-auto text-muted-foreground/50" />
+                  <div className="space-y-2">
+                    <p className="text-base font-medium text-foreground">
+                      Authentication Required
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Please login to view the weekly menu
+                    </p>
+                  </div>
+                  <Link to="/login">
+                    <Button className="mt-2">
+                      Login to View Weekly Menu
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+              <>
               {menuStatus === "succeeded" && menu && (
                 <div className="space-y-2.5">
                   {dayNames.map((day) => (
@@ -265,6 +305,8 @@ function MessPage() {
                     </details>
                   ))}
                 </div>
+              )}
+              </>
               )}
             </CardContent>
           </Card>
