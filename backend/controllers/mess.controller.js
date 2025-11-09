@@ -4,7 +4,7 @@ import z from "zod";
 import { logger } from "../middleware/logger.js";
 
 const submitFeedbackSchema = z.object({
-    date: z.union([ z.string(), z.date() ]),
+    date: z.coerce.date(),
     mealType: z.enum([ "Breakfast", "Lunch", "Snacks", "Dinner" ]),
     rating: z.coerce.number().min(1).max(5),
     comment: z.string().trim().optional().default(""),
@@ -40,27 +40,18 @@ export const submitFeedback = async (req, res) => {
 
         const { date, mealType, rating, comment } = validationResult.data;
 
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (Number.isNaN(dateObj.getTime())) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid date",
-            });
-        }
-
         const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
-        const day = days[ dateObj.getDay() ];
-
+        const day = days[ date.getDay() ];
         const feedback = await Feedback.create({
-            date: dateObj,
+            date,
             day,
             mealType,
             rating,
             comment,
-            user: req.userId,
+            user: req.user._id,
         });
 
-        logger.info("Feedback submitted", { userId: req.userId, mealType, rating });
+        logger.info("Feedback submitted", { userId: req.user._id, mealType, rating });
 
         return res.status(201).json({
             success: true,

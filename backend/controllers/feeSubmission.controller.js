@@ -1,0 +1,462 @@
+import { z } from 'zod';
+import FeeSubmission from '../models/feeSubmission.model.js';
+import User from '../models/user.model.js';
+import { scopedFeeFilter } from '../middleware/roles.js';
+import { uploadBufferToCloudinary } from '../config/cloudinary.js';
+import { logger } from '../middleware/logger.js';
+import nodemailer from 'nodemailer';
+
+// Get fee status - role-based (student sees own, admin sees all)
+export async function getFeeStatus(req, res) {
+    try {
+        const filter = scopedFeeFilter(req);
+        const feeSubmissions = await FeeSubmission.find(filter).sort({ createdAt: -1 });
+        logger.info('Fee status fetched', { role: req.user.role, count: feeSubmissions.length });
+        return res.status(200).json({
+            success: true,
+            message: 'Fee status fetched successfully',
+            data: feeSubmissions,
+        });
+    } catch (err) {
+        logger.error('Failed to fetch fee status', { error: err.message, role: req.user?.role });
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch fee status',
+            error: err.message,
+        });
+    }
+}
+
+// Submit hostel fee document
+export async function submitHostelFee(req, res) {
+    const { _id: userId } = req.user;
+
+    try {
+        // Require file
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({
+                success: false,
+                message: 'Fee document is required',
+            });
+        }
+
+        // Upload document to Cloudinary
+        const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
+            folder: `fees/${String(userId)}/hostel`,
+            resource_type: 'auto',
+        });
+
+        const documentUrl = uploadResult?.url || uploadResult?.secure_url;
+        if (!documentUrl) {
+            return res.status(502).json({
+                success: false,
+                message: 'Failed to upload document',
+            });
+        }
+
+        // Update FeeSubmission - entry should already exist from signup
+        const feeSubmission = await FeeSubmission.findOneAndUpdate(
+            { studentId: userId },
+            {
+                'hostelFee.documentUrl': documentUrl,
+                'hostelFee.status': 'pending',
+            },
+            {
+                new: true,
+            }
+        );
+
+        if (!feeSubmission) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fee submission entry not found. Please contact admin.',
+            });
+        }
+
+        logger.info('Hostel fee document submitted', {
+            studentId: userId.toString(),
+            feeSubmissionId: feeSubmission._id.toString(),
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Hostel fee document submitted successfully',
+            data: feeSubmission,
+        });
+    } catch (err) {
+        logger.error('Failed to submit hostel fee', {
+            error: err.message,
+            userId: userId?.toString?.(),
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to submit hostel fee',
+            error: err.message,
+        });
+    }
+}
+
+// Submit mess fee document
+export async function submitMessFee(req, res) {
+    const { _id: userId, name, email } = req.user;
+
+    try {
+        // Require file
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({
+                success: false,
+                message: 'Fee document is required',
+            });
+        }
+
+        // Upload document to Cloudinary
+        const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
+            folder: `fees/${String(userId)}/mess`,
+            resource_type: 'auto',
+        });
+
+        const documentUrl = uploadResult?.url || uploadResult?.secure_url;
+        if (!documentUrl) {
+            return res.status(502).json({
+                success: false,
+                message: 'Failed to upload document',
+            });
+        }
+
+        // Update FeeSubmission - entry should already exist from signup
+        const feeSubmission = await FeeSubmission.findOneAndUpdate(
+            { studentId: userId },
+            {
+                'messFee.documentUrl': documentUrl,
+                'messFee.status': 'pending',
+            },
+            {
+                new: true,
+            }
+        );
+
+        if (!feeSubmission) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fee submission entry not found. Please contact admin.',
+            });
+        }
+
+        logger.info('Mess fee document submitted', {
+            studentId: userId.toString(),
+            feeSubmissionId: feeSubmission._id.toString(),
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Mess fee document submitted successfully',
+            data: feeSubmission,
+        });
+    } catch (err) {
+        logger.error('Failed to submit mess fee', {
+            error: err.message,
+            userId: userId?.toString?.(),
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to submit mess fee',
+            error: err.message,
+        });
+    }
+}
+
+// Update fee status (admin only)
+const updateFeeStatusSchema = z.object({
+    hostelFeeStatus: z.enum([ 'documentNotSubmitted', 'pending', 'approved', 'rejected' ]).optional(),
+    messFeeStatus: z.enum([ 'documentNotSubmitted', 'pending', 'approved', 'rejected' ]).optional(),
+});
+
+export async function updateFeeStatus(req, res) {
+    const parsed = updateFeeStatusSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: z.treeifyError(parsed.error),
+        });
+    }
+
+    const { studentId } = req.params;
+    const { hostelFeeStatus, messFeeStatus } = parsed.data;
+
+    try {
+        // Verify student exists
+        const student = await User.findById(studentId);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found',
+            });
+        }
+
+        // Build update object
+        const updateFields = {};
+        if (hostelFeeStatus !== undefined) {
+            updateFields[ 'hostelFee.status' ] = hostelFeeStatus;
+        }
+        if (messFeeStatus !== undefined) {
+            updateFields[ 'messFee.status' ] = messFeeStatus;
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'At least one fee status must be provided',
+            });
+        }
+
+        // Update FeeSubmission
+        const feeSubmission = await FeeSubmission.findOneAndUpdate(
+            { studentId },
+            updateFields,
+            { new: true, upsert: false }
+        );
+
+        if (!feeSubmission) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fee submission not found for this student',
+            });
+        }
+
+        logger.info('Fee status updated', {
+            studentId: studentId.toString(),
+            hostelFeeStatus,
+            messFeeStatus,
+            actorId: req.user._id.toString(),
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Fee status updated successfully',
+            data: feeSubmission,
+        });
+    } catch (err) {
+        logger.error('Failed to update fee status', {
+            error: err.message,
+            studentId,
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update fee status',
+            error: err.message,
+        });
+    }
+}
+
+// Send single fee reminder
+const sendFeeReminderSchema = z.object({
+    studentId: z.string().min(1),
+    emailType: z.enum([ 'hostelFee', 'messFee', 'both' ]),
+    notes: z.string().optional(),
+});
+
+export async function sendFeeReminder(req, res) {
+    const parsed = sendFeeReminderSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: z.treeifyError(parsed.error),
+        });
+    }
+
+    const { studentId, emailType, notes } = parsed.data;
+
+    try {
+        const student = await User.findById(studentId);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found',
+            });
+        }
+
+        const sender = req.user;
+
+        let emailSubject, emailContent;
+
+        if (emailType === 'hostelFee' || emailType === 'both') {
+            emailSubject = 'Reminder: Hostel Fee Payment Due';
+            emailContent = `<p>Dear ${student.name},</p><p>This is a friendly reminder that your hostel fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name}<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+        }
+
+        if (emailType === 'messFee' || emailType === 'both') {
+            if (emailSubject) {
+                emailSubject = 'Reminder: Hostel and Mess Fee Payments Due';
+                emailContent = `<p>Dear ${student.name},</p><p>This is a friendly reminder that your hostel and mess fee payments are due. Please make the payments as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}<p>If you have already made the payments, please ignore this email.</p><p>Best regards,<br>${sender.name}<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+            } else {
+                emailSubject = 'Reminder: Mess Fee Payment Due';
+                emailContent = `<p>Dear ${student.name},</p><p>This is a friendly reminder that your mess fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name}<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+            }
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+            port: parseInt(process.env.EMAIL_PORT || '587'),
+            secure: process.env.EMAIL_SECURE === 'true',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+            debug: true,
+        });
+
+        const mailOptions = {
+            from: `"Hostelia - ${sender.name}" <${process.env.EMAIL_USER}>`,
+            to: student.email,
+            subject: emailSubject,
+            html: emailContent,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+
+        logger.info('Fee reminder sent', {
+            studentId: studentId.toString(),
+            studentEmail: student.email,
+            emailType,
+            messageId: info.messageId,
+            senderId: req.user._id.toString(),
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: `Fee reminder sent to ${student.name}`,
+            email: student.email,
+            messageId: info.messageId
+        });
+    } catch (error) {
+        logger.error('Error sending fee reminder email', {
+            error: error.message,
+            studentId,
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Error sending email: ' + error.message,
+        });
+    }
+}
+
+// Send bulk fee reminders
+const sendBulkFeeRemindersSchema = z.object({
+    studentIds: z.array(z.string()).min(1),
+    emailType: z.enum([ 'hostelFee', 'messFee', 'both' ]),
+    notes: z.string().optional(),
+});
+
+export async function sendBulkFeeReminders(req, res) {
+    const parsed = sendBulkFeeRemindersSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: z.treeifyError(parsed.error),
+        });
+    }
+
+    const { studentIds, emailType, notes } = parsed.data;
+
+    try {
+        const sender = req.user;
+
+        const students = await User.find({ _id: { $in: studentIds } });
+        if (students.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No students found',
+            });
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+            port: parseInt(process.env.EMAIL_PORT || '587'),
+            secure: process.env.EMAIL_SECURE === 'true',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+            debug: true,
+        });
+
+        const results = { success: [], failed: [] };
+
+        for (const student of students) {
+            try {
+                let emailSubject, emailContent;
+
+                if (emailType === 'hostelFee' || emailType === 'both') {
+                    emailSubject = 'Reminder: Hostel Fee Payment Due';
+                    emailContent = `<p>Dear ${student.name},</p><p>This is a friendly reminder that your hostel fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name}<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+                }
+
+                if (emailType === 'messFee' || emailType === 'both') {
+                    if (emailSubject) {
+                        emailSubject = 'Reminder: Hostel and Mess Fee Payments Due';
+                        emailContent = `<p>Dear ${student.name},</p><p>This is a friendly reminder that your hostel and mess fee payments are due. Please make the payments as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}<p>If you have already made the payments, please ignore this email.</p><p>Best regards,<br>${sender.name}<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+                    } else {
+                        emailSubject = 'Reminder: Mess Fee Payment Due';
+                        emailContent = `<p>Dear ${student.name},</p><p>This is a friendly reminder that your mess fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name}<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+                    }
+                }
+
+                const mailOptions = {
+                    from: `"Hostelia - ${sender.name}" <${process.env.EMAIL_USER}>`,
+                    to: student.email,
+                    subject: emailSubject,
+                    html: emailContent,
+                };
+
+                const info = await transporter.sendMail(mailOptions);
+
+                results.success.push({
+                    id: student._id.toString(),
+                    name: student.name,
+                    email: student.email,
+                    messageId: info.messageId,
+                });
+            } catch (error) {
+                results.failed.push({
+                    id: student._id.toString(),
+                    name: student.name,
+                    email: student.email,
+                    error: error.message,
+                });
+            }
+        }
+
+        logger.info('Bulk fee reminders sent', {
+            total: students.length,
+            success: results.success.length,
+            failed: results.failed.length,
+            emailType,
+            senderId: req.user._id.toString(),
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: `Sent ${results.success.length} emails, failed to send ${results.failed.length} emails`,
+            results,
+        });
+    } catch (error) {
+        logger.error('Error sending bulk fee reminders', {
+            error: error.message,
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Error sending bulk fee reminders',
+            error: error.message,
+        });
+    }
+}
+

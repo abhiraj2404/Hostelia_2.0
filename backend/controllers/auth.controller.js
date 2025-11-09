@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import User from "../models/user.model.js";
 import OTP from "../models/otp.model.js";
+import FeeSubmission from "../models/feeSubmission.model.js";
 import { logger } from "../middleware/logger.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
@@ -228,10 +229,28 @@ export const verifyOTP = async (req, res) => {
                 role: "student",
             });
 
+            // Create base FeeSubmission entry with both fees as documentNotSubmitted
+            await FeeSubmission.create({
+                studentId: newUser._id,
+                studentName: name,
+                studentEmail: email,
+                hostelFee: {
+                    status: 'documentNotSubmitted',
+                },
+                messFee: {
+                    status: 'documentNotSubmitted',
+                },
+            });
+
             // Generate token and set cookies
             generateToken(newUser._id, res);
             res.cookie("userid", newUser._id.toString());
             res.cookie("role", newUser.role);
+
+            logger.info('User created via OTP verification with fee submission entry', {
+                userId: newUser._id.toString(),
+                email: newUser.email,
+            });
 
             return res.status(200).json({
                 success: true,
@@ -313,10 +332,28 @@ export const signup = async (req, res) => {
             role: "student",
         });
 
+        // Create base FeeSubmission entry with both fees as documentNotSubmitted
+        await FeeSubmission.create({
+            studentId: newUser._id,
+            studentName: name,
+            studentEmail: email,
+            hostelFee: {
+                status: 'documentNotSubmitted',
+            },
+            messFee: {
+                status: 'documentNotSubmitted',
+            },
+        });
+
         // Generate token and set cookies
         generateToken(newUser._id, res);
         res.cookie("userid", newUser._id.toString());
         res.cookie("role", newUser.role);
+
+        logger.info('User created with fee submission entry', {
+            userId: newUser._id.toString(),
+            email: newUser.email,
+        });
 
         return res.status(201).json({
             success: true,
