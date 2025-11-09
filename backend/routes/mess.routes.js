@@ -7,6 +7,6 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.get("/menu", getMenu);
-router.post("/feedback", authMiddleware, submitFeedback);
+router.post("/feedback", submitFeedback);
 
 export default router;
