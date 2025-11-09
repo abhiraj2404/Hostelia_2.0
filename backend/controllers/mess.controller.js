@@ -1,4 +1,4 @@
-import * as menu from "../data/menu.json" with { type: 'json' };
+import menuData from "../data/menu.json" with { type: 'json' };
 import Feedback from "../models/feedback.model.js";
 import z from "zod";
 import { logger } from "../middleware/logger.js";
@@ -15,7 +15,7 @@ export const getMenu = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Menu fetched successfully",
-            menu,
+            menu: menuData,
         });
     } catch (error) {
         logger.error("Failed to load menu:", error);

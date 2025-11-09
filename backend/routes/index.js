@@ -10,7 +10,7 @@ const router = Router();
 
 // API routes
 router.use("/auth", authRouter);
-router.use("/mess", authMiddleware, messRouter);
+router.use("/mess", messRouter);
 router.use("/problem", authMiddleware, problemRouter);
 router.use("/announcement", authMiddleware, announcementRouter);
 router.use("/fee", authMiddleware, feeSubmissionRouter);

@@ -10,6 +10,7 @@ import StudentComplaintDetailPage from "./pages/student/StudentComplaintDetailPa
 import StudentComplaintsPage from "./pages/student/StudentComplaintsPage";
 import StudentNewComplaintPage from "./pages/student/StudentNewComplaintPage";
 import MessPage from "./pages/student/MessPage";
+import AnnouncementsPage from "./pages/student/AnnouncementsPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
             element={<StudentComplaintDetailPage />}
           />
           <Route path="/student/mess" element={<MessPage />} />
+          <Route path="/student/announcements" element={<AnnouncementsPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
