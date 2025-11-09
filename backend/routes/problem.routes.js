@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { } from '../middleware/auth.middleware.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { problemUpload } from '../config/cloudinary.js';
+import { handleMulterError } from '../middleware/multerErrorHandler.js';
 import {
     createProblem,
     listProblems,
@@ -13,7 +14,7 @@ import {
 const router = Router();
 
 // Create a new problem (student only) with optional image upload
-router.post('/', authorizeRoles('student'), problemUpload.single('problemImage'), createProblem);
+router.post('/', authorizeRoles('student'), handleMulterError(problemUpload.single('problemImage')), createProblem);
 
 // List problems (role-based): student -> own problems, warden -> problems of their hostel, admin -> all problems
 router.get('/', listProblems);

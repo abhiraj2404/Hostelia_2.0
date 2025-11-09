@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { announcementUpload } from '../config/cloudinary.js';
+import { handleMulterError } from '../middleware/multerErrorHandler.js';
 import { getAnnouncement, createAnnouncement, deleteAnnouncement } from '../controllers/announcement.controller.js';
 
 const router = Router();
@@ -11,7 +12,7 @@ router.post(
     '/',
     authMiddleware,
     authorizeRoles('warden', 'admin'),
-    announcementUpload.single('announcementFile'),
+    handleMulterError(announcementUpload.single('announcementFile')),
     createAnnouncement
 );
 router.delete(
