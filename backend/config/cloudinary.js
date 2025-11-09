@@ -66,6 +66,12 @@ export const announcementUpload = multer({
     fileFilter: announcementFileFilter,
 });
 
+export const feeUpload = multer({
+    storage: memoryStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: imageFilter, // Only allow images (jpeg, jpg, png)
+});
+
 // Helper: convert Buffer to Readable stream
 function bufferToStream(buffer) {
     const readable = new Readable();
@@ -99,6 +105,7 @@ export default {
     cloudinary: cloudinary.v2,
     problemUpload,
     announcementUpload,
+    feeUpload,
     uploadBufferToCloudinary,
     cloudinaryClient: cloudinary.v2,
 };
