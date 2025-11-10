@@ -45,6 +45,7 @@ const problemSchema = new mongoose.Schema(
         "Internet",
         "Furniture",
         "Pest Control",
+        "Beating",
         "Other",
       ],
       required: true,
