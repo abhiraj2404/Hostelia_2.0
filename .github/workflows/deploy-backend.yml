@@ -20,4 +20,4 @@ jobs:
 
       - name: Deploying to server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd Hostelia_2.0 && git pull && cd backend && npm i && pm2 restart index"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo hello && cd Hostelia_2.0 && git pull && cd backend && npm i && pm2 restart index"
