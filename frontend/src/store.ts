@@ -3,6 +3,7 @@ import authReducer from "./features/auth/authSlice";
 import complaintsReducer from "./features/complaints/complaintsSlice";
 import messReducer from "./features/mess/messSlice";
 import announcementsReducer from "./features/announcements/announcementsSlice";
+import transitReducer from "./features/transit/transitSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     complaints: complaintsReducer,
     mess: messReducer,
     announcements: announcementsReducer,
+    transit: transitReducer,
   },
 });
 

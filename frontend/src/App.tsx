@@ -11,6 +11,8 @@ import StudentComplaintsPage from "./pages/student/StudentComplaintsPage";
 import StudentNewComplaintPage from "./pages/student/StudentNewComplaintPage";
 import MessPage from "./pages/student/MessPage";
 import AnnouncementsPage from "./pages/student/AnnouncementsPage";
+import EntryExitPage from "./pages/student/EntryExitPage";
+import WardenTransitPage from "./pages/warden/WardenTransitPage";
 
 function App() {
   return (
@@ -38,6 +40,9 @@ function App() {
           />
           <Route path="/student/mess" element={<MessPage />} />
           <Route path="/student/announcements" element={<AnnouncementsPage />} />
+          <Route path="/student/entry-exit" element={<EntryExitPage />} />
+
+          <Route path="/warden/transit" element={<WardenTransitPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
