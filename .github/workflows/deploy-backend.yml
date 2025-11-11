@@ -20,4 +20,7 @@ jobs:
 
       - name: Deploying to server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'export NVM_DIR="$HOME/.nvm" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && hostname && echo hello && cd Hostelia_2.0 && pwd && git pull && cd backend && npm i && pm2 restart index'
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'export NVM_DIR="$HOME/.nvm" && \
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && \
+          [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" && \
+          hostname && echo hello && cd Hostelia_2.0 && pwd && git pull && cd backend && npm i && pm2 restart index'
