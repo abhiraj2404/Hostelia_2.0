@@ -25,15 +25,9 @@ function Navbar() {
     { label: "About", to: "/about" },
     { label: "Contact", to: "/contact" },
     { label: "Complaints", to: "/student/complaints" },
-    { label: "Mess", to: "/student/mess" },
-    {
-      label: "Entry/Exit",
-      to:
-        user && (user.role === "warden" || user.role === "admin")
-          ? "/warden/transit"
-          : "/student/entry-exit",
-    },
-    { label: "Announcements", to: "/student/announcements" },
+    { label: "Mess", to: "/mess" },
+    { label: "Entry/Exit", to: "/transit" },
+    { label: "Announcements", to: "/announcements" },
   ];
 
   const handleLogout = async () => {
