@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,19 +16,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
+  authFailure,
   authStart,
   signupSuccess,
-  authFailure,
 } from "@/features/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { apiClient } from "@/lib/api-client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { isAxiosError } from "axios";
+import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
 
 // Step 1 Validation Schema
 const step1Schema = z
@@ -74,6 +75,26 @@ const step2Schema = z.object({
 
 type Step2FormData = z.infer<typeof step2Schema>;
 
+type ApiErrorResponse = {
+  message?: string;
+};
+
+const getApiErrorMessage = (error: unknown) => {
+  if (isAxiosError<ApiErrorResponse>(error)) {
+    return (
+      error.response?.data?.message ||
+      error.message ||
+      "Network error. Please try again."
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Network error. Please try again.";
+};
+
 export default function Signup() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -86,12 +107,19 @@ export default function Signup() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [step1Data, setStep1Data] = useState<Step1FormData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
 
   // Step 1 Form
   const step1Form = useForm<Step1FormData>({
     resolver: zodResolver(step1Schema),
+    defaultValues: {
+      name: "",
+      rollNo: "",
+      email: "",
+      roomNo: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   // Step 2 Form
@@ -123,18 +151,14 @@ export default function Signup() {
 
       if (response.data.success) {
         setStep1Data(data);
-        setOtpSent(true);
         setResendCountdown(60);
         setCurrentStep(2);
         setSuccessMessage("OTP sent to your email");
       } else {
         throw new Error(response.data.message || "Failed to send OTP");
       }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Network error. Please try again.";
+    } catch (error: unknown) {
+      const errorMessage = getApiErrorMessage(error);
       setApiError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -178,11 +202,8 @@ export default function Signup() {
       } else {
         throw new Error(response.data.message || "OTP verification failed");
       }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Network error. Please try again.";
+    } catch (error: unknown) {
+      const errorMessage = getApiErrorMessage(error);
       setApiError(errorMessage);
       dispatch(authFailure(errorMessage));
     } finally {
@@ -209,11 +230,8 @@ export default function Signup() {
       } else {
         throw new Error(response.data.message || "Failed to resend OTP");
       }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Network error. Please try again.";
+    } catch (error: unknown) {
+      const errorMessage = getApiErrorMessage(error);
       setApiError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -223,7 +241,7 @@ export default function Signup() {
   const isFormLoading = isLoading || reduxLoading;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md">
         {/* Step 1: Personal Information */}
         {currentStep === 1 && (
@@ -309,25 +327,30 @@ export default function Signup() {
                     <Label htmlFor="hostel" className="text-sm font-medium">
                       Hostel
                     </Label>
-                    <Select
-                      disabled={isFormLoading}
-                      onValueChange={(value) =>
-                        step1Form.setValue(
-                          "hostel",
-                          value as "BH-1" | "BH-2" | "BH-3" | "BH-4"
-                        )
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select hostel" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="BH-1">BH-1</SelectItem>
-                        <SelectItem value="BH-2">BH-2</SelectItem>
-                        <SelectItem value="BH-3">BH-3</SelectItem>
-                        <SelectItem value="BH-4">BH-4</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Controller
+                      control={step1Form.control}
+                      name="hostel"
+                      render={({ field }) => (
+                        <Select
+                          disabled={isFormLoading}
+                          value={field.value ?? undefined}
+                          onValueChange={(value) => {
+                            field.onChange(value as Step1FormData["hostel"]);
+                            field.onBlur();
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select hostel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="BH-1">BH-1</SelectItem>
+                            <SelectItem value="BH-2">BH-2</SelectItem>
+                            <SelectItem value="BH-3">BH-3</SelectItem>
+                            <SelectItem value="BH-4">BH-4</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                     {step1Form.formState.errors.hostel && (
                       <p className="text-xs text-red-600">
                         {step1Form.formState.errors.hostel.message}
@@ -359,25 +382,30 @@ export default function Signup() {
                   <Label htmlFor="year" className="text-sm font-medium">
                     Year
                   </Label>
-                  <Select
-                    disabled={isFormLoading}
-                    onValueChange={(value) =>
-                      step1Form.setValue(
-                        "year",
-                        value as "UG-1" | "UG-2" | "UG-3" | "UG-4"
-                      )
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UG-1">1st Year</SelectItem>
-                      <SelectItem value="UG-2">2nd Year</SelectItem>
-                      <SelectItem value="UG-3">3rd Year</SelectItem>
-                      <SelectItem value="UG-4">4th Year</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={step1Form.control}
+                    name="year"
+                    render={({ field }) => (
+                      <Select
+                        disabled={isFormLoading}
+                        value={field.value ?? undefined}
+                        onValueChange={(value) => {
+                          field.onChange(value as Step1FormData["year"]);
+                          field.onBlur();
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="UG-1">1st Year</SelectItem>
+                          <SelectItem value="UG-2">2nd Year</SelectItem>
+                          <SelectItem value="UG-3">3rd Year</SelectItem>
+                          <SelectItem value="UG-4">4th Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {step1Form.formState.errors.year && (
                     <p className="text-xs text-red-600">
                       {step1Form.formState.errors.year.message}
