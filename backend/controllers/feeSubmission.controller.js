@@ -4,7 +4,7 @@ import User from '../models/user.model.js';
 import { scopedFeeFilter } from '../middleware/roles.js';
 import { uploadBufferToCloudinary } from '../config/cloudinary.js';
 import { logger } from '../middleware/logger.js';
-import nodemailer from 'nodemailer';
+import { sendEmail, getEmailUser } from '../utils/email-client.js';
 
 // Get fee status - role-based (student sees own, admin sees all)
 export async function getFeeStatus(req, res) {
@@ -296,28 +296,14 @@ export async function sendFeeReminder(req, res) {
             }
         }
 
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: parseInt(process.env.EMAIL_PORT || '587'),
-            secure: process.env.EMAIL_SECURE === 'true',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-            debug: true,
-        });
-
         const mailOptions = {
-            from: `"Hostelia - ${sender.name}" <${process.env.EMAIL_USER}>`,
+            from: `"Hostelia - ${sender.name}" <${getEmailUser()}>`,
             to: student.email,
             subject: emailSubject,
             html: emailContent,
         };
 
-        const info = await transporter.sendMail(mailOptions);
+        const info = await sendEmail(mailOptions, { debug: true });
 
         logger.info('Fee reminder sent', {
             studentId: studentId.toString(),
@@ -375,20 +361,6 @@ export async function sendBulkFeeReminders(req, res) {
             });
         }
 
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: parseInt(process.env.EMAIL_PORT || '587'),
-            secure: process.env.EMAIL_SECURE === 'true',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-            debug: true,
-        });
-
         const results = { success: [], failed: [] };
 
         for (const student of students) {
@@ -411,13 +383,13 @@ export async function sendBulkFeeReminders(req, res) {
                 }
 
                 const mailOptions = {
-                    from: `"Hostelia - ${sender.name}" <${process.env.EMAIL_USER}>`,
+                    from: `"Hostelia - ${sender.name}" <${getEmailUser()}>`,
                     to: student.email,
                     subject: emailSubject,
                     html: emailContent,
                 };
 
-                const info = await transporter.sendMail(mailOptions);
+                const info = await sendEmail(mailOptions, { debug: true });
 
                 results.success.push({
                     id: student._id.toString(),
