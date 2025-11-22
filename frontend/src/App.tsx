@@ -9,7 +9,9 @@ import Signup from "./pages/Signup";
 import StudentComplaintDetailPage from "./pages/student/StudentComplaintDetailPage";
 import StudentComplaintsPage from "./pages/student/StudentComplaintsPage";
 import StudentNewComplaintPage from "./pages/student/StudentNewComplaintPage";
-import MessPage from "./pages/student/MessPage";
+import MessPage from "./pages/MessPage";
+import AnnouncementsPage from "./pages/AnnouncementsPage";
+import TransitPage from "./pages/TransitPage";
 
 function App() {
   return (
@@ -35,7 +37,15 @@ function App() {
             path="/student/complaints/:id"
             element={<StudentComplaintDetailPage />}
           />
-          <Route path="/student/mess" element={<MessPage />} />
+          <Route path="/mess" element={<MessPage />} />
+          <Route path="/announcements" element={<AnnouncementsPage />} />
+          <Route path="/transit" element={<TransitPage />} />
+
+          {/* Legacy routes - redirect to new paths */}
+          <Route path="/student/mess" element={<Navigate to="/mess" replace />} />
+          <Route path="/student/announcements" element={<Navigate to="/announcements" replace />} />
+          <Route path="/student/entry-exit" element={<Navigate to="/transit" replace />} />
+          <Route path="/warden/transit" element={<Navigate to="/transit" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,24 +1,11 @@
 import mongoose from 'mongoose';
 
 const transitSchema = new mongoose.Schema({
-    studentRollNumber: {
-        type: String,
-        required: true
-    },
-    studentName: {
-        type: String,
+    studentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
-        default: "Unknown"
-    },
-    studentHostel: {
-        type: String,
-        required: true,
-        default: "Unknown"
-    },
-    studentRoomNumber: {
-        type: String,
-        required: true,
-        default: "Unknown"
+        index: true
     },
     purpose: {
         type: String,
@@ -26,18 +13,19 @@ const transitSchema = new mongoose.Schema({
     },
     transitStatus: {
         type: String,
-        enum: ['ENTRY', 'EXIT'],
+        enum: [ 'ENTRY', 'EXIT' ],
         required: true
     },
     date: {
         type: Date,
         required: true,
-        default: () => new Date().toISOString().split('T')[0]  // YYYY-MM-DD
+        default: Date.now,
+        index: true
     },
     time: {
         type: String,
         required: true,
-        default: () => new Date().toTimeString().split(' ')[0]  // HH:MM:SS
+        default: () => new Date().toTimeString().split(' ')[ 0 ]  // HH:MM:SS
     }
 }, {
     timestamps: true

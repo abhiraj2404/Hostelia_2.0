@@ -1,0 +1,466 @@
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import {
+  CalendarIcon,
+  LogIn,
+  LogOut,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Clock,
+} from "lucide-react";
+
+// Helper functions for time selection
+const generateHours = () => {
+  return Array.from({ length: 24 }, (_, i) => {
+    const hour = i.toString().padStart(2, "0");
+    return { value: hour, label: hour };
+  });
+};
+
+const generateMinutes = () => {
+  return Array.from({ length: 60 }, (_, i) => {
+    const minute = i.toString().padStart(2, "0");
+    return { value: minute, label: minute };
+  });
+};
+
+// Form validation schema
+const entryExitSchema = z
+  .object({
+    transitStatus: z.enum(["ENTRY", "EXIT"], {
+      required_error: "Please select entry or exit",
+    }),
+    date: z.date({
+      required_error: "Date is required",
+    }),
+    hour: z.string().min(1, "Hour is required"),
+    minute: z.string().min(1, "Minute is required"),
+    purpose: z
+      .string()
+      .min(3, "Purpose must be at least 3 characters")
+      .max(500, "Purpose cannot exceed 500 characters"),
+  })
+  .refine(
+    (data) => {
+      const now = new Date();
+      const selectedDateTime = new Date(data.date);
+      const hours = parseInt(data.hour, 10);
+      const minutes = parseInt(data.minute, 10);
+      selectedDateTime.setHours(hours, minutes, 0, 0);
+      return selectedDateTime >= now;
+    },
+    {
+      message: "Cannot create entry for past date and time. Please select current or future time.",
+      path: ["minute"],
+    }
+  );
+
+type EntryExitFormData = z.infer<typeof entryExitSchema>;
+
+const transitTypes = [
+  { value: "EXIT", label: "Exit", icon: LogOut, color: "text-orange-600" },
+  { value: "ENTRY", label: "Entry", icon: LogIn, color: "text-green-600" },
+] as const;
+
+interface TransitFormProps {
+  onSubmit: (data: { transitStatus: string; date: Date; time: string; purpose: string }) => Promise<void>;
+  createStatus: "idle" | "loading" | "succeeded" | "failed";
+  createError: string | null;
+}
+
+
+export function TransitForm({ onSubmit, createStatus, createError }: TransitFormProps) {
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  const now = new Date();
+  const currentHour = now.getHours().toString().padStart(2, "0");
+  const currentMinute = now.getMinutes().toString().padStart(2, "0");
+
+  const {
+    control,
+    handleSubmit: handleFormSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue,
+  } = useForm<EntryExitFormData>({
+    resolver: zodResolver(entryExitSchema),
+    defaultValues: {
+      transitStatus: "EXIT",
+      date: new Date(),
+      hour: currentHour,
+      minute: currentMinute,
+      purpose: "",
+    },
+  });
+
+  const transitStatus = watch("transitStatus");
+  const selectedDate = watch("date");
+  const selectedHour = watch("hour");
+  const selectedMinute = watch("minute");
+
+  useEffect(() => {
+    if (selectedDate) {
+      const selected = new Date(selectedDate);
+      const today = new Date();
+      
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      
+      if (selected.getTime() === today.getTime()) {
+        const now = new Date();
+        const currentH = now.getHours();
+        const currentM = now.getMinutes();
+        const selectedH = parseInt(selectedHour || "0", 10);
+        const selectedM = parseInt(selectedMinute || "0", 10);
+        
+        if (selectedH < currentH || (selectedH === currentH && selectedM < currentM)) {
+          setValue("hour", currentH.toString().padStart(2, "0"));
+          setValue("minute", currentM.toString().padStart(2, "0"));
+        }
+      }
+    }
+  }, [selectedDate, selectedHour, selectedMinute, setValue]);
+
+  useEffect(() => {
+    if (createStatus === "succeeded") {
+      const now = new Date();
+      const currentH = now.getHours().toString().padStart(2, "0");
+      const currentM = now.getMinutes().toString().padStart(2, "0");
+      reset({
+        transitStatus: "EXIT",
+        date: now,
+        hour: currentH,
+        minute: currentM,
+        purpose: "",
+      });
+    }
+  }, [createStatus, reset]);
+
+  const getMinHour = () => {
+    const selected = new Date(selectedDate);
+    const today = new Date();
+    selected.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    if (selected.getTime() === today.getTime()) {
+      return new Date().getHours();
+    }
+    return 0;
+  };
+
+  const getMinMinute = () => {
+    const selected = new Date(selectedDate);
+    const today = new Date();
+    selected.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const currentH = now.getHours();
+    const selectedH = parseInt(selectedHour || "0", 10);
+    if (selected.getTime() === today.getTime() && selectedH === currentH) {
+      return now.getMinutes();
+    }
+    return 0;
+  };
+
+  const isHourDisabled = (hour: number) => hour < getMinHour();
+  const isMinuteDisabled = (minute: number) => minute < getMinMinute();
+
+  const isDateDisabled = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  };
+
+  const handleSubmitForm = async (data: EntryExitFormData) => {
+    const timeWithSeconds = `${data.hour}:${data.minute}:00`;
+    await onSubmit({
+      transitStatus: data.transitStatus,
+      date: data.date,
+      time: timeWithSeconds,
+      purpose: data.purpose.trim(),
+    });
+  };
+
+  return (
+    <Card className="border shadow-lg bg-card overflow-hidden hover:shadow-xl transition-all duration-300">
+      <CardHeader className="bg-muted/50 text-foreground pb-3 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {transitStatus === "ENTRY" ? (
+            <div className="p-1.5 bg-green-500/10 rounded-lg">
+              <LogIn className="h-4 w-4 text-green-600" />
+            </div>
+          ) : (
+            <div className="p-1.5 bg-orange-500/10 rounded-lg">
+              <LogOut className="h-4 w-4 text-orange-600" />
+            </div>
+          )}
+          <div>
+            <CardTitle className="text-lg font-semibold">
+              {transitStatus === "ENTRY" ? "Entry" : "Exit"} Record
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-sm mt-0.5">
+              Submit your {transitStatus.toLowerCase()} details
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-3 space-y-3">
+        <form onSubmit={handleFormSubmit(handleSubmitForm)} className="space-y-3">
+          {/* Transit Type Selection */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-foreground flex items-center gap-1">
+              Type <span className="text-red-500">*</span>
+            </Label>
+            <Controller
+              name="transitStatus"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger className="h-9 border focus:border-primary/50 transition-colors text-sm">
+                    <SelectValue placeholder="Select entry or exit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {transitTypes.map((type) => {
+                      const Icon = type.icon;
+                      return (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center gap-1.5">
+                            <Icon className={cn("size-3", type.color)} />
+                            <span className="font-medium text-xs">{type.label}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.transitStatus && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-2 w-2" />
+                {errors.transitStatus.message}
+              </p>
+            )}
+          </div>
+
+          {/* Date Selection */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-foreground flex items-center gap-1">
+              <CalendarIcon className="h-2.5 w-2.5" />
+              Date <span className="text-red-500">*</span>
+            </Label>
+            <Controller
+              name="date"
+              control={control}
+              render={({ field }) => (
+                <div className="relative">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "w-full h-7 justify-start text-left font-normal border hover:border-primary/50 transition-colors text-xs",
+                      !field.value && "text-muted-foreground"
+                    )}
+                    onClick={() => setShowCalendar(!showCalendar)}
+                  >
+                    <CalendarIcon className="mr-2 h-2.5 w-2.5" />
+                    {field.value ? formatDate(field.value) : <span>Pick a date</span>}
+                  </Button>
+                  {showCalendar && (
+                    <div className="absolute top-full mt-2 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-1 max-w-xs w-full max-h-68 overflow-y-auto">
+                      <Calendar
+                        selected={field.value}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          setShowCalendar(false);
+                        }}
+                        disabled={isDateDisabled}
+                        className="rounded-lg text-xs p-0"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            />
+            {errors.date && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-2 w-2" />
+                {errors.date.message}
+              </p>
+            )}
+          </div>
+
+          {/* Time Selection */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-foreground flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" />
+              Time <span className="text-red-500">*</span>
+            </Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="space-y-0.5">
+                <Label className="text-xs text-muted-foreground">Hour</Label>
+                <Controller
+                  name="hour"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="h-7 border focus:border-primary/50 transition-colors text-xs">
+                        <SelectValue placeholder="Hour" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-40 overflow-y-auto">
+                        {generateHours().map((hour) => (
+                          <SelectItem 
+                            key={hour.value} 
+                            value={hour.value}
+                            disabled={isHourDisabled(parseInt(hour.value, 10))}
+                          >
+                            {hour.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.hour && (
+                  <p className="text-xs text-red-600">{errors.hour.message}</p>
+                )}
+              </div>
+              <div className="space-y-0.5">
+                <Label className="text-xs text-muted-foreground">Minute</Label>
+                <Controller
+                  name="minute"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="h-7 border focus:border-primary/50 transition-colors text-xs">
+                        <SelectValue placeholder="Minute" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-40 overflow-y-auto">
+                        {generateMinutes().map((minute) => (
+                          <SelectItem 
+                            key={minute.value} 
+                            value={minute.value}
+                            disabled={isMinuteDisabled(parseInt(minute.value, 10))}
+                          >
+                            {minute.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.minute && (
+                  <p className="text-xs text-red-600">{errors.minute.message}</p>
+                )}
+              </div>
+            </div>
+            {selectedHour && selectedMinute && (
+              <div className="mt-1 p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Selected time: <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedHour}:{selectedMinute}</span>
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Purpose */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-foreground">
+              Purpose <span className="text-red-500">*</span>
+            </Label>
+            <Controller
+              name="purpose"
+              control={control}
+              render={({ field }) => (
+                <div className="relative">
+                  <Textarea
+                    {...field}
+                    placeholder="Describe the reason for your entry/exit..."
+                    className="min-h-10 max-h-20 border focus:border-primary/50 transition-colors resize-none text-xs"
+                  />
+                  <div className="absolute bottom-1 right-2 text-xs text-muted-foreground">
+                    {field.value?.length || 0}/500
+                  </div>
+                </div>
+              )}
+            />
+            {errors.purpose && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-2 w-2" />
+                {errors.purpose.message}
+              </p>
+            )}
+          </div>
+
+          {/* Error Display */}
+          {createError && (
+            <div className="flex items-center gap-1.5 p-1.5 rounded bg-destructive/10 border border-destructive/20">
+              <AlertCircle className="size-2.5 text-destructive shrink-0" />
+              <p className="text-xs font-medium text-destructive">{createError}</p>
+            </div>
+          )}
+
+          {/* Success Display */}
+          {createStatus === "succeeded" && (
+            <div className="flex items-center gap-1.5 p-1.5 rounded bg-green-500/10 border border-green-500/20">
+              <CheckCircle className="size-2.5 text-green-600 shrink-0" />
+              <p className="text-xs font-medium text-green-600">Record created successfully!</p>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <Button 
+            type="submit" 
+            disabled={createStatus === "loading"}
+            className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow transition-all duration-200 text-xs"
+          >
+            {createStatus === "loading" ? (
+              <div className="flex items-center gap-1.5">
+                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                <span className="text-xs">Submitting...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="h-2.5 w-2.5" />
+                <span className="text-xs">Submit {transitStatus === "ENTRY" ? "Entry" : "Exit"}</span>
+              </div>
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

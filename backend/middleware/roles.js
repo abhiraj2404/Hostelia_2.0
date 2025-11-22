@@ -37,4 +37,13 @@ export function isProblemInScope(problemDoc, req) {
     return false;
 }
 
+// Compute MongoDB filters for FeeSubmissions based on the requester role
+export function scopedFeeFilter(req) {
+    const role = req.user?.role;
+    if (role === 'student') {
+        return { studentId: req.user._id };
+    }
+    // admin (or any higher role) sees all
+    return {};
+}
 

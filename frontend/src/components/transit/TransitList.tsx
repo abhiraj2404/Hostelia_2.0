@@ -1,0 +1,396 @@
+import { useState } from "react";
+import { useAppSelector } from "@/hooks";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertCircle,
+  Loader2,
+  Users,
+  Search,
+  Filter,
+} from "lucide-react";
+
+interface TransitEntry {
+  _id: string;
+  studentId: {
+    _id: string;
+    name: string;
+    rollNo: string;
+    hostel: string;
+    roomNo: string;
+  };
+  purpose: string;
+  transitStatus: "ENTRY" | "EXIT";
+  date: string;
+  time: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TransitListProps {
+  entries: TransitEntry[];
+  listStatus: "idle" | "loading" | "succeeded" | "failed";
+  listError: string | null;
+  onRefresh: () => void;
+}
+
+export function TransitList({ entries, listStatus, listError, onRefresh }: TransitListProps) {
+  const user = useAppSelector((s) => s.auth.user);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ENTRY" | "EXIT">("ALL");
+  const [hostelFilter, setHostelFilter] = useState<string>("ALL");
+
+  // Get unique hostels from entries
+  const uniqueHostels = Array.from(
+    new Set(entries.map((entry) => entry.studentId.hostel))
+  ).sort();
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+  };
+
+  const formatTime = (timeStr: string) => {
+    return timeStr.slice(0, 5); // HH:MM
+  };
+
+  // Filter entries based on search and filters
+  const filteredEntries = entries.filter((entry) => {
+    const matchesSearch =
+      entry.studentId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.studentId.rollNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.studentId.hostel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.purpose.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "ALL" || entry.transitStatus === statusFilter;
+
+    const matchesHostel =
+      hostelFilter === "ALL" || entry.studentId.hostel === hostelFilter;
+
+    return matchesSearch && matchesStatus && matchesHostel;
+  });
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("ALL");
+    setHostelFilter("ALL");
+  };
+
+  return (
+    <Card className="border-0 overflow-hidden bg-linear-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-2xl hover:shadow-xl transition-all duration-300">
+      <CardHeader className="bg-linear-to-r from-gray-600 to-gray-400 text-white space-y-4 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-2">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm">
+                <Users className="size-5 text-white" />
+              </div>
+              <span className="font-bold">Transit Register</span>
+            </CardTitle>
+            <CardDescription className="text-gray-300 text-sm">
+              Complete record of all student entry and exit transactions
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            disabled={listStatus === "loading"}
+            className="border-2 border-white/30 bg-white/10 text-white hover:bg-white hover:text-gray-900 transition-all backdrop-blur-sm font-semibold"
+          >
+            {listStatus === "loading" ? (
+              <Loader2 className="size-4 animate-spin mr-2" />
+            ) : null}
+            Refresh Records
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Search */}
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              placeholder="Search name, roll, hostel..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-11 border-2 border-white/30 bg-white/10 text-white placeholder:text-gray-300 focus:bg-white/20 focus:border-white transition-all backdrop-blur-sm"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+            <SelectTrigger className="h-11 border-2 border-white/30 bg-white/10 text-white focus:bg-white/20 focus:border-white transition-all backdrop-blur-sm">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Status</SelectItem>
+              <SelectItem value="ENTRY">Entry Only</SelectItem>
+              <SelectItem value="EXIT">Exit Only</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Hostel Filter (hide for warden) */}
+          {user?.role !== "warden" && (
+            <Select value={hostelFilter} onValueChange={setHostelFilter}>
+              <SelectTrigger className="h-11 border-2 border-white/30 bg-white/10 text-white focus:bg-white/20 focus:border-white transition-all backdrop-blur-sm">
+                <SelectValue placeholder="Filter by hostel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Hostels</SelectItem>
+                {uniqueHostels.map((hostel) => (
+                  <SelectItem key={hostel} value={hostel}>
+                    {hostel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {/* Active Filters Display */}
+        {(searchTerm || statusFilter !== "ALL" || hostelFilter !== "ALL") && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-white/20">
+            <div className="flex items-center gap-2 text-sm font-medium text-white">
+              <Filter className="size-4" />
+              <span>
+                Showing <span className="font-bold bg-white/20 px-2 py-0.5 rounded">{filteredEntries.length}</span> of {entries.length} records
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="h-9 px-4 text-sm bg-white/10 text-white hover:bg-white hover:text-gray-900 border border-white/30 transition-all font-semibold"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
+      </CardHeader>
+
+      <CardContent className="p-0">
+        {listStatus === "loading" ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-white rounded-full animate-spin"></div>
+            </div>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Loading transit records...</p>
+          </div>
+        ) : listError ? (
+          <div className="m-6">
+            <div className="flex items-start gap-3 p-5 rounded-xl bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900">
+              <AlertCircle className="size-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-red-900 dark:text-red-200">Error loading records</p>
+                <p className="text-sm text-red-700 dark:text-red-400 mt-1">{listError}</p>
+              </div>
+            </div>
+          </div>
+        ) : filteredEntries.length === 0 ? (
+          <div className="text-center py-20 px-4 space-y-4">
+            {entries.length === 0 ? (
+              <>
+                <div className="mx-auto w-20 h-20 bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Users className="size-10 text-gray-400 dark:text-gray-600" />
+                </div>
+                <div className="space-y-2 max-w-md mx-auto">
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    No Transit Records Yet
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Student entry and exit records will appear here once they start logging their transit movements
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto w-20 h-20 bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Search className="size-10 text-gray-400 dark:text-gray-600" />
+                </div>
+                <div className="space-y-2 max-w-md mx-auto">
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    No Matching Records Found
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Try adjusting your search terms or filters to find what you're looking for
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View - Hidden on Mobile */}
+            <div className="hidden lg:block overflow-hidden">
+              <div className="overflow-x-auto">
+                <div className="max-h-[650px] overflow-y-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-gray-100 dark:bg-gray-900 z-10 shadow-sm">
+                      <TableRow className="border-b-2 border-gray-300 dark:border-gray-700">
+                        <TableHead className="w-14 font-bold text-gray-900 dark:text-white">#</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white min-w-[150px]">Student</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white">Roll No</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white">Hostel</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white">Room</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white">Date</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white">Time</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white">Type</TableHead>
+                        <TableHead className="font-bold text-gray-900 dark:text-white min-w-[200px]">Purpose</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEntries.map((entry, index) => {
+                        const isEntry = entry.transitStatus === "ENTRY";
+                        return (
+                          <TableRow 
+                            key={entry._id}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-800"
+                          >
+                            <TableCell className="font-bold text-gray-500 dark:text-gray-500">
+                              {String(index + 1).padStart(2, '0')}
+                            </TableCell>
+                            <TableCell className="font-semibold text-gray-900 dark:text-gray-100">
+                              <div className="max-w-[180px] truncate">{entry.studentId.name}</div>
+                            </TableCell>
+                            <TableCell className="font-medium text-gray-800 dark:text-gray-200">
+                              {entry.studentId.rollNo}
+                            </TableCell>
+                            <TableCell className="text-gray-700 dark:text-gray-300">
+                              {entry.studentId.hostel}
+                            </TableCell>
+                            <TableCell className="text-gray-700 dark:text-gray-300 text-center">
+                              {entry.studentId.roomNo}
+                            </TableCell>
+                            <TableCell className="font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                              {formatDate(entry.date)}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              {formatTime(entry.time)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={isEntry ? "default" : "outline"}
+                                className={
+                                  isEntry
+                                    ? "bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-600 font-semibold px-3 py-1 shadow-sm"
+                                    : "border-2 border-orange-600 text-orange-700 hover:bg-orange-600 hover:text-white dark:border-orange-500 dark:text-orange-400 dark:hover:bg-orange-500 dark:hover:text-white font-semibold px-3 py-1"
+                                }
+                              >
+                                {entry.transitStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-700 dark:text-gray-300">
+                              <div className="text-sm leading-relaxed max-w-[220px] wrap-break-word">
+                                {entry.purpose}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Card View - Hidden on Desktop */}
+            <div className="lg:hidden p-4 space-y-4 max-h-[650px] overflow-y-auto">
+              {filteredEntries.map((entry, index) => {
+                const isEntry = entry.transitStatus === "ENTRY";
+                return (
+                  <Card key={entry._id} className="border-2 border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-all duration-200">
+                    <CardContent className="p-4 space-y-3">
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300 text-sm shadow-sm">
+                            {String(index + 1).padStart(2, '0')}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 dark:text-gray-100 text-base">
+                              {entry.studentId.name}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                              {entry.studentId.rollNo}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={isEntry ? "default" : "outline"}
+                          className={
+                            isEntry
+                              ? "bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 font-semibold px-3 py-1.5 text-xs shadow-sm"
+                              : "border-2 border-orange-600 text-orange-700 hover:bg-orange-600 hover:text-white dark:border-orange-500 dark:text-orange-400 font-semibold px-3 py-1.5 text-xs"
+                          }
+                        >
+                          {entry.transitStatus}
+                        </Badge>
+                      </div>
+
+                      {/* Info Grid */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200 dark:border-gray-800">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide">Hostel</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{entry.studentId.hostel}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide">Room</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{entry.studentId.roomNo}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide">Date</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{formatDate(entry.date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide">Time</p>
+                          <p className="text-sm font-mono font-semibold text-gray-900 dark:text-gray-100 mt-0.5">{formatTime(entry.time)}</p>
+                        </div>
+                      </div>
+
+                      {/* Purpose */}
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1.5">Purpose</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed wrap-break-word">
+                          {entry.purpose}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -14,18 +14,21 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { logout } from "@/features/auth/authSlice";
 import { apiClient } from "@/lib/api-client";
 
-const navItems = [
-  { label: "Home", to: "/" },
-  { label: "About", to: "/about" },
-  { label: "Contact", to: "/contact" },
-  { label: "Complaints", to: "/student/complaints" },
-  { label: "Mess", to: "/student/mess" },
-];
-
 function Navbar() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+
+  // navItems must be inside to access user
+  const navItems = [
+    { label: "Home", to: "/" },
+    { label: "About", to: "/about" },
+    { label: "Contact", to: "/contact" },
+    { label: "Complaints", to: "/student/complaints" },
+    { label: "Mess", to: "/mess" },
+    { label: "Entry/Exit", to: "/transit" },
+    { label: "Announcements", to: "/announcements" },
+  ];
 
   const handleLogout = async () => {
     try {
