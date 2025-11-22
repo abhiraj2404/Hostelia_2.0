@@ -86,7 +86,6 @@ export default function Signup() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [step1Data, setStep1Data] = useState<Step1FormData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
 
   // Step 1 Form
@@ -123,7 +122,6 @@ export default function Signup() {
 
       if (response.data.success) {
         setStep1Data(data);
-        setOtpSent(true);
         setResendCountdown(60);
         setCurrentStep(2);
         setSuccessMessage("OTP sent to your email");

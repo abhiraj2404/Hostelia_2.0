@@ -1,7 +1,11 @@
-import React from "react";
+const features = [
+  "Secure Authentication (OTP / College Email)",
+  "Role-Based Dashboards",
+  "Problem Tracking with Upvotes",
+  "Email Integration (Gmail API)"
+];
 
-
-function About({ loggedIn = false }) {
+function About() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       
@@ -35,10 +39,9 @@ function About({ loggedIn = false }) {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-4">Core Features</h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <li className="bg-white p-4 rounded shadow-sm">Secure Authentication (OTP / College Email)</li>
-            <li className="bg-white p-4 rounded shadow-sm">Role-Based Dashboards</li>
-            <li className="bg-white p-4 rounded shadow-sm">Problem Tracking with Upvotes</li>
-            <li className="bg-white p-4 rounded shadow-sm">Email Integration (Gmail API)</li>
+            {features.map((feature, index) => (
+              <li key={index} className="bg-white p-4 rounded shadow-sm">{feature}</li>
+            ))}
           </ul>
         </section>
 
