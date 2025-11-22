@@ -1,35 +1,52 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 /**
- * Create and configure email transporter
+ * Get or create Resend client instance
+ * Uses EMAIL_PASS as the Resend API key (Resend API keys start with 're_')
+ * Initialized lazily to ensure environment variables are loaded
  */
-const createTransporter = () => {
-    return nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || "smtp.resend.com",
-        port: parseInt(process.env.EMAIL_PORT || "587"),
-        secure: process.env.EMAIL_SECURE === "true",
-        auth: {
-            user: "resend",
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+let resendClient = null;
+
+const getResendClient = () => {
+    if (!resendClient) {
+        const apiKey = process.env.EMAIL_PASS;
+        if (!apiKey) {
+            throw new Error("EMAIL_PASS environment variable is not set. Please set it to your Resend API key.");
+        }
+        resendClient = new Resend(apiKey);
+    }
+    return resendClient;
 };
 
 /**
- * Send email using the configured transporter
+ * Send email using Resend
  * @param {Object} mailOptions - Email options (to, subject, html, from, etc.)
- * @param {Object} options - Additional options (debug, etc.)
- * @returns {Promise} - Result from nodemailer sendMail
+ * @param {Object} options - Additional options (debug, etc.) - currently unused but kept for compatibility
+ * @returns {Promise} - Result from Resend API (formatted to be compatible with nodemailer response)
  */
 export const sendEmail = async (mailOptions, options = {}) => {
-    const transporter = createTransporter();
+    try {
+        const resend = getResendClient();
+        const { data, error } = await resend.emails.send({
+            from: mailOptions.from,
+            to: mailOptions.to,
+            subject: mailOptions.subject,
+            html: mailOptions.html,
+        });
 
-    // Add debug option if specified
-    if (options.debug) {
-        transporter.options.debug = true;
+        if (error) {
+            throw new Error(`Resend API error: ${error.message || JSON.stringify(error)}`);
+        }
+
+        // Return data in a format compatible with nodemailer response
+        // Controllers expect messageId property
+        return {
+            messageId: data?.id || data?.messageId,
+            ...data,
+        };
+    } catch (error) {
+        throw error;
     }
-
-    return await transporter.sendMail(mailOptions);
 };
 
 /**
