@@ -34,18 +34,14 @@ function ComplaintsListPage() {
   const isWarden = role === "warden";
   const isAdmin = role === "admin";
 
-  const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
   useEffect(() => {
     if (isAuthenticated) {
-      const extendedFilters = {
-        ...filters,
-        ...(query && { query }),
-      };
-      dispatch(fetchComplaints(extendedFilters));
+      // Fetch all complaints without query parameter - filtering happens client-side
+      dispatch(fetchComplaints(filters));
     }
-  }, [dispatch, isAuthenticated, filters, query]);
+  }, [dispatch, isAuthenticated, filters]);
 
   useEffect(() => {
     if (error) {
@@ -54,6 +50,7 @@ function ComplaintsListPage() {
   }, [error]);
 
   const statusCounts = useMemo(() => {
+    // Count all items regardless of filters for metrics
     const pending = items.filter((c) => c.status === "Pending").length;
     const resolved = items.filter((c) => c.status === "Resolved").length;
     const awaiting = items.filter((c) => c.status === "ToBeConfirmed").length;
@@ -72,17 +69,37 @@ function ComplaintsListPage() {
     [statusCounts]
   );
 
-  const hasActiveFilters = Boolean(filters.status || filters.category || filters.hostel || query);
+  const hasActiveFilters = Boolean(
+    filters.status || filters.category || filters.hostel || filters.query
+  );
 
   const visibleItems = useMemo(() => {
-    // Backend handles search filtering, we only sort here
-    const sorted = [...items].sort((a, b) => {
+    let filtered = [...items];
+
+    // 1. Apply status filter
+    if (filters.status && filters.status !== "all") {
+      filtered = filtered.filter((complaint) => complaint.status === filters.status);
+    }
+
+    // 2. Apply category filter
+    if (filters.category && filters.category !== "all") {
+      filtered = filtered.filter((complaint) => complaint.category === filters.category);
+    }
+
+    // 3. Apply hostel filter (admin only)
+    if (isAdmin && filters.hostel && filters.hostel !== "all") {
+      filtered = filtered.filter((complaint) => complaint.hostel === filters.hostel);
+    }
+
+    // 4. Sort by date
+    const sorted = filtered.sort((a, b) => {
       const aTime = new Date(a.createdAt).getTime();
       const bTime = new Date(b.createdAt).getTime();
       return sort === "newest" ? bTime - aTime : aTime - bTime;
     });
+
     return sorted;
-  }, [items, sort]);
+  }, [items, filters.status, filters.category, filters.hostel, isAdmin, sort]);
 
   const createPath = "/complaints/new";
   const detailPath = (id: string) => `/complaints/${id}`;
@@ -94,12 +111,22 @@ function ComplaintsListPage() {
     dispatch(setFilters({ ...filters, ...patch }));
   };
 
+  const handleQueryChange = (value: string) => {
+    const trimmed = value.trim();
+    dispatch(
+      setFilters({
+        ...filters,
+        query: trimmed.length ? trimmed : undefined,
+      })
+    );
+  };
+
   const clearFilters = () => {
-    setQuery("");
     dispatch(
       setFilters({
         status: undefined,
         category: undefined,
+        query: undefined,
         ...(isAdmin ? { hostel: undefined } : {}),
       })
     );
@@ -159,9 +186,9 @@ function ComplaintsListPage() {
 
         <ComplaintMetrics metrics={metrics} />
 
-         <ComplaintFilterBar
-          query={query}
-          onQueryChange={setQuery}
+        <ComplaintFilterBar
+          query={filters.query ?? ""}
+          onQueryChange={handleQueryChange}
           status={filters.status}
           category={filters.category}
           hostel={filters.hostel}

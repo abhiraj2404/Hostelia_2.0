@@ -9,6 +9,7 @@ import ComplaintCreatePage from "./pages/complaints/ComplaintCreatePage";
 import ComplaintDetailPage from "./pages/complaints/ComplaintDetailPage";
 import ComplaintsListPage from "./pages/complaints/ComplaintsListPage";
 import Contact from "./pages/Contact";
+import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import MessPage from "./pages/MessPage";
@@ -49,6 +50,7 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={onlyGuests(<Login />)} />

@@ -147,16 +147,29 @@ export function ComplaintVerificationCard({
             </div>
           </>
         ) : (
-          <div className="rounded-lg bg-muted/50 p-4">
-            <p className="text-sm">
-              {complaint.status === "Pending" &&
-                "Waiting for warden to review and resolve this complaint."}
-              {complaint.status === "Resolved" &&
-                "This complaint has been confirmed as resolved."}
-              {complaint.status === "Rejected" &&
-                "This complaint was rejected by the warden."}
-            </p>
-          </div>
+          <>
+            {complaint.status === "Pending" && (
+              <div className="rounded-lg bg-muted/50 p-4 text-center">
+                <p className="text-sm font-medium">
+                  ⏳ Waiting for warden to review and resolve this complaint.
+                </p>
+              </div>
+            )}
+            {complaint.status === "Resolved" && (
+              <div className="rounded-lg bg-green-50 p-4 text-center dark:bg-green-950/20">
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  ✓ This complaint has been confirmed as resolved.
+                </p>
+              </div>
+            )}
+            {complaint.status === "Rejected" && (
+              <div className="rounded-lg bg-red-50 p-4 text-center dark:bg-red-950/20">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  ✗ This complaint was rejected by the warden.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

@@ -73,8 +73,8 @@ export default function Login() {
 
         dispatch(loginSuccess(userData));
 
-        // Navigate to the intended destination or home
-        const from = (location.state as { from?: string })?.from || "/";
+        // Navigate to dashboard after successful login
+        const from = (location.state as { from?: string })?.from || "/dashboard";
         navigate(from, { replace: true });
         toast.success("Welcome back!");
       } else {

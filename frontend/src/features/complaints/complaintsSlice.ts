@@ -42,6 +42,7 @@ export interface Complaint {
 }
 
 export interface ComplaintsFilters {
+  query?: string;
   status?: string;
   category?: string;
   hostel?: string;

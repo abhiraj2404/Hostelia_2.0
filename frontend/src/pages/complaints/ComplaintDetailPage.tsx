@@ -189,21 +189,41 @@ function ComplaintDetailPage() {
             <div className="space-y-6">
               <ComplaintProgressTimeline complaint={selected} />
 
-              {isStudent && (
-                <ComplaintVerificationCard
-                  complaint={selected}
-                  canVerify={canVerify}
-                  onVerify={handleVerification}
-                />
-              )}
+              {selected.status === "Resolved" ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Complaint Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-lg bg-green-50 p-4 text-center dark:bg-green-950/20">
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        ✓ This complaint has been resolved
+                      </p>
+                      <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                        The student has confirmed the resolution
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {isStudent && (
+                    <ComplaintVerificationCard
+                      complaint={selected}
+                      canVerify={canVerify}
+                      onVerify={handleVerification}
+                    />
+                  )}
 
-              {(isWarden || isAdmin) && (
-                <ComplaintWardenToolsCard
-                  complaint={selected}
-                  statusLoading={statusLoading}
-                  onUpdate={handleStatusUpdate}
-                  error={commentStatus !== "failed" ? error : null}
-                />
+                  {(isWarden || isAdmin) && (
+                    <ComplaintWardenToolsCard
+                      complaint={selected}
+                      statusLoading={statusLoading}
+                      onUpdate={handleStatusUpdate}
+                      error={commentStatus !== "failed" ? error : null}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>
