@@ -1,11 +1,11 @@
 import z from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import User from "../models/user.model.js";
 import OTP from "../models/otp.model.js";
 import FeeSubmission from "../models/feeSubmission.model.js";
 import { logger } from "../middleware/logger.js";
+import { sendEmail, getEmailUser } from "../utils/email-client.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
@@ -111,23 +111,9 @@ export const generateOTP = async (req, res) => {
         await OTP.findOneAndDelete({ email });
         await OTP.create({ email, otp });
 
-        // Set up email transporter
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || "smtp.gmail.com",
-            port: parseInt(process.env.EMAIL_PORT || "587"),
-            secure: process.env.EMAIL_SECURE === "true",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-        });
-
         // Email content
         const mailOptions = {
-            from: `"Hostelia - IIIT Sri City" <${process.env.EMAIL_USER}>`,
+            from: `"Hostelia - IIIT Sri City" <${getEmailUser()}>`,
             to: email,
             subject: "Email Verification OTP for Hostelia",
             html: `
@@ -146,7 +132,7 @@ export const generateOTP = async (req, res) => {
         };
 
         // Send email
-        await transporter.sendMail(mailOptions);
+        await sendEmail(mailOptions);
 
         return res.status(200).json({
             success: true,
