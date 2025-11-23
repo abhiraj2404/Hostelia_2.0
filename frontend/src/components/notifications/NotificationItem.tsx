@@ -29,7 +29,8 @@ export function NotificationItem({ notification, onItemClick }: NotificationItem
       problem: "Problem",
       announcement: "Announcement",
       fee: "Fee",
-      transit: "Transit"
+      transit: "Transit",
+      mess: "Mess"
     };
     return labels[type] || type;
   };

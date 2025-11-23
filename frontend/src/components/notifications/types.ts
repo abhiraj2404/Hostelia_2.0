@@ -2,7 +2,7 @@ export interface Notification {
   _id: string;
   id: string;
   userId: string;
-  type: "problem_created" | "problem_status_updated" | "announcement_created";
+  type: "problem_created" | "problem_status_updated" | "announcement_created" | "mess_feedback_submitted";
   title: string;
   message: string;
   relatedEntityId: string;

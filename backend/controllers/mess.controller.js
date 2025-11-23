@@ -1,7 +1,9 @@
 import menuData from "../data/menu.json" with { type: 'json' };
 import Feedback from "../models/feedback.model.js";
+import User from "../models/user.model.js";
 import z from "zod";
 import { logger } from "../middleware/logger.js";
+import { notifyUsers } from "../utils/notificationService.js";
 
 const submitFeedbackSchema = z.object({
     date: z.coerce.date(),
@@ -52,6 +54,44 @@ export const submitFeedback = async (req, res) => {
         });
 
         logger.info("Feedback submitted", { userId: req.user._id, mealType, rating });
+
+        // Notify admins and wardens about the new mess feedback
+        try {
+            // Find all admins
+            const admins = await User.find({ role: 'admin' }).select('_id');
+            const adminIds = admins.map((admin) => admin._id.toString());
+
+            // Find wardens for the student's hostel
+            const studentHostel = req.user.hostel;
+            const wardens = await User.find({
+                role: 'warden',
+                hostel: studentHostel,
+            }).select('_id');
+            const wardenIds = wardens.map((warden) => warden._id.toString());
+
+            // Combine admin and warden IDs
+            const notifyUserIds = [ ...adminIds, ...wardenIds ];
+
+            if (notifyUserIds.length > 0) {
+                await notifyUsers(notifyUserIds, {
+                    type: 'mess_feedback_submitted',
+                    title: 'New Mess Feedback',
+                    message: `${req.user.name} (${req.user.hostel}) submitted ${mealType} feedback with rating ${rating}/5`,
+                    relatedEntityId: feedback._id,
+                    relatedEntityType: 'mess',
+                });
+                logger.info('Notifications sent for mess feedback submission', {
+                    feedbackId: feedback._id.toString(),
+                    notifiedUsers: notifyUserIds.length,
+                });
+            }
+        } catch (notifError) {
+            // Log error but don't fail the request
+            logger.error('Failed to send notifications for mess feedback submission', {
+                error: notifError.message,
+                feedbackId: feedback._id.toString(),
+            });
+        }
 
         return res.status(201).json({
             success: true,
