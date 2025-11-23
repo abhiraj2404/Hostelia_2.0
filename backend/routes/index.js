@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authRouter from "./auth.routes.js";
+import userRouter from "./user.routes.js";
 import messRouter from "./mess.routes.js";
 import problemRouter from "./problem.routes.js";
 import announcementRouter from "./announcement.routes.js";
@@ -13,6 +14,7 @@ const router = Router();
 
 // API routes
 router.use("/auth", authRouter);
+router.use("/user", authMiddleware, userRouter);
 router.use("/mess", authMiddleware, messRouter);
 router.use("/problem", authMiddleware, problemRouter);
 router.use("/announcement", authMiddleware, announcementRouter);
