@@ -334,7 +334,7 @@ function MomentumCTA() {
               variant="outline"
               className="sm:w-auto border-primary-foreground/60 text-primary-foreground bg-white/10 hover:bg-white/20"
             >
-              <Link to="/student/complaints">
+              <Link to="/complaints">
                 Explore live portal
                 <ArrowUpRight className="ml-2 h-4 w-4" />
               </Link>

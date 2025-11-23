@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 const footerLinks = [
-  { label: "Complaints", to: "/student/complaints" },
+  { label: "Complaints", to: "/complaints" },
   { label: "About", to: "/about" },
   { label: "Support", to: "/contact" },
 ];

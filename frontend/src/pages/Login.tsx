@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getApiErrorMessage } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   authFailure,
 } from "@/features/auth/authSlice";
 import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
 
 // Validation schema for login
 const loginSchema = z.object({
@@ -75,16 +76,15 @@ export default function Login() {
         // Navigate to the intended destination or home
         const from = (location.state as { from?: string })?.from || "/";
         navigate(from, { replace: true });
+        toast.success("Welcome back!");
       } else {
         throw new Error(response.data.message || "Login failed");
       }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Network error. Please try again.";
+    } catch (error: unknown) {
+      const errorMessage = getApiErrorMessage(error, "Network error. Please try again.");
       setApiError(errorMessage);
       dispatch(authFailure(errorMessage));
+      toast.error(errorMessage);
     }
   };
 
@@ -92,8 +92,8 @@ export default function Login() {
   const isFormLoading = isSubmitting || isLoading;
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-3xl">
+    <div className="min-h-screen bg-background p-6 md:p-10">
+      <div className="mx-auto w-full max-w-sm md:max-w-3xl">
         <div className={cn("flex flex-col gap-6")}>
           <Card className="overflow-hidden border-2">
             <CardContent className="grid p-0 md:grid-cols-2">
@@ -134,12 +134,12 @@ export default function Login() {
                   <div className="grid gap-2">
                     <div className="flex items-center">
                       <Label htmlFor="password">Password</Label>
-                      <a
-                        href="#"
+                      <Link
+                        to="/contact"
                         className="ml-auto text-sm underline-offset-2 hover:underline"
                       >
                         Forgot your password?
-                      </a>
+                      </Link>
                     </div>
                     <div className="relative">
                       <Input

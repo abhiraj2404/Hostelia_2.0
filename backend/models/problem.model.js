@@ -1,9 +1,13 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const commentSubSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    role: { type: String, enum: [ 'student', 'warden', 'admin' ], required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    role: {
+      type: String,
+      enum: ["student", "warden", "admin"],
+      required: true,
+    },
     message: { type: String, required: true, trim: true, maxlength: 2000 },
     createdAt: { type: Date, default: Date.now },
   },
@@ -26,7 +30,7 @@ const problemSchema = new mongoose.Schema(
     },
     hostel: {
       type: String,
-      enum: [ 'BH-1', 'BH-2', 'BH-3', 'BH-4' ],
+      enum: ["BH-1", "BH-2", "BH-3", "BH-4"],
       required: true,
       index: true,
     },
@@ -45,25 +49,24 @@ const problemSchema = new mongoose.Schema(
         "Internet",
         "Furniture",
         "Pest Control",
-        "Beating",
         "Other",
       ],
       required: true,
     },
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
       index: true,
     },
     status: {
       type: String,
-      enum: [ "Pending", "Resolved", "Rejected", "ToBeConfirmed" ],
+      enum: ["Pending", "Resolved", "Rejected", "ToBeConfirmed"],
       default: "Pending",
     },
     studentStatus: {
       type: String,
-      enum: [ "NotResolved", "Resolved", "Rejected" ],
+      enum: ["NotResolved", "Resolved", "Rejected"],
       default: "NotResolved",
     },
     studentVerifiedAt: {
@@ -71,7 +74,7 @@ const problemSchema = new mongoose.Schema(
       default: null,
     },
     comments: {
-      type: [ commentSubSchema ],
+      type: [commentSubSchema],
       default: [],
     },
     resolvedAt: {

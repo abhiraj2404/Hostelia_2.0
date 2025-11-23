@@ -1,74 +1,172 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Users, Shield, Zap, Mail } from "lucide-react";
+
 const features = [
-  "Secure Authentication (OTP / College Email)",
-  "Role-Based Dashboards",
-  "Problem Tracking with Upvotes",
-  "Email Integration (Gmail API)"
+  {
+    icon: <Shield className="h-5 w-5 text-blue-500" />,
+    title: "Secure Authentication",
+    description: "OTP-based login with college email integration.",
+  },
+  {
+    icon: <Users className="h-5 w-5 text-green-500" />,
+    title: "Role-Based Dashboards",
+    description: "Custom views for students, wardens, and admins.",
+  },
+  {
+    icon: <Zap className="h-5 w-5 text-yellow-500" />,
+    title: "Problem Tracking",
+    description: "Report issues, upvote problems, and track status.",
+  },
+  {
+    icon: <Mail className="h-5 w-5 text-purple-500" />,
+    title: "Email Integration",
+    description: "Automated notifications via Gmail API.",
+  },
+];
+
+const techStack = [
+  "Node.js",
+  "Express",
+  "MongoDB",
+  "React",
+  "Redux Toolkit",
+  "Tailwind CSS",
+  "Shadcn UI",
+  "Socket.io",
 ];
 
 function About() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      
-
-      <header className="bg-blue-600 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold">HOSTELIA</h1>
-          <p className="mt-2">Revolutionizing Hostel Management with Innovation</p>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Hero Section */}
+      <header className="py-20 border-b">
+        <div className="container mx-auto px-4 text-center max-w-4xl">
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6">
+            HOSTELIA
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Revolutionizing Hostel Management with Innovation
+          </p>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-10">
-        <section className="bg-white rounded shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">Our Mission</h2>
-          <p>
-            At <strong className="text-blue-600">Hostelia</strong>, we simplify
-            hostel management to improve communication, security, and
-            administration for students, wardens, and admins.
-          </p>
-        </section>
+      <main className="container mx-auto px-4 py-10 max-w-5xl space-y-10">
+        {/* Mission & About Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold tracking-tight">Our Mission</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              At <strong className="text-primary font-semibold">Hostelia</strong>, we
+              simplify hostel management to improve communication, security, and
+              administration for students, wardens, and admins.
+            </p>
+          </div>
 
-        <section className="bg-white rounded shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">About The Project</h2>
-          <p>
-            A user-friendly hostel management app where students can report
-            issues, pay fees, and access policies; wardens manage attendance
-            and complaints; admins oversee room allocation and fee tracking.
-          </p>
-        </section>
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold tracking-tight">About The Project</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              A user-friendly hostel management app where students can report
+              issues, pay fees, and access policies; wardens manage attendance
+              and complaints; admins oversee room allocation and fee tracking.
+            </p>
+          </div>
+        </div>
 
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Core Features</h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Core Features */}
+        <section>
+          <h2 className="text-3xl font-bold text-center mb-8">Core Features</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <li key={index} className="bg-white p-4 rounded shadow-sm">{feature}</li>
+              <Card key={index} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="mb-2">{feature.icon}</div>
+                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>{feature.description}</CardDescription>
+                </CardContent>
+              </Card>
             ))}
-          </ul>
+          </div>
         </section>
 
-        <section className="bg-white rounded shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-2">Technology Stack</h2>
-          <p>Node.js, Express, MongoDB, Socket.io, EJS, Tailwind CSS, Gmail API</p>
+        {/* Technology Stack */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Technology Stack</CardTitle>
+              <CardDescription>
+                Built with modern web technologies for performance and
+                scalability.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {techStack.map((tech, index) => (
+                  <Badge key={index} variant="secondary" className="text-sm">
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Users & Roles</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-white p-4 rounded shadow-sm">
-              <h3 className="font-medium">Hostel Office (Admin)</h3>
-              <p className="text-sm mt-1">Oversee operations, room allocation, fee tracking</p>
-            </div>
-            <div className="bg-white p-4 rounded shadow-sm">
-              <h3 className="font-medium">Hostel Wardens</h3>
-              <p className="text-sm mt-1">Manage complaints, announcements, mess updates</p>
-            </div>
-            <div className="bg-white p-4 rounded shadow-sm">
-              <h3 className="font-medium">Students</h3>
-              <p className="text-sm mt-1">Report issues, upvote problems, pay fees</p>
-            </div>
+        {/* Users & Roles */}
+        <section>
+          <h2 className="text-3xl font-bold text-center mb-8">Users & Roles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Hostel Office (Admin)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Oversee operations, room allocation, and fee tracking.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Hostel Wardens
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Manage complaints, announcements, and mess updates.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Students
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Report issues, upvote problems, and pay fees.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
       </main>
-
     </div>
   );
 }

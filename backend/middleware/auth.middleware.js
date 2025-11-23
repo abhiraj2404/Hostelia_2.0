@@ -23,7 +23,9 @@ export const authMiddleware = async (req, res, next) => {
         const decoded = jwt.verify(token, JWT_SECRET);
 
         // Load user and attach to req.user with required fields
-        const user = await User.findById(decoded.userID).select("name email role hostel");
+        const user = await User.findById(decoded.userID).select(
+            "name email role hostel roomNo rollNo year"
+        );
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -34,6 +36,9 @@ export const authMiddleware = async (req, res, next) => {
             _id: user._id,
             role: user.role,
             hostel: user.hostel,
+            roomNo: user.roomNo,
+            rollNo: user.rollNo,
+            year: user.year,
             name: user.name,
             email: user.email,
         };

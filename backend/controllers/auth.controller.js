@@ -440,6 +440,52 @@ export const login = async (req, res) => {
 };
 
 /**
+ * Get current authenticated user
+ */
+export const getCurrentUser = async (req, res) => {
+    try {
+        const userId = req.user?._id;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
+
+        const user = await User.findById(userId).select(
+            "name email role hostel roomNo rollNo year"
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            user: {
+                userId: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                hostel: user.hostel,
+                roomNo: user.roomNo,
+                rollNo: user.rollNo,
+                year: user.year,
+            },
+        });
+    } catch (error) {
+        logger.error("getCurrentUser error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to load user profile",
+        });
+    }
+};
+
+/**
  * User logout
  */
 export const logout = (req, res) => {
