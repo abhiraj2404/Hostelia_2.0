@@ -3,6 +3,8 @@ import { uploadBufferToCloudinary } from "../config/cloudinary.js";
 import { logger } from "../middleware/logger.js";
 import { isProblemInScope, scopedProblemsFilter } from "../middleware/roles.js";
 import Problem from "../models/problem.model.js";
+import User from "../models/user.model.js";
+import { notifyUsers } from "../utils/notificationService.js";
 
 const createProblemSchema = z.object({
   problemTitle: z.string().min(3).max(200),
@@ -67,6 +69,44 @@ export async function createProblem(req, res) {
       problemTitle: parsed.data.problemTitle,
       studentId: userId.toString(),
     });
+
+    // Notify admins and wardens about the new problem
+    try {
+      // Find all admins
+      const admins = await User.find({ role: "admin" }).select("_id");
+      const adminIds = admins.map((admin) => admin._id.toString());
+
+      // Find wardens for the problem's hostel
+      const wardens = await User.find({
+        role: "warden",
+        hostel: parsed.data.hostel,
+      }).select("_id");
+      const wardenIds = wardens.map((warden) => warden._id.toString());
+
+      // Combine admin and warden IDs
+      const notifyUserIds = [...adminIds, ...wardenIds];
+
+      if (notifyUserIds.length > 0) {
+        await notifyUsers(notifyUserIds, {
+          type: "problem_created",
+          title: "New Problem Reported",
+          message: `A new ${parsed.data.category} problem has been reported in ${parsed.data.hostel}, Room ${parsed.data.roomNo}: ${parsed.data.problemTitle}`,
+          relatedEntityId: problem._id,
+          relatedEntityType: "problem",
+        });
+        logger.info("Notifications sent for problem creation", {
+          problemId: problem._id.toString(),
+          notifiedUsers: notifyUserIds.length,
+        });
+      }
+    } catch (notifError) {
+      // Log error but don't fail the request
+      logger.error("Failed to send notifications for problem creation", {
+        error: notifError.message,
+        problemId: problem._id.toString(),
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: "Problem created successfully",
@@ -77,11 +117,13 @@ export async function createProblem(req, res) {
       error: err.message,
       userId: userId?.toString?.(),
     });
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create problem",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to create problem",
+        error: err.message,
+      });
   }
 }
 
@@ -222,26 +264,50 @@ export async function updateProblemStatus(req, res) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const newStatus = parsed.data.status;
-    problem.status = newStatus;
-
-    // When warden marks as Resolved, change to ToBeConfirmed for student verification
-    if (newStatus === "Resolved") {
-      problem.status = "ToBeConfirmed";
+    const oldStatus = problem.status;
+    problem.status = parsed.data.status;
+    if (parsed.data.status === "Resolved" && !problem.resolvedAt) {
       problem.resolvedAt = new Date();
     }
-
-    // Reset studentStatus when warden changes status
-    if (newStatus === "Pending") {
-      problem.studentStatus = "NotResolved";
-    }
-
     await problem.save();
     logger.info("Problem status updated", {
       problemId: problem._id.toString(),
       status: problem.status,
       actorId: req.user._id.toString(),
     });
+
+    // Notify the student who created the problem about status update
+    try {
+      const studentId = problem.studentId.toString();
+      const statusMessages = {
+        Pending: "is pending review",
+        Resolved: "has been resolved",
+        Rejected: "has been rejected",
+        ToBeConfirmed: "needs your confirmation",
+      };
+      const statusMessage =
+        statusMessages[parsed.data.status] || "status has been updated";
+
+      await notifyUsers([studentId], {
+        type: "problem_status_updated",
+        title: "Problem Status Updated",
+        message: `Your problem "${problem.problemTitle}" ${statusMessage}.`,
+        relatedEntityId: problem._id,
+        relatedEntityType: "problem",
+      });
+      logger.info("Notification sent for problem status update", {
+        problemId: problem._id.toString(),
+        studentId,
+        newStatus: parsed.data.status,
+      });
+    } catch (notifError) {
+      // Log error but don't fail the request
+      logger.error("Failed to send notification for problem status update", {
+        error: notifError.message,
+        problemId: problem._id.toString(),
+      });
+    }
+
     return res
       .status(200)
       .json({ success: true, message: "Status updated", problem });
@@ -250,11 +316,13 @@ export async function updateProblemStatus(req, res) {
       error: err.message,
       problemId: id,
     });
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update status",
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to update status",
+        error: err.message,
+      });
   }
 }
 
