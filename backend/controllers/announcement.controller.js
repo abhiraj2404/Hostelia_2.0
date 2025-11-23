@@ -1,7 +1,9 @@
 import z from "zod";
 import Announcement from "../models/announcement.model.js";
+import User from "../models/user.model.js";
 import { uploadBufferToCloudinary } from "../config/cloudinary.js";
 import { logger } from "../middleware/logger.js";
+import { notifyUsers } from "../utils/notificationService.js";
 
 export async function getAnnouncement(req, res) {
     try {
@@ -76,6 +78,33 @@ export async function createAnnouncement(req, res) {
         });
 
         logger.info("Announcement created", { id: announcement._id, by: req.user.email });
+
+        // Notify all students about the new announcement
+        try {
+            const students = await User.find({ role: 'student' }).select('_id');
+            const studentIds = students.map((student) => student._id.toString());
+
+            if (studentIds.length > 0) {
+                await notifyUsers(studentIds, {
+                    type: 'announcement_created',
+                    title: 'New Announcement',
+                    message: `New announcement: ${title}`,
+                    relatedEntityId: announcement._id,
+                    relatedEntityType: 'announcement',
+                });
+                logger.info('Notifications sent for announcement creation', {
+                    announcementId: announcement._id.toString(),
+                    notifiedUsers: studentIds.length,
+                });
+            }
+        } catch (notifError) {
+            // Log error but don't fail the request
+            logger.error('Failed to send notifications for announcement creation', {
+                error: notifError.message,
+                announcementId: announcement._id.toString(),
+            });
+        }
+
         return res.status(201).json({
             success: true,
             message: "Announcement created successfully",
