@@ -23,6 +23,7 @@ import {
   SquarePen,
   UserCircle2,
 } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import type { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Toaster, toast } from "sonner";
@@ -107,7 +108,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
             Hostelia
           </NavLink>
         </div>
-        <div className="flex flex-1 items-center justify-end px-4 md:px-6">
+        <div className="flex flex-1 items-center justify-end gap-2 px-4 md:px-6">
           <Sheet>
             <SheetTrigger asChild>
               <Button
@@ -123,6 +124,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
               <SidebarContent />
             </SheetContent>
           </Sheet>
+          {isAuthenticated && user && <NotificationBell />}
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
