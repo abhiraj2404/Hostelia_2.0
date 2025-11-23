@@ -67,4 +67,31 @@ export const submitFeedback = async (req, res) => {
     }
 }
 
+export const getAllFeedbacks = async (req, res) => {
+    try {
+        const feedbacks = await Feedback.find()
+            .populate('user', 'name email rollNo hostel roomNo year')
+            .sort({ createdAt: -1 });
+
+        logger.info("Feedbacks fetched", {
+            count: feedbacks.length,
+            requestedBy: req.user._id,
+            role: req.user.role
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Feedbacks fetched successfully",
+            feedbacks,
+            count: feedbacks.length,
+        });
+    } catch (error) {
+        logger.error("Failed to fetch feedbacks:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch feedbacks",
+        });
+    }
+}
+
 

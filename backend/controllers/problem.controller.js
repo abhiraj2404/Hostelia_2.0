@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import Problem from '../models/problem.model.js';
+import User from '../models/user.model.js';
 import { scopedProblemsFilter, isProblemInScope } from '../middleware/roles.js';
 import { uploadBufferToCloudinary } from '../config/cloudinary.js';
 import { logger } from '../middleware/logger.js';
+import { notifyUsers } from '../utils/notificationService.js';
 
 const createProblemSchema = z.object({
     problemTitle: z.string().min(3).max(200),
@@ -53,6 +55,44 @@ export async function createProblem(req, res) {
             problemImage: problemImageUrl,
         });
         logger.info('Problem created', { problemId: problem._id.toString(), problemTitle: parsed.data.problemTitle, studentId: userId.toString() });
+
+        // Notify admins and wardens about the new problem
+        try {
+            // Find all admins
+            const admins = await User.find({ role: 'admin' }).select('_id');
+            const adminIds = admins.map((admin) => admin._id.toString());
+
+            // Find wardens for the problem's hostel
+            const wardens = await User.find({
+                role: 'warden',
+                hostel: parsed.data.hostel,
+            }).select('_id');
+            const wardenIds = wardens.map((warden) => warden._id.toString());
+
+            // Combine admin and warden IDs
+            const notifyUserIds = [ ...adminIds, ...wardenIds ];
+
+            if (notifyUserIds.length > 0) {
+                await notifyUsers(notifyUserIds, {
+                    type: 'problem_created',
+                    title: 'New Problem Reported',
+                    message: `A new ${parsed.data.category} problem has been reported in ${parsed.data.hostel}, Room ${parsed.data.roomNo}: ${parsed.data.problemTitle}`,
+                    relatedEntityId: problem._id,
+                    relatedEntityType: 'problem',
+                });
+                logger.info('Notifications sent for problem creation', {
+                    problemId: problem._id.toString(),
+                    notifiedUsers: notifyUserIds.length,
+                });
+            }
+        } catch (notifError) {
+            // Log error but don't fail the request
+            logger.error('Failed to send notifications for problem creation', {
+                error: notifError.message,
+                problemId: problem._id.toString(),
+            });
+        }
+
         return res.status(201).json({
             success: true,
             message: 'Problem created successfully',
@@ -123,12 +163,45 @@ export async function updateProblemStatus(req, res) {
             return res.status(403).json({ success: false, message: 'Forbidden' });
         }
 
+        const oldStatus = problem.status;
         problem.status = parsed.data.status;
         if (parsed.data.status === 'Resolved' && !problem.resolvedAt) {
             problem.resolvedAt = new Date();
         }
         await problem.save();
         logger.info('Problem status updated', { problemId: problem._id.toString(), status: problem.status, actorId: req.user._id.toString() });
+
+        // Notify the student who created the problem about status update
+        try {
+            const studentId = problem.studentId.toString();
+            const statusMessages = {
+                Pending: 'is pending review',
+                Resolved: 'has been resolved',
+                Rejected: 'has been rejected',
+                ToBeConfirmed: 'needs your confirmation',
+            };
+            const statusMessage = statusMessages[ parsed.data.status ] || 'status has been updated';
+
+            await notifyUsers([ studentId ], {
+                type: 'problem_status_updated',
+                title: 'Problem Status Updated',
+                message: `Your problem "${problem.problemTitle}" ${statusMessage}.`,
+                relatedEntityId: problem._id,
+                relatedEntityType: 'problem',
+            });
+            logger.info('Notification sent for problem status update', {
+                problemId: problem._id.toString(),
+                studentId,
+                newStatus: parsed.data.status,
+            });
+        } catch (notifError) {
+            // Log error but don't fail the request
+            logger.error('Failed to send notification for problem status update', {
+                error: notifError.message,
+                problemId: problem._id.toString(),
+            });
+        }
+
         return res.status(200).json({ success: true, message: 'Status updated', problem });
     } catch (err) {
         logger.error('Failed to update status', { error: err.message, problemId: id });
