@@ -14,6 +14,7 @@ const notificationSchema = new mongoose.Schema(
                 'problem_created',
                 'problem_status_updated',
                 'announcement_created',
+                'mess_feedback_submitted',
                 // Future types can be added here:
                 // 'fee_submission_required',
                 // 'transit_request_approved',
@@ -36,7 +37,7 @@ const notificationSchema = new mongoose.Schema(
         },
         relatedEntityType: {
             type: String,
-            enum: [ 'problem', 'announcement', 'fee', 'transit' ],
+            enum: [ 'problem', 'announcement', 'fee', 'transit', 'mess' ],
             required: true,
         },
         read: {
