@@ -1,5 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
 // Define the user data structure
 export interface UserData {
@@ -7,7 +7,12 @@ export interface UserData {
   name?: string;
   email: string;
   token?: string;
-  [key: string]: any; // Allow for additional fields from backend
+  rollNo?: string;
+  hostel?: string;
+  roomNo?: string;
+  year?: string;
+  role?: string;
+  [key: string]: unknown; // Allow for additional fields from backend
 }
 
 // Define the auth state

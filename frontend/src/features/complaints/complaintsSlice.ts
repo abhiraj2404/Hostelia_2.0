@@ -42,6 +42,7 @@ export interface Complaint {
 }
 
 export interface ComplaintsFilters {
+  query?: string;
   status?: string;
   category?: string;
   hostel?: string;
@@ -217,6 +218,30 @@ export const addComplaintComment = createAsyncThunk<
   }
 );
 
+export const updateComplaintStatus = createAsyncThunk<
+  Complaint,
+  { complaintId: string; status: Complaint["status"] },
+  { rejectValue: string }
+>(
+  "complaints/updateComplaintStatus",
+  async ({ complaintId, status }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.patch(`/problem/${complaintId}/status`, {
+        status,
+      });
+      if (!response.data?.success) {
+        return rejectWithValue(
+          response.data?.message ?? "Failed to update status"
+        );
+      }
+      return response.data.problem as Complaint;
+    } catch (error: unknown) {
+      const message = extractErrorMessage(error, "Failed to update status");
+      return rejectWithValue(message);
+    }
+  }
+);
+
 export const verifyComplaintResolution = createAsyncThunk<
   Complaint,
   { complaintId: string; studentStatus: Complaint["studentStatus"] },
@@ -319,6 +344,20 @@ const complaintsSlice = createSlice({
       .addCase(addComplaintComment.rejected, (state, action) => {
         state.commentStatus = "failed";
         state.error = action.payload ?? "Unable to add comment";
+      })
+      .addCase(updateComplaintStatus.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const index = state.items.findIndex((item) => item._id === updated._id);
+        if (index >= 0) {
+          state.items[index] = updated;
+        }
+        if (state.selected?._id === updated._id) {
+          state.selected = updated;
+        }
+        state.error = null;
+      })
+      .addCase(updateComplaintStatus.rejected, (state, action) => {
+        state.error = action.payload ?? "Unable to update status";
       })
       .addCase(verifyComplaintResolution.fulfilled, (state, action) => {
         const updated = action.payload;

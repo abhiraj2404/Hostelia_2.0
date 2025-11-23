@@ -1,14 +1,15 @@
-function Contact() {
+function Dashboard() {
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">
       <div className="mx-auto max-w-7xl">
-        <h1 className="text-3xl font-bold tracking-tight">Contact</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="mt-2 text-muted-foreground">
-          Get in touch with us
+          Welcome to your dashboard
         </p>
       </div>
     </div>
   );
 }
 
-export default Contact;
+export default Dashboard;
+

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight,
@@ -95,8 +95,13 @@ function Hero() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-                <Link to="/student/complaints">See complaints portal</Link>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                <Link to="/complaints">See complaints portal</Link>
               </Button>
             </div>
             <div className="grid gap-4 pt-6 sm:grid-cols-3">
@@ -166,7 +171,9 @@ function Hero() {
                         {index + 1}
                       </span>
                       <div>
-                        <p className="font-medium text-foreground">{stage.title}</p>
+                        <p className="font-medium text-foreground">
+                          {stage.title}
+                        </p>
                         <p>{stage.description}</p>
                       </div>
                     </li>

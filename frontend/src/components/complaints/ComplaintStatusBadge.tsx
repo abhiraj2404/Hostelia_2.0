@@ -1,15 +1,18 @@
 import { Badge } from "@/components/ui/badge";
 import type { Complaint } from "@/features/complaints/complaintsSlice";
 
-const statusVariantMap: Record<Complaint["status"], "default" | "success" | "destructive" | "outline"> = {
-  Pending: "outline",
-  Resolved: "success",
+const statusVariantMap: Record<
+  Complaint["status"],
+  "default" | "success" | "destructive" | "outline" | "secondary"
+> = {
+  Pending: "secondary",
+  Resolved: "default",
   Rejected: "destructive",
-  ToBeConfirmed: "default",
+  ToBeConfirmed: "outline",
 };
 
 const statusLabelMap: Record<Complaint["status"], string> = {
-  Pending: "Pending",
+  Pending: "Under Review",
   Resolved: "Resolved",
   Rejected: "Rejected",
   ToBeConfirmed: "Awaiting Confirmation",
@@ -20,20 +23,35 @@ interface ComplaintStatusBadgeProps {
 }
 
 export function ComplaintStatusBadge({ status }: ComplaintStatusBadgeProps) {
-  return <Badge variant={statusVariantMap[status]}>{statusLabelMap[status]}</Badge>;
+  return (
+    <Badge
+      variant={statusVariantMap[status]}
+      className="shadow-md backdrop-blur-sm bg-background/95"
+    >
+      {statusLabelMap[status]}
+    </Badge>
+  );
 }
 
 const studentStatusMap: Record<Complaint["studentStatus"], string> = {
-  NotResolved: "Pending review",
-  Resolved: "Student accepted",
-  Rejected: "Student disputed",
+  NotResolved: "Not Verified",
+  Resolved: "Student Confirmed",
+  Rejected: "Student Reopened",
 };
 
 interface ComplaintStudentStatusBadgeProps {
   studentStatus: Complaint["studentStatus"];
 }
 
-export function ComplaintStudentStatusBadge({ studentStatus }: ComplaintStudentStatusBadgeProps) {
-  return <Badge variant="outline">{studentStatusMap[studentStatus]}</Badge>;
+export function ComplaintStudentStatusBadge({
+  studentStatus,
+}: ComplaintStudentStatusBadgeProps) {
+  return (
+    <Badge
+      variant="outline"
+      className="shadow-md backdrop-blur-sm bg-background/95"
+    >
+      {studentStatusMap[studentStatus]}
+    </Badge>
+  );
 }
-
