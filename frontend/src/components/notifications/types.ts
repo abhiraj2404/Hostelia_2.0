@@ -6,7 +6,7 @@ export interface Notification {
   title: string;
   message: string;
   relatedEntityId: string;
-  relatedEntityType: "problem" | "announcement" | "fee" | "transit";
+  relatedEntityType: "problem" | "announcement" | "fee" | "transit" | "mess";
   read: boolean;
   readAt: string | null;
   createdAt: string;

@@ -50,59 +50,18 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={requireAuth(<Dashboard />)} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={onlyGuests(<Login />)} />
             <Route path="/signup" element={onlyGuests(<Signup />)} />
 
-            <Route
-              path="/complaints"
-              element={requireAuth(<ComplaintsListPage />)}
-            />
-            <Route
-              path="/complaints/new"
-              element={studentOnly(<ComplaintCreatePage />)}
-            />
-            <Route
-              path="/complaints/:id"
-              element={requireAuth(<ComplaintDetailPage />)}
-            />
+            <Route path="/complaints" element={requireAuth(<ComplaintsListPage />)} />
+            <Route path="/complaints/new" element={studentOnly(<ComplaintCreatePage />)} />
+            <Route path="/complaints/:id" element={requireAuth(<ComplaintDetailPage />)} />
             <Route path="/mess" element={<MessPage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/transit" element={<TransitPage />} />
-
-            {/* Legacy routes - redirect to new paths */}
-            <Route
-              path="/student/complaints"
-              element={requireAuth(<ComplaintsListPage />)}
-            />
-            <Route
-              path="/student/complaints/new"
-              element={studentOnly(<ComplaintCreatePage />)}
-            />
-            <Route
-              path="/student/complaints/:id"
-              element={requireAuth(<ComplaintDetailPage />)}
-            />
-            <Route
-              path="/student/mess"
-              element={<Navigate to="/mess" replace />}
-            />
-            <Route
-              path="/student/announcements"
-              element={<Navigate to="/announcements" replace />}
-            />
-            <Route
-              path="/student/entry-exit"
-              element={<Navigate to="/transit" replace />}
-            />
-            <Route
-              path="/warden/transit"
-              element={<Navigate to="/transit" replace />}
-            />
-
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <Footer />
