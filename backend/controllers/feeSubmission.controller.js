@@ -5,6 +5,7 @@ import { scopedFeeFilter } from '../middleware/roles.js';
 import { uploadBufferToCloudinary } from '../config/cloudinary.js';
 import { logger } from '../middleware/logger.js';
 import { sendEmail, getEmailUser } from '../utils/email-client.js';
+import { notifyUsers } from '../utils/notificationService.js';
 
 // Get fee status - role-based (student sees own, admin sees all)
 export async function getFeeStatus(req, res) {
@@ -78,6 +79,31 @@ export async function submitHostelFee(req, res) {
             feeSubmissionId: feeSubmission._id.toString(),
         });
 
+        // Notify admins about hostel fee submission
+        try {
+            const admins = await User.find({ role: 'admin' }).select('_id');
+            const adminIds = admins.map((admin) => admin._id.toString());
+
+            if (adminIds.length > 0) {
+                await notifyUsers(adminIds, {
+                    type: 'hostel_fee_submitted',
+                    title: 'Hostel Fee Submitted',
+                    message: `${req.user.name} submitted hostel fee documents for review.`,
+                    relatedEntityId: feeSubmission._id,
+                    relatedEntityType: 'fee',
+                });
+                logger.info('Notifications sent for hostel fee submission', {
+                    feeSubmissionId: feeSubmission._id.toString(),
+                    notifiedUsers: adminIds.length,
+                });
+            }
+        } catch (notifError) {
+            logger.error('Failed to send notifications for hostel fee submission', {
+                error: notifError.message,
+                feeSubmissionId: feeSubmission._id.toString(),
+            });
+        }
+
         return res.status(201).json({
             success: true,
             message: 'Hostel fee document submitted successfully',
@@ -146,6 +172,31 @@ export async function submitMessFee(req, res) {
             studentId: userId.toString(),
             feeSubmissionId: feeSubmission._id.toString(),
         });
+
+        // Notify admins about mess fee submission
+        try {
+            const admins = await User.find({ role: 'admin' }).select('_id');
+            const adminIds = admins.map((admin) => admin._id.toString());
+
+            if (adminIds.length > 0) {
+                await notifyUsers(adminIds, {
+                    type: 'mess_fee_submitted',
+                    title: 'Mess Fee Submitted',
+                    message: `${req.user.name} submitted mess fee documents for review.`,
+                    relatedEntityId: feeSubmission._id,
+                    relatedEntityType: 'fee',
+                });
+                logger.info('Notifications sent for mess fee submission', {
+                    feeSubmissionId: feeSubmission._id.toString(),
+                    notifiedUsers: adminIds.length,
+                });
+            }
+        } catch (notifError) {
+            logger.error('Failed to send notifications for mess fee submission', {
+                error: notifError.message,
+                feeSubmissionId: feeSubmission._id.toString(),
+            });
+        }
 
         return res.status(201).json({
             success: true,
@@ -230,6 +281,39 @@ export async function updateFeeStatus(req, res) {
             messFeeStatus,
             actorId: req.user._id.toString(),
         });
+
+        // Notify student about fee status updates
+        try {
+            const updates = [];
+            if (hostelFeeStatus !== undefined) {
+                updates.push(`Hostel fee status: ${hostelFeeStatus}`);
+            }
+            if (messFeeStatus !== undefined) {
+                updates.push(`Mess fee status: ${messFeeStatus}`);
+            }
+
+            const message =
+                updates.length > 0
+                    ? updates.join(' | ')
+                    : 'Your fee status has been updated.';
+
+            await notifyUsers([ studentId ], {
+                type: 'fee_status_updated',
+                title: 'Fee Status Updated',
+                message,
+                relatedEntityId: feeSubmission._id,
+                relatedEntityType: 'fee',
+            });
+            logger.info('Notification sent for fee status update', {
+                studentId: studentId.toString(),
+                feeSubmissionId: feeSubmission._id.toString(),
+            });
+        } catch (notifError) {
+            logger.error('Failed to send notification for fee status update', {
+                error: notifError.message,
+                studentId: studentId.toString(),
+            });
+        }
 
         return res.status(200).json({
             success: true,
