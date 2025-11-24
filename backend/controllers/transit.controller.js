@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import Transit from '../models/transit.model.js';
+import User from '../models/user.model.js';
 import { logger } from '../middleware/logger.js';
 
 const createTransitSchema = z.object({
     purpose: z.string().min(3).max(500),
     transitStatus: z.enum([ 'ENTRY', 'EXIT' ]),
-    date: z.coerce.date().optional(),
+    date: z.coerce.date(),
     time: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, 'Time must be in HH:MM:SS format').optional(),
 });
 
@@ -22,12 +23,34 @@ export async function createTransitEntry(req, res) {
     const { _id: userId } = req.user;
 
     try {
+        const lastTransit = await Transit.findOne({ studentId: userId }).sort({ createdAt: -1 });
+        const entryDate = parsed.data.date;
+        const entryTime = parsed.data.time || new Date().toTimeString().split(' ')[ 0 ];
+        if (lastTransit) {
+            const expectedStatus = lastTransit.transitStatus === 'ENTRY' ? 'EXIT' : 'ENTRY';
+            if (parsed.data.transitStatus !== expectedStatus) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Next transit record must be ${expectedStatus} after a ${lastTransit.transitStatus}`,
+                    lastTransitStatus: lastTransit.transitStatus
+                });
+            }
+            const lastDateTime = buildDateTime(lastTransit.date, lastTransit.time);
+            const nextDateTime = buildDateTime(entryDate, entryTime);
+            if (nextDateTime <= lastDateTime) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Next transit record time must be after the previous record time',
+                    lastRecordTimestamp: lastDateTime.toISOString()
+                });
+            }
+        }
         const transitData = {
             studentId: userId,
             purpose: parsed.data.purpose,
             transitStatus: parsed.data.transitStatus,
-            date: parsed.data.date || new Date(),
-            time: parsed.data.time || new Date().toTimeString().split(' ')[ 0 ],
+            date: entryDate,
+            time: entryTime,
         };
 
         const transit = await Transit.create(transitData);
@@ -53,7 +76,8 @@ export async function createTransitEntry(req, res) {
 
 export async function listTransitEntries(req, res) {
     try {
-        const transitEntries = await Transit.find({})
+        const filter = await buildTransitFilter(req);
+        const transitEntries = await Transit.find(filter)
             .populate('studentId', 'name rollNo hostel roomNo')
             .sort({ createdAt: -1 });
         logger.info('Transit entries fetched', { count: transitEntries.length });
@@ -70,5 +94,33 @@ export async function listTransitEntries(req, res) {
             error: err.message
         });
     }
+}
+
+function buildDateTime(dateValue, timeString) {
+    const dateObj = new Date(dateValue);
+    const [ hours = 0, minutes = 0, seconds = 0 ] = (timeString || '00:00:00').split(':').map(Number);
+    dateObj.setHours(hours, minutes, seconds, 0);
+    return dateObj;
+}
+
+async function buildTransitFilter(req) {
+    const role = req.user?.role;
+    if (role === 'student') {
+        return { studentId: req.user._id };
+    }
+    if (role === 'warden') {
+        const hostel = req.user?.hostel;
+        if (!hostel) {
+            logger.warn('Transit filter: warden without hostel assignment', { userId: req.user?._id?.toString?.() });
+            return { studentId: { $in: [] } };
+        }
+        const hostelStudents = await User.find({ hostel }).select('_id');
+        const studentIds = hostelStudents.map((student) => student._id);
+        if (studentIds.length === 0) {
+            return { studentId: { $in: [] } };
+        }
+        return { studentId: { $in: studentIds } };
+    }
+    return {};
 }
 
