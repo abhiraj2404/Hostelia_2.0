@@ -139,3 +139,51 @@ export async function deleteAnnouncement(req, res) {
         });
     }
 }
+
+const commentSchema = z.object({
+    message: z.string().trim().min(1).max(2000),
+});
+
+export async function addAnnouncementComment(req, res) {
+    const parsed = commentSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({
+            success: false,
+            message: "Validation failed",
+            errors: parsed.error.flatten(),
+        });
+    }
+    const { id } = req.params;
+    try {
+        const announcement = await Announcement.findById(id);
+        if (!announcement) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Announcement not found" });
+        }
+
+        announcement.comments.push({
+            user: req.user._id,
+            role: req.user.role,
+            message: parsed.data.message,
+        });
+        await announcement.save();
+        logger.info("Comment added to announcement", {
+            announcementId: announcement._id.toString(),
+            userId: req.user._id.toString(),
+        });
+        return res
+            .status(201)
+            .json({ success: true, message: "Comment added", data: announcement });
+    } catch (err) {
+        logger.error("Failed to add comment", {
+            error: err.message,
+            announcementId: id,
+        });
+        return res.status(500).json({
+            success: false,
+            message: "Failed to add comment",
+            error: err.message,
+        });
+    }
+}

@@ -15,6 +15,10 @@ const notificationSchema = new mongoose.Schema(
                 'problem_status_updated',
                 'announcement_created',
                 'mess_feedback_submitted',
+                'hostel_fee_submitted',
+                'mess_fee_submitted',
+                'fee_status_updated',
+                'mess_menu_updated',
                 // Future types can be added here:
                 // 'fee_submission_required',
                 // 'transit_request_approved',

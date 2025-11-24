@@ -10,7 +10,7 @@ const router = Router();
 // Create a new transit entry (student only)
 router.post('/', authorizeRoles('student'), createTransitEntry);
 
-// List all transit entries (all authenticated users)
+// List transit entries based on role scope
 router.get('/', listTransitEntries);
 
 export default router;

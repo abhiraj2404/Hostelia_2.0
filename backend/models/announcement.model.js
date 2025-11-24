@@ -1,5 +1,19 @@
 import mongoose from 'mongoose';
 
+const commentSubSchema = new mongoose.Schema(
+    {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        role: {
+            type: String,
+            enum: [ "student", "warden", "admin" ],
+            required: true,
+        },
+        message: { type: String, required: true, trim: true, maxlength: 2000 },
+        createdAt: { type: Date, default: Date.now },
+    },
+    { _id: false }
+);
+
 const announcementSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -17,6 +31,10 @@ const announcementSchema = new mongoose.Schema({
     fileUrl: {
         type: String,
         default: undefined
+    },
+    comments: {
+        type: [ commentSubSchema ],
+        default: [],
     }
 }, {
     timestamps: true
