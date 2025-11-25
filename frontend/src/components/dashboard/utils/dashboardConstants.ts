@@ -51,7 +51,11 @@ export const statusColors = {
 };
 
 // Fee status badge variants
-export const feeStatusConfig = {
+export const feeStatusConfig: Record<string, {
+  label: string;
+  variant: "default" | "secondary" | "outline" | "destructive";
+  color: string;
+}> = {
   documentNotSubmitted: {
     label: "Not Submitted",
     variant: "secondary" as const,
