@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CommentSection } from "./CommentSection";
 import type { Announcement, CommentFormData } from "@/types/announcement";
 import {
@@ -20,8 +19,6 @@ import {
   FileText,
   ExternalLink,
   Megaphone,
-  Shield,
-  GraduationCap,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -34,31 +31,8 @@ interface AnnouncementDetailProps {
   isDeleting: boolean;
 }
 
-const getRoleIcon = (role: string) => {
-  switch (role) {
-    case "admin":
-      return <Shield className="size-4" />;
-    case "warden":
-      return <User className="size-4" />;
-    case "student":
-      return <GraduationCap className="size-4" />;
-    default:
-      return <User className="size-4" />;
-  }
-};
 
-const getRoleBadgeVariant = (role: string) => {
-  switch (role) {
-    case "admin":
-      return "primary";
-    case "warden":
-      return "primary";
-    case "student":
-      return "secondary";
-    default:
-      return "outline";
-  }
-};
+// role badge variants removed — badges are no longer displayed
 
 export function AnnouncementDetail({
   announcement,
@@ -121,17 +95,9 @@ export function AnnouncementDetail({
               </h1>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  {getRoleIcon(announcement.postedBy.role)}
-                  <span className="font-medium">
-                    {announcement.postedBy.name}
-                  </span>
+                  <User className="size-4" />
+                  <span className="font-medium">{announcement.postedBy.name}</span>
                 </div>
-                <Badge
-                  variant={getRoleBadgeVariant(announcement.postedBy.role)}
-                  className="h-5 text-xs capitalize"
-                >
-                  {announcement.postedBy.role}
-                </Badge>
                 <div className="flex items-center gap-1.5">
                   <Calendar className="size-4" />
                   {formatTime(announcement.createdAt)}
@@ -192,34 +158,35 @@ export function AnnouncementDetail({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between rounded-lg border bg-background p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2">
-                      <FileText className="size-5 text-primary" />
+                  {/* Attachment block (images and other files use same attachment UI) */}
+                  <div className="flex items-center justify-between rounded-lg border bg-background p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-primary/10 p-2">
+                        <FileText className="size-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">View Attachment</p>
+                        <p className="text-xs text-muted-foreground">
+                          Click to view or download the file
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">View Attachment</p>
-                      <p className="text-xs text-muted-foreground">
-                        Click to view or download the file
-                      </p>
-                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={/\.pdf(\?|$)/i.test(announcement.fileUrl) || /pdf/i.test(announcement.fileUrl)
+                          ? `https://docs.google.com/viewer?url=${encodeURIComponent(
+                              announcement.fileUrl
+                            )}&embedded=true`
+                          : announcement.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <ExternalLink className="size-4" />
+                        View
+                      </a>
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={/\.pdf(\?|$)/i.test(announcement.fileUrl) || /pdf/i.test(announcement.fileUrl)
-                        ? `https://docs.google.com/viewer?url=${encodeURIComponent(
-                            announcement.fileUrl
-                          )}&embedded=true`
-                        : announcement.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <ExternalLink className="size-4" />
-                      View
-                    </a>
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           )}
@@ -254,13 +221,7 @@ export function AnnouncementDetail({
                   </p>
                 </div>
               </div>
-              <Badge
-                variant={getRoleBadgeVariant(announcement.postedBy.role)}
-                className="w-full justify-center gap-1.5 py-1.5"
-              >
-                {getRoleIcon(announcement.postedBy.role)}
-                {announcement.postedBy.role}
-              </Badge>
+              {/* role display removed */}
             </CardContent>
           </Card>
 

@@ -129,13 +129,13 @@ function MessPage() {
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
         <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full border bg-card text-xs font-medium shadow-sm">
+          {/* <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full border bg-card text-xs font-medium shadow-sm">
             <UtensilsCrossed className="size-3.5 text-primary" />
             <span>Mess Services</span>
-          </div>
+          </div> */}
           <div className="flex items-center justify-between">
             <div className="text-center lg:text-left">
-              <h1 className="text-2xl font-bold tracking-tight mb-3 bg-linear-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Mess Menu & Feedback
               </h1>
               <p className="text-muted-foreground text-sm">

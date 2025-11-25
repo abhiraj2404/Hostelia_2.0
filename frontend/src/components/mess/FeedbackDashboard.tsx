@@ -32,18 +32,13 @@ import {
   AlertCircle,
   Loader2,
   CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import apiClient from "@/lib/api-client";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+// pagination component removed — using TransitHistory-style footer instead
 
 interface Feedback {
   _id: string;
@@ -87,27 +82,26 @@ export function FeedbackDashboard() {
   const [showFromCalendar, setShowFromCalendar] = useState(false);
   const [showToCalendar, setShowToCalendar] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 9;
+  const ITEMS_PER_PAGE = 10;
+  // Fetch feedbacks (exposed for refresh)
+  const fetchFeedbacks = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get("/mess/feedback");
+      // Handle both response formats: { feedbacks: [] } or direct array
+      const feedbackData = response.data?.feedbacks || response.data || [];
+      setFeedbacks(feedbackData);
+      setFilteredFeedbacks(feedbackData);
+      setError(null);
+    } catch (err: any) {
+      console.error("Feedback fetch error:", err);
+      setError(err.response?.data?.message || "Failed to load feedbacks");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Fetch feedbacks
   useEffect(() => {
-    const fetchFeedbacks = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get("/mess/feedback");
-        // Handle both response formats: { feedbacks: [] } or direct array
-        const feedbackData = response.data?.feedbacks || response.data || [];
-        setFeedbacks(feedbackData);
-        setFilteredFeedbacks(feedbackData);
-        setError(null);
-      } catch (err: any) {
-        console.error("Feedback fetch error:", err);
-        setError(err.response?.data?.message || "Failed to load feedbacks");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFeedbacks();
   }, []);
 
@@ -197,39 +191,10 @@ export function FeedbackDashboard() {
     return filteredFeedbacks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredFeedbacks, currentPage]);
 
-  const getPageNumbers = () => {
-    const pages: (number | "ellipsis")[] = [];
-    const showEllipsisThreshold = 7;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
 
-    if (totalPages <= showEllipsisThreshold) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-
-      if (currentPage > 3) {
-        pages.push("ellipsis");
-      }
-
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (currentPage < totalPages - 2) {
-        pages.push("ellipsis");
-      }
-
-      if (totalPages > 1) {
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
-  };
+  // numbered pagination helper removed — using simple anchored footer for consistency
 
   // Get unique hostels
   const hostels = [
@@ -289,97 +254,52 @@ export function FeedbackDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Average Rating
-            </CardTitle>
-            <TrendingUp className="size-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {stats.avgRating.toFixed(1)}
-            </div>
-            <div className="flex gap-0.5 mt-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "size-3",
-                    i <= Math.round(stats.avgRating)
-                      ? "fill-amber-400 text-amber-400"
-                      : "text-muted-foreground/30"
-                  )}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Feedbacks
-            </CardTitle>
-            <Users className="size-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {stats.totalFeedbacks}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {feedbacks.length} total submissions
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              With Comments
-            </CardTitle>
-            <MessageSquare className="size-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {stats.withComments}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.totalFeedbacks > 0
-                ? `${Math.round((stats.withComments / stats.totalFeedbacks) * 100)}% with comments`
-                : "No comments yet"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Meal Ratings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {Object.entries(stats.mealRatings).slice(0, 2).map(([meal, rating]) => {
-                const Icon = mealIcons[meal as keyof typeof mealIcons];
-                return (
-                  <div key={meal} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <Icon className="size-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">{meal}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="size-3 fill-amber-400 text-amber-400" />
-                      <span className="font-medium">{rating.toFixed(1)}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards - unified style with TransitStats */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Build metrics same pattern as TransitStats */}
+        {([
+          {
+            label: "Average Rating",
+            value: stats.avgRating.toFixed(1),
+            helper: "Avg across meals",
+            icon: TrendingUp,
+            tone: "bg-blue-500/10 text-blue-600",
+          },
+          {
+            label: "Total Feedbacks",
+            value: stats.totalFeedbacks,
+            helper: "All submissions",
+            icon: Users,
+            tone: "bg-emerald-500/10 text-emerald-600",
+          },
+          {
+            label: "With Comments",
+            value: stats.withComments,
+            helper: "Contains message",
+            icon: MessageSquare,
+            tone: "bg-orange-500/10 text-orange-600",
+          },
+          {
+            label: "Meal Ratings",
+            value: Object.keys(stats.mealRatings).length > 0 ? Object.values(stats.mealRatings)[0].toFixed(1) : "-",
+            helper: "Example meal avg",
+            icon: UtensilsCrossed,
+            tone: "bg-purple-500/10 text-purple-600",
+          },
+        ] as const).map((m) => (
+          <Card key={m.label} className="border-border/60">
+            <CardContent className="flex items-center justify-between py-6">
+              <div>
+                <p className="text-xs font-medium uppercase text-muted-foreground">{m.helper}</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{m.value}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{m.label}</p>
+              </div>
+              <div className={cn("flex h-12 w-12 items-center justify-center rounded-full", m.tone)}>
+                <m.icon className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
@@ -420,17 +340,18 @@ export function FeedbackDashboard() {
                     <span>Pick a date</span>
                   )}
                 </Button>
-                {showFromCalendar && (
-                  <div className="absolute z-50 mt-2 bg-background border rounded-lg shadow-lg">
-                    <Calendar
-                      selected={dateFrom}
-                      onSelect={(date) => {
-                        setDateFrom(date);
-                        setShowFromCalendar(false);
-                      }}
-                    />
-                  </div>
-                )}
+                    {showFromCalendar && (
+                      <div className="absolute left-0 z-50 mt-2 bg-background border rounded-lg shadow-lg w-72 sm:w-80">
+                        <Calendar
+                          className="w-full"
+                          selected={dateFrom}
+                          onSelect={(date) => {
+                            setDateFrom(date);
+                            setShowFromCalendar(false);
+                          }}
+                        />
+                      </div>
+                    )}
               </div>
             </div>
 
@@ -450,8 +371,9 @@ export function FeedbackDashboard() {
                   )}
                 </Button>
                 {showToCalendar && (
-                  <div className="absolute z-50 mt-2 bg-background border rounded-lg shadow-lg">
+                  <div className="absolute left-0 z-50 mt-2 bg-background border rounded-lg shadow-lg w-72 sm:w-80">
                     <Calendar
+                      className="w-full"
                       selected={dateTo}
                       onSelect={(date) => {
                         setDateTo(date);
@@ -516,11 +438,28 @@ export function FeedbackDashboard() {
       </Card>
 
       {/* Feedback Table */}
-      <Card className="shadow-sm">
+      <Card className="shadow-sm relative flex flex-col h-full">
         <CardHeader className="border-b bg-muted/30">
-          <CardTitle className="text-base">Feedback Submissions</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Feedback Submissions</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchFeedbacks}
+              disabled={loading}
+              className="shadow-sm"
+            >
+              <RefreshCw
+                className={cn(
+                  "mr-2 h-4 w-4",
+                  loading && "animate-spin"
+                )}
+              />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={cn("p-0 flex-1", filteredFeedbacks.length > 0 && totalPages > 1 && "pb-0")}>
           {filteredFeedbacks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <MessageSquare className="size-12 text-muted-foreground/50 mb-3" />
@@ -534,7 +473,7 @@ export function FeedbackDashboard() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1 pb-16">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/20">
@@ -616,45 +555,39 @@ export function FeedbackDashboard() {
             </div>
           )}
         </CardContent>
+
+        {/* Pagination Controls - positioned at bottom of the card */}
+        {filteredFeedbacks.length > 0 && totalPages > 1 && (
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 py-3 border-t border-border/30 bg-card">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredFeedbacks.length)} of {filteredFeedbacks.length} records
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              <div className="text-sm">Page {currentPage} of {totalPages}</div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
-      {/* Pagination */}
-      {filteredFeedbacks.length > 0 && totalPages > 1 && (
-        <div className="flex justify-end mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-
-              {getPageNumbers().map((pageNum, idx) => (
-                <PaginationItem key={idx}>
-                  {pageNum === "ellipsis" ? (
-                    <PaginationEllipsis />
-                  ) : (
-                    <PaginationLink
-                      onClick={() => setCurrentPage(pageNum)}
-                      isActive={currentPage === pageNum}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  )}
-                </PaginationItem>
-              ))}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      
     </div>
   );
 }

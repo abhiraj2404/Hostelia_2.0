@@ -1,10 +1,14 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { ArrowLeft, ArrowRight, TrendingUp, Users } from "lucide-react";
+
+type TransitMetric = {
+  label: string;
+  value: number;
+  helper: string;
+  icon: any;
+  tone: string;
+};
 
 interface TransitEntry {
   _id: string;
@@ -40,7 +44,6 @@ export function TransitStats({ entries }: TransitStatsProps) {
     if (!prev) {
       map.set(sid, e);
     } else {
-      // prefer the latest by createdAt (fallback to date+time)
       const prevTime = new Date(prev.createdAt || `${prev.date}T${prev.time}`).getTime();
       const curTime = new Date(e.createdAt || `${e.date}T${e.time}`).getTime();
       if (curTime > prevTime) map.set(sid, e);
@@ -54,85 +57,55 @@ export function TransitStats({ entries }: TransitStatsProps) {
   const today = new Date().toISOString().split("T")[0];
   const todayRecords = entries.filter((e) => e.date.split("T")[0] === today).length;
 
-  const stats = [
+  const metrics: TransitMetric[] = [
     {
-      title: "Total Records",
+      label: "Total Records",
       value: totalRecords,
+      helper: "All submissions",
       icon: TrendingUp,
-      gradient: "from-blue-500 to-blue-600",
-      iconBg: "bg-blue-500",
-      lightBg: "bg-blue-50/50 dark:bg-blue-950/20",
-      borderColor: "border-blue-200 dark:border-blue-900",
+      tone: "bg-blue-500/10 text-blue-600",
     },
     {
-      title: "Entries",
+      label: "Entries",
       value: entryCount,
+      helper: "Recorded entries",
       icon: ArrowLeft,
-      gradient: "from-green-500 to-green-600",
-      iconBg: "bg-green-500",
-      lightBg: "bg-green-50/50 dark:bg-green-950/20",
-      borderColor: "border-green-200 dark:border-green-900",
+      tone: "bg-emerald-500/10 text-emerald-600",
     },
     {
-      title: "Exits",
+      label: "Exits",
       value: exitCount,
+      helper: "Recorded exits",
       icon: ArrowRight,
-      gradient: "from-orange-500 to-orange-600",
-      iconBg: "bg-orange-500",
-      lightBg: "bg-orange-50/50 dark:bg-orange-950/20",
-      borderColor: "border-orange-200 dark:border-orange-900",
+      tone: "bg-orange-500/10 text-orange-600",
     },
     {
-      title: "Students Out",
+      label: "Students Out",
       value: studentsCurrentlyOut,
+      helper: "Currently outside",
       icon: Users,
-      gradient: "from-purple-500 to-purple-600",
-      iconBg: "bg-purple-500",
-      lightBg: "bg-purple-50/50 dark:bg-purple-950/20",
-      borderColor: "border-purple-200 dark:border-purple-900",
+      tone: "bg-purple-500/10 text-purple-600",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <Card
-            key={stat.title}
-            className={`border ${stat.borderColor} overflow-hidden bg-card hover:shadow-lg transition-all duration-300 hover:scale-[1.01] group relative`}
-          >
-            {/* Gradient overlay */}
-            <div className={`absolute inset-0 bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-            
-            <CardHeader className="pb-2 px-3 pt-3 relative">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {stat.title}
-                </CardTitle>
-                <div className={`p-1.5 rounded ${stat.iconBg} shadow group-hover:scale-105 transition-transform duration-300`}>
-                  <Icon className="size-3 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="relative px-3 pb-3">
-              <div className="space-y-1">
-                <div className={`text-2xl font-bold bg-linear-to-r ${stat.gradient} bg-clip-text text-transparent`}>
-                  {stat.value}
-                </div>
-                {stat.title === "Total Records" && todayRecords > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {todayRecords} today
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {metrics.map((m) => (
+        <Card key={m.label} className="border-border/60">
+          <CardContent className="flex items-center justify-between py-6">
+            <div>
+              <p className="text-xs font-medium uppercase text-muted-foreground">{m.helper}</p>
+              <p className="mt-2 text-3xl font-semibold text-foreground">{m.value}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{m.label}</p>
+            </div>
+            <div className={cn("flex h-12 w-12 items-center justify-center rounded-full", m.tone)}>
+              <m.icon className="h-5 w-5" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
+
+export default TransitStats;
