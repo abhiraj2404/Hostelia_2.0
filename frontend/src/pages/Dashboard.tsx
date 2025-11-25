@@ -1,7 +1,6 @@
 import { AdminDashboardLayout } from "@/components/dashboard/layouts/AdminDashboardLayout";
 import { StudentDashboardLayout } from "@/components/dashboard/layouts/StudentDashboardLayout";
 import { WardenDashboardLayout } from "@/components/dashboard/layouts/WardenDashboardLayout";
-import { UserCard } from "@/components/dashboard/UserCard";
 import { useAppSelector } from "@/hooks";
 
 function Dashboard() {
