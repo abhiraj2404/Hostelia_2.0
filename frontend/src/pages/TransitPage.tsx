@@ -5,7 +5,7 @@ import { TransitForm } from "@/components/transit/TransitForm";
 import { TransitHistory } from "@/components/transit/TransitHistory";
 import { TransitList } from "@/components/transit/TransitList";
 import { TransitStats } from "@/components/transit/TransitStats";
-import { AlertCircle, ArrowLeftRight } from "lucide-react";
+import { AlertCircle} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -137,10 +137,10 @@ function TransitPage() {
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
         <div className="mb-8 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-2 rounded-full border border-primary/20 bg-primary/5 text-xs font-medium shadow-sm">
+          {/* <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-2 rounded-full border border-primary/20 bg-primary/5 text-xs font-medium shadow-sm">
             <ArrowLeftRight className="size-3.5 text-primary" />
             <span className="text-foreground">Transit Management</span>
-          </div>
+          </div> */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-2">
               {isStudent ? "Entry & Exit Records" : "Transit Dashboard"}

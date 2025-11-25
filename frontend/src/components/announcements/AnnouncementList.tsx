@@ -20,18 +20,22 @@ export function AnnouncementList({
 }: AnnouncementListProps) {
   if (status === "loading") {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+      <div className="flex flex-col gap-5">
         {[...Array(3)].map((_, i) => (
           <Card key={i} className="animate-pulse border-border/60">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 space-y-3">
-                  <div className="h-3 w-20 bg-muted rounded"></div>
-                  <div className="h-5 w-full bg-muted rounded"></div>
-                  <div className="h-3 w-3/4 bg-muted rounded"></div>
+            <CardContent className="p-0">
+              <div className="flex flex-col sm:flex-row">
+                <div className="sm:w-24 bg-muted/30 h-24 sm:h-auto" />
+                <div className="flex-1 p-6 space-y-3">
+                  <div className="h-6 w-3/4 bg-muted rounded"></div>
+                  <div className="h-4 w-full bg-muted rounded"></div>
+                  <div className="h-4 w-5/6 bg-muted rounded"></div>
+                  <div className="flex gap-2 mt-4">
+                    <div className="h-5 w-16 bg-muted rounded" />
+                    <div className="h-5 w-24 bg-muted rounded" />
+                  </div>
                 </div>
               </div>
-              <div className="h-20 bg-muted rounded"></div>
             </CardContent>
           </Card>
         ))}
@@ -70,7 +74,7 @@ export function AnnouncementList({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+    <div className="flex flex-col gap-5">
       {items.map((announcement) => (
         <AnnouncementCard
           key={announcement._id}

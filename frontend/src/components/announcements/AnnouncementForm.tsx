@@ -160,38 +160,49 @@ export function AnnouncementForm({
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="file" className="text-sm font-medium">
-                Attach File{" "}
-                <span className="text-muted-foreground text-xs">
-                  (Optional)
-                </span>
+                Attach File
+                <span className="text-muted-foreground text-xs"> (Optional)</span>
               </Label>
-              <div className="relative">
-                <Input
+
+              {/* Custom chooser: hidden input + styled label to match app UI */}
+              <div className="flex items-center gap-3">
+                <input
                   id="file"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   {...register("file")}
-                  className="cursor-pointer h-9 text-sm file:mr-3 file:px-3 file:py-1 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  className="sr-only"
                 />
+
+                <label
+                  htmlFor="file"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer border border-border/60 shadow-sm"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Choose file</span>
+                </label>
+
+                <p className="text-xs text-muted-foreground">
+                  PDF, JPG, JPEG, PNG • Max 5MB
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                PDF, JPG, JPEG, PNG (Max 5MB)
-              </p>
+
               {errors.file && (
                 <p className="text-xs text-destructive flex items-center gap-1">
                   <AlertCircle className="size-3" />
                   {errors.file.message}
                 </p>
               )}
+
               {fileList && fileList.length > 0 && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border/60 text-xs">
-                  <FileText className="size-4 text-primary shrink-0" />
-                  <span className="flex-1 truncate font-medium">
-                    {fileList[0].name}
-                  </span>
-                  <span className="text-muted-foreground shrink-0">
-                    {(fileList[0].size / 1024).toFixed(1)} KB
-                  </span>
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 border border-border/60 text-sm">
+                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{fileList[0].name}</div>
+                    <div className="text-xs text-muted-foreground">{(
+                      fileList[0].size / 1024
+                    ).toFixed(1)} KB</div>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -203,9 +214,9 @@ export function AnnouncementForm({
                         file: undefined,
                       })
                     }
-                    className="h-6 w-6 p-0"
+                    className="h-8 w-8 p-0"
                   >
-                    <X className="size-3" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               )}
