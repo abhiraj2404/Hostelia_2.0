@@ -216,12 +216,32 @@ function ComplaintDetailPage() {
                   )}
 
                   {(isWarden || isAdmin) && (
-                    <ComplaintWardenToolsCard
-                      complaint={selected}
-                      statusLoading={statusLoading}
-                      onUpdate={handleStatusUpdate}
-                      error={commentStatus !== "failed" ? error : null}
-                    />
+                    <>
+                      {selected.status === "Rejected" ? (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Complaint Status</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="rounded-lg bg-red-50 p-4 text-center dark:bg-red-950/20">
+                              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                                ✗ This complaint has been rejected
+                              </p>
+                              <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+                                No further action can be taken on this complaint
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <ComplaintWardenToolsCard
+                          complaint={selected}
+                          statusLoading={statusLoading}
+                          onUpdate={handleStatusUpdate}
+                          error={commentStatus !== "failed" ? error : null}
+                        />
+                      )}
+                    </>
                   )}
                 </>
               )}

@@ -13,7 +13,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Complaint } from "@/features/complaints/complaintsSlice";
+import { fetchUsersByIds, type UserData } from "@/lib/user-api";
 import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { formatComplaintDate } from "./complaintConstants";
@@ -45,7 +47,10 @@ export function ComplaintDetailHeader({
       </div>
       <div className="flex flex-col items-end gap-2">
         <ComplaintStatusBadge status={complaint.status} />
-        <ComplaintStudentStatusBadge studentStatus={complaint.studentStatus} />
+        <ComplaintStudentStatusBadge
+          studentStatus={complaint.studentStatus}
+          complaintStatus={complaint.status}
+        />
       </div>
     </div>
   );
@@ -60,6 +65,20 @@ export function ComplaintSummaryCard({
   complaint,
   onOpenImage,
 }: ComplaintSummaryCardProps) {
+  const [studentData, setStudentData] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    const loadStudent = async () => {
+      const users = await fetchUsersByIds([complaint.studentId]);
+      const student = users.get(complaint.studentId);
+      if (student) {
+        setStudentData(student);
+      }
+    };
+
+    loadStudent();
+  }, [complaint.studentId]);
+
   return (
     <Card>
       <CardHeader>
@@ -69,6 +88,13 @@ export function ComplaintSummaryCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm text-muted-foreground">
+        {studentData && (
+          <div className="rounded-lg bg-muted/30 p-3 text-xs">
+            <span className="font-medium text-foreground">Submitted by:</span>{" "}
+            {studentData.name}
+            {studentData.rollNo && ` (Roll No: ${studentData.rollNo})`}
+          </div>
+        )}
         <p className="leading-relaxed">{complaint.problemDescription}</p>
         {complaint.problemImage && (
           <div>
@@ -126,8 +152,8 @@ export function ComplaintVerificationCard({
         {canVerify ? (
           <>
             <p>
-              The warden has marked this complaint as resolved. Please verify
-              the fix and confirm or reopen if the problem still exists.
+              This complaint has been marked as resolved. Please verify the fix
+              and confirm or reopen if the problem still exists.
             </p>
             <div className="flex flex-col gap-2">
               <Button
@@ -151,7 +177,7 @@ export function ComplaintVerificationCard({
             {complaint.status === "Pending" && (
               <div className="rounded-lg bg-muted/50 p-4 text-center">
                 <p className="text-sm font-medium">
-                  ⏳ Waiting for warden to review and resolve this complaint.
+                  ⏳ Waiting for staff to review and resolve this complaint.
                 </p>
               </div>
             )}
@@ -165,7 +191,7 @@ export function ComplaintVerificationCard({
             {complaint.status === "Rejected" && (
               <div className="rounded-lg bg-red-50 p-4 text-center dark:bg-red-950/20">
                 <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  ✗ This complaint was rejected by the warden.
+                  ✗ This complaint has been rejected.
                 </p>
               </div>
             )}
@@ -198,42 +224,45 @@ export function ComplaintWardenToolsCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm text-muted-foreground">
-        <p>
-          Update the status of this complaint. When you mark it as resolved, it
-          will be sent to the student for confirmation.
-        </p>
-        <div className="flex flex-col gap-2">
-          <Button
-            variant="outline"
-            disabled={statusLoading || complaint.status === "Pending"}
-            onClick={() => onUpdate("Pending")}
-          >
-            Mark as Under Review
-          </Button>
-          <Button
-            variant="default"
-            className="bg-green-600 hover:bg-green-700"
-            disabled={statusLoading || complaint.status === "ToBeConfirmed"}
-            onClick={() => onUpdate("Resolved")}
-          >
-            Mark as Resolved
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={statusLoading || complaint.status === "Rejected"}
-            onClick={() => onUpdate("Rejected")}
-          >
-            Reject Complaint
-          </Button>
-        </div>
-        <div className="rounded-lg bg-muted/50 p-3">
-          <p className="text-xs">
-            <strong>Note:</strong> When you mark a complaint as resolved, it
-            will be sent to the student for verification. The student can then
-            confirm or reopen it.
-          </p>
-        </div>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {complaint.status === "ToBeConfirmed" ? (
+          <div className="rounded-lg bg-muted/50 p-4 text-center">
+            <p className="text-sm font-medium">
+              ⏳ Waiting for student to confirm the resolution.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p>
+              Update the status of this complaint. When you mark it as resolved,
+              it will be sent to the student for confirmation.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
+                disabled={statusLoading}
+                onClick={() => onUpdate("ToBeConfirmed")}
+              >
+                Mark as Resolved
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={statusLoading || complaint.status === "Rejected"}
+                onClick={() => onUpdate("Rejected")}
+              >
+                Reject Complaint
+              </Button>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3">
+              <p className="text-xs">
+                <strong>Note:</strong> When you mark a complaint as resolved, it
+                will be sent to the student for verification. The student can
+                then confirm or reopen it.
+              </p>
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -254,6 +283,25 @@ export function ComplaintConversationCard({
   commentStatus,
   error,
 }: ComplaintConversationCardProps) {
+  const [userMap, setUserMap] = useState<Map<string, UserData>>(new Map());
+  const [showAllComments, setShowAllComments] = useState(false);
+  const INITIAL_COMMENTS_SHOWN = 5;
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (complaint.comments.length === 0) return;
+
+      // Only fetch user data for students (wardens and admins don't have names)
+      const userIds = complaint.comments
+        .filter((c) => c.role === "student")
+        .map((c) => c.user);
+      const users = await fetchUsersByIds(userIds);
+      setUserMap(users);
+    };
+
+    loadUsers();
+  }, [complaint.comments]);
+
   return (
     <Card>
       <CardHeader>
@@ -273,20 +321,67 @@ export function ComplaintConversationCard({
             {complaint.comments
               .slice()
               .reverse()
-              .map((comment, index) => (
-                <div
-                  key={`${comment.createdAt}-${index}`}
-                  className="rounded-lg border border-border/60 bg-background p-4"
-                >
-                  <div className="flex flex-col gap-1 text-xs uppercase tracking-widest text-muted-foreground/70 md:flex-row md:items-center md:justify-between">
-                    <span>{comment.role}</span>
-                    <span>{formatComplaintDate(comment.createdAt)}</span>
+              .slice(0, showAllComments ? undefined : INITIAL_COMMENTS_SHOWN)
+              .map((comment, index) => {
+                // For warden/admin, display role name only; for students, fetch user data with roll number
+                let displayName: string;
+                if (comment.role === "warden") {
+                  displayName = "Warden";
+                } else if (comment.role === "admin") {
+                  displayName = "Admin";
+                } else {
+                  const userData = userMap.get(comment.user);
+                  if (userData) {
+                    displayName = userData.rollNo
+                      ? `${userData.name} (${userData.rollNo})`
+                      : userData.name;
+                  } else {
+                    displayName = "Student";
+                  }
+                }
+
+                return (
+                  <div
+                    key={`${comment.createdAt}-${index}`}
+                    className="rounded-lg border border-border/60 bg-background p-4"
+                  >
+                    <div className="flex flex-col gap-1 text-xs md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold text-foreground">
+                          {displayName}
+                        </span>
+                      </div>
+                      <span className="text-muted-foreground">
+                        {formatComplaintDate(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-foreground leading-relaxed">
+                      {comment.message}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {comment.message}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
+
+            {complaint.comments.length > INITIAL_COMMENTS_SHOWN && (
+              <div className="flex justify-center pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllComments(!showAllComments)}
+                  className="text-primary hover:text-primary/80"
+                >
+                  {showAllComments ? (
+                    <>Show Less</>
+                  ) : (
+                    <>
+                      Show {complaint.comments.length - INITIAL_COMMENTS_SHOWN}{" "}
+                      More Comments
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

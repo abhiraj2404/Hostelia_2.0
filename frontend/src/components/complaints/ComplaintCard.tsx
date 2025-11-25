@@ -1,4 +1,9 @@
-import { Link } from "react-router-dom";
+import {
+  ComplaintStatusBadge,
+  ComplaintStudentStatusBadge,
+} from "@/components/complaints/ComplaintStatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,19 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  Clock,
-  MapPin,
-} from "lucide-react";
-import {
-  ComplaintStatusBadge,
-  ComplaintStudentStatusBadge,
-} from "@/components/complaints/ComplaintStatusBadge";
-import { formatComplaintDate, getComplaintCategoryIcon } from "./complaintConstants";
 import type { Complaint } from "@/features/complaints/complaintsSlice";
+import { fetchUsersByIds, type UserData } from "@/lib/user-api";
+import { Calendar, Clock, MapPin, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  formatComplaintDate,
+  getComplaintCategoryIcon,
+} from "./complaintConstants";
 
 type ComplaintCardProps = {
   complaint: Complaint;
@@ -26,6 +27,19 @@ type ComplaintCardProps = {
 };
 
 export function ComplaintCard({ complaint, detailPath }: ComplaintCardProps) {
+  const [studentData, setStudentData] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    const loadStudent = async () => {
+      const users = await fetchUsersByIds([complaint.studentId]);
+      const student = users.get(complaint.studentId);
+      if (student) {
+        setStudentData(student);
+      }
+    };
+
+    loadStudent();
+  }, [complaint.studentId]);
   return (
     <Card className="group flex h-full flex-col overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-40 overflow-hidden rounded-b-3xl bg-muted/20">
@@ -47,6 +61,7 @@ export function ComplaintCard({ complaint, detailPath }: ComplaintCardProps) {
           <ComplaintStatusBadge status={complaint.status} />
           <ComplaintStudentStatusBadge
             studentStatus={complaint.studentStatus}
+            complaintStatus={complaint.status}
           />
         </div>
         <Badge
@@ -67,6 +82,15 @@ export function ComplaintCard({ complaint, detailPath }: ComplaintCardProps) {
       </CardHeader>
 
       <CardContent className="mt-auto space-y-3 text-sm text-muted-foreground">
+        {studentData && (
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            <span className="font-medium text-foreground">
+              {studentData.name}
+              {studentData.rollNo && ` (${studentData.rollNo})`}
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
           <span>
@@ -100,4 +124,3 @@ export function ComplaintCard({ complaint, detailPath }: ComplaintCardProps) {
     </Card>
   );
 }
-
