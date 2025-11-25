@@ -25,12 +25,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import {
   AlertCircle,
   Loader2,
   Users,
   Search,
   Filter,
+  CalendarIcon,
 } from "lucide-react";
 
 interface TransitEntry {
@@ -62,6 +64,8 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ENTRY" | "EXIT">("ALL");
   const [hostelFilter, setHostelFilter] = useState<string>("ALL");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Get unique hostels from entries
   const uniqueHostels = Array.from(
@@ -95,13 +99,18 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
     const matchesHostel =
       hostelFilter === "ALL" || entry.studentId.hostel === hostelFilter;
 
-    return matchesSearch && matchesStatus && matchesHostel;
+    const matchesDate = !dateFilter || (
+      new Date(entry.date).toDateString() === dateFilter.toDateString()
+    );
+
+    return matchesSearch && matchesStatus && matchesHostel && matchesDate;
   });
 
   const handleClearFilters = () => {
     setSearchTerm("");
     setStatusFilter("ALL");
     setHostelFilter("ALL");
+    setDateFilter(undefined);
   };
 
   return (
@@ -134,7 +143,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search */}
           <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -144,6 +153,33 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-11 border"
             />
+          </div>
+
+          {/* Date Filter */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="w-full h-11 justify-start text-left font-normal"
+              onClick={() => setShowCalendar(!showCalendar)}
+            >
+              <CalendarIcon className="mr-2 size-4" />
+              {dateFilter ? (
+                new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(dateFilter)
+              ) : (
+                <span>Filter by date</span>
+              )}
+            </Button>
+            {showCalendar && (
+              <div className="absolute z-50 mt-2 bg-background border rounded-lg shadow-lg">
+                <Calendar
+                  selected={dateFilter}
+                  onSelect={(date) => {
+                    setDateFilter(date);
+                    setShowCalendar(false);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Status Filter */}
@@ -177,7 +213,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
         </div>
 
         {/* Active Filters Display */}
-        {(searchTerm || statusFilter !== "ALL" || hostelFilter !== "ALL") && (
+        {(searchTerm || statusFilter !== "ALL" || hostelFilter !== "ALL" || dateFilter) && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border/30">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Filter className="size-4" />

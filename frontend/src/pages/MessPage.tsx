@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 import { TodayMenu } from "@/components/mess/TodayMenu";
 import { WeeklyMenu } from "@/components/mess/WeeklyMenu";
 import { FeedbackForm } from "@/components/mess/FeedbackForm";
-import { UtensilsCrossed, AlertCircle, Plus } from "lucide-react";
+import { FeedbackDashboard } from "@/components/mess/FeedbackDashboard";
+import { MenuEditor } from "@/components/mess/MenuEditor";
+import { UtensilsCrossed, AlertCircle, Plus, BarChart3, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MenuData {
@@ -35,9 +37,16 @@ function MessPage() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  
+  // Admin/Warden dashboard state
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardView, setDashboardView] = useState<"feedback" | "menu">("feedback");
 
   // Only students can submit feedback
   const canSubmitFeedback = user?.role === "student";
+  
+  // Admins and wardens can view dashboard
+  const canViewDashboard = user?.role === "admin" || user?.role === "warden";
 
   // Fetch menu
   const fetchMenu = async () => {
@@ -132,6 +141,8 @@ function MessPage() {
               <p className="text-muted-foreground text-sm">
                 {canSubmitFeedback 
                   ? "Explore today's meals, browse the weekly menu, and share your dining experience" 
+                  : canViewDashboard
+                  ? "Manage mess menu and view student feedback"
                   : "Explore today's meals and browse the weekly menu schedule"
                 }
               </p>
@@ -145,11 +156,74 @@ function MessPage() {
                 Give Feedback
               </Button>
             )}
+            {canViewDashboard && !showDashboard && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setShowDashboard(true);
+                    setDashboardView("feedback");
+                  }}
+                  className="shadow-lg"
+                >
+                  <BarChart3 className="size-4 mr-2" />
+                  View Feedback
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDashboard(true);
+                    setDashboardView("menu");
+                  }}
+                  variant="outline"
+                  className="shadow-lg"
+                >
+                  <Edit className="size-4 mr-2" />
+                  Edit Menu
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        {canSubmitFeedback && showFeedbackForm ? (
+        {/* Admin/Warden Dashboard View */}
+        {canViewDashboard && showDashboard ? (
+          <div className="space-y-6">
+            {/* Dashboard Toggle */}
+            <div className="flex items-center justify-between bg-card border rounded-lg px-4 py-3 shadow-sm">
+              <div className="flex gap-2">
+                <Button
+                  variant={dashboardView === "feedback" ? "default" : "outline"}
+                  onClick={() => setDashboardView("feedback")}
+                  className="shadow-sm"
+                >
+                  <BarChart3 className="size-4 mr-2" />
+                  Feedback Dashboard
+                </Button>
+                <Button
+                  variant={dashboardView === "menu" ? "default" : "outline"}
+                  onClick={() => setDashboardView("menu")}
+                  className="shadow-sm"
+                >
+                  <Edit className="size-4 mr-2" />
+                  Menu Editor
+                </Button>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={() => setShowDashboard(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Back to Menu View
+              </Button>
+            </div>
+
+            {/* Dashboard Content */}
+            {dashboardView === "feedback" ? (
+              <FeedbackDashboard />
+            ) : (
+              <MenuEditor currentMenu={menu} onMenuUpdate={fetchMenu} />
+            )}
+          </div>
+        ) : canSubmitFeedback && showFeedbackForm ? (
           // Student Layout with Feedback: TodayMenu | WeeklyMenu | FeedbackForm
           <div className="grid gap-6 lg:grid-cols-12 xl:gap-8">
             {/* Today's Menu - Takes 4 columns */}
