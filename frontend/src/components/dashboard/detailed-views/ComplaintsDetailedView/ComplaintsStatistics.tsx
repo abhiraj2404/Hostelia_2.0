@@ -11,7 +11,7 @@ export function ComplaintsStatistics({ complaints }: ComplaintsStatisticsProps) 
   const total = complaints.length;
   const pending = complaints.filter(c => c.status === 'Pending').length;
   const resolved = complaints.filter(c => c.status === 'Resolved').length;
-  const rejected = complaints.filter(c => c.status === 'Rejected').length;
+  // const rejected = complaints.filter(c => c.status === 'Rejected').length;
 
   // Calculate average resolution time (mock logic for now as we might need resolvedAt date)
   // Assuming if resolved, we use updatedAt as resolved date

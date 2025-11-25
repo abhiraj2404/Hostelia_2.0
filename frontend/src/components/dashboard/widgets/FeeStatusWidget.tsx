@@ -11,8 +11,8 @@ interface FeeStatusWidgetProps {
 }
 
 export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
-  const hostelConfig = feeStatusConfig[fees.hostelFee.status];
-  const messConfig = feeStatusConfig[fees.messFee.status];
+  const hostelConfig = feeStatusConfig[fees.hostelFee.status as string];
+  const messConfig = feeStatusConfig[fees.messFee.status as string];
 
   return (
     <Card className="border-border/60">

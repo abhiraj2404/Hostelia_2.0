@@ -57,7 +57,7 @@ export function MessMenuWidget({ menu }: MessMenuWidgetProps) {
                 <h4 className="font-semibold text-sm">{mealType}</h4>
               </div>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-6">
-                {items.map((item, index) => (
+                {(items as string[]).map((item, index) => (
                   <li key={index}>{item}</li>
                 ))}
               </ul>

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, CheckCircle, Clock, XCircle } from "lucide-react";
+import { DollarSign, Clock, XCircle } from "lucide-react";
 import type { FeeSubmission } from "@/types/dashboard";
 
 interface FeesStatisticsProps {

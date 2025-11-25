@@ -13,7 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle, AlertCircle } from "lucide-react";
 import type { Complaint } from "@/features/complaints/complaintsSlice";
 
 interface ComplaintsAnalyticsProps {
@@ -164,7 +164,7 @@ export function ComplaintsAnalytics({ complaints }: ComplaintsAnalyticsProps) {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {statusData.map((entry, index) => (
+                    {statusData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

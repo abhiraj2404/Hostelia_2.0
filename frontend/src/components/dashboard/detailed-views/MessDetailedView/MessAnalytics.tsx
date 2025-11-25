@@ -8,8 +8,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
+  // LineChart,
+  // Line,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, TrendingUp, Users, Calendar } from "lucide-react";
@@ -20,7 +20,7 @@ interface MessAnalyticsProps {
   filters: MessFilters;
 }
 
-export function MessAnalytics({ feedback, filters }: MessAnalyticsProps) {
+export function MessAnalytics({ feedback }: MessAnalyticsProps) {
   // Overall statistics
   const stats = useMemo(() => {
     if (feedback.length === 0) return { avgRating: 0, todayRating: 0, totalFeedback: 0, positiveCount: 0 };
@@ -59,8 +59,8 @@ export function MessAnalytics({ feedback, filters }: MessAnalyticsProps) {
     });
   }, [feedback]);
 
-  // Day-wise Performance (Last 7 Days detailed by meal type)
-  const dayWiseData = useMemo(() => {
+  // Removed unused variable - Day-wise Performance (Last 7 Days detailed by meal type)
+  /* const dayWiseData = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
@@ -85,10 +85,10 @@ export function MessAnalytics({ feedback, filters }: MessAnalyticsProps) {
         Dinner: dinner.length > 0 ? parseFloat((dinner.reduce((sum, f) => sum + f.rating, 0) / dinner.length).toFixed(2)) : 0,
       };
     });
-  }, [feedback]);
+  }, [feedback]); */
 
-  // Rating Distribution
-  const ratingDistribution = useMemo(() => {
+  // Removed unused variable - Rating Distribution
+  /* const ratingDistribution = useMemo(() => {
     const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     feedback.forEach(f => {
       dist[f.rating as keyof typeof dist]++;
@@ -97,7 +97,7 @@ export function MessAnalytics({ feedback, filters }: MessAnalyticsProps) {
       rating: `${rating} Star${parseInt(rating) > 1 ? 's' : ''}`,
       count,
     }));
-  }, [feedback]);
+  }, [feedback]); */
 
   // Day of Week Analysis
   const dayOfWeekData = useMemo(() => {

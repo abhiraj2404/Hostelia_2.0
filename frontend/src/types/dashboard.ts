@@ -77,6 +77,7 @@ export interface QuickAction {
   label: string;
   icon: any;
   path: string;
+  primary?: boolean;
   variant?: "default" | "outline" | "ghost";
 }
 
@@ -93,6 +94,7 @@ export interface MetricCardData {
 
 // Mess Menu
 export interface MessMenu {
+  [key: string]: Record<string, string[]>;
   Monday: Record<string, string[]>;
   Tuesday: Record<string, string[]>;
   Wednesday: Record<string, string[]>;

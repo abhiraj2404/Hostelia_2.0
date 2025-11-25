@@ -54,9 +54,7 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
     return status ? colors[status] || 'text-blue-500' : 'text-blue-500';
   };
 
-  const getStatusIcon = (status?: string) => {
-    return filters.status && filters.status !== 'all' ? DollarSign : DollarSign;
-  };
+  // Removed unused getStatusIcon function
 
   // Build dynamic stat cards
   const buildStatCards = () => {
@@ -256,7 +254,7 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {hostelFeeData.map((entry, index) => (
+                    {hostelFeeData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -286,7 +284,7 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {messFeeData.map((entry, index) => (
+                    {messFeeData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
