@@ -184,3 +184,50 @@ export const getAllWardens = async (req, res) => {
         });
     }
 };
+
+/**
+ * Get only the name and role for a user
+ */
+export const getUserName = async (req, res) => {
+    try {
+        const validationResult = getUserByIdSchema.safeParse({
+            userId: req.params.userId,
+        });
+
+        if (!validationResult.success) {
+            return res.status(400).json({
+                success: false,
+                message: "Validation failed",
+                errors: z.treeifyError(validationResult.error),
+            });
+        }
+
+        const { userId } = validationResult.data;
+        const user = await User.findById(userId).select("name role");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        logger.info("User name retrieved", { userId });
+
+        return res.status(200).json({
+            success: true,
+            message: "User name retrieved successfully",
+            user: {
+                name: user.name,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        logger.error("Error retrieving user name:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+};
