@@ -30,19 +30,20 @@ export function ComplaintProgressTimeline({
     stages.push({
       label: "Under Review",
       status: "current",
-      timestamp: complaint.updatedAt,
+      timestamp: null, // No timestamp for current stage
     });
   } else if (complaint.status === "Rejected") {
     stages.push({
       label: "Rejected",
       status: "rejected",
-      timestamp: complaint.updatedAt,
+      timestamp: complaint.resolvedAt || complaint.updatedAt,
     });
   } else {
+    // Status is ToBeConfirmed or Resolved - Under Review stage is completed
     stages.push({
       label: "Under Review",
       status: "completed",
-      timestamp: complaint.updatedAt,
+      timestamp: complaint.resolvedAt || complaint.updatedAt,
     });
   }
 
@@ -51,7 +52,7 @@ export function ComplaintProgressTimeline({
     stages.push({
       label: "Awaiting Confirmation",
       status: "current",
-      timestamp: complaint.resolvedAt,
+      timestamp: null, // No timestamp for current stage
     });
     stages.push({
       label: "Resolved",
@@ -61,12 +62,11 @@ export function ComplaintProgressTimeline({
     stages.push({
       label: "Awaiting Confirmation",
       status: "completed",
-      timestamp: complaint.resolvedAt,
+      timestamp: complaint.studentVerifiedAt,
     });
     stages.push({
       label: "Resolved",
       status: "completed",
-      timestamp: complaint.studentVerifiedAt,
     });
   } else if (complaint.status !== "Rejected") {
     stages.push({

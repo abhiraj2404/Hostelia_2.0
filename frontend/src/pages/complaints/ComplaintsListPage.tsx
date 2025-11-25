@@ -1,4 +1,10 @@
-import { Plus, RefreshCw, XCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,6 +41,8 @@ function ComplaintsListPage() {
   const isAdmin = role === "admin";
 
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const [page, setPage] = useState(1);
+  const limit = 8;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -78,17 +86,23 @@ function ComplaintsListPage() {
 
     // 1. Apply status filter
     if (filters.status && filters.status !== "all") {
-      filtered = filtered.filter((complaint) => complaint.status === filters.status);
+      filtered = filtered.filter(
+        (complaint) => complaint.status === filters.status
+      );
     }
 
     // 2. Apply category filter
     if (filters.category && filters.category !== "all") {
-      filtered = filtered.filter((complaint) => complaint.category === filters.category);
+      filtered = filtered.filter(
+        (complaint) => complaint.category === filters.category
+      );
     }
 
     // 3. Apply hostel filter (admin only)
     if (isAdmin && filters.hostel && filters.hostel !== "all") {
-      filtered = filtered.filter((complaint) => complaint.hostel === filters.hostel);
+      filtered = filtered.filter(
+        (complaint) => complaint.hostel === filters.hostel
+      );
     }
 
     // 4. Sort by date
@@ -100,6 +114,18 @@ function ComplaintsListPage() {
 
     return sorted;
   }, [items, filters.status, filters.category, filters.hostel, isAdmin, sort]);
+
+  const paginatedItems = useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return visibleItems.slice(startIndex, startIndex + limit);
+  }, [visibleItems, page, limit]);
+
+  const totalPages = Math.ceil(visibleItems.length / limit);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filters.status, filters.category, filters.hostel, filters.query]);
 
   const createPath = "/complaints/new";
   const detailPath = (id: string) => `/complaints/${id}`;
@@ -220,7 +246,46 @@ function ComplaintsListPage() {
             createPath={createPath}
           />
         ) : (
-          <ComplaintGrid complaints={visibleItems} detailPath={detailPath} />
+          <>
+            <ComplaintGrid
+              complaints={paginatedItems}
+              detailPath={detailPath}
+            />
+
+            {/* Pagination Controls */}
+            {visibleItems.length > limit && (
+              <div className="flex items-center justify-between px-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {(page - 1) * limit + 1} to{" "}
+                  {Math.min(page * limit, visibleItems.length)} of{" "}
+                  {visibleItems.length} complaints
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <div className="text-sm">
+                    Page {page} of {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
