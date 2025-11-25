@@ -5,7 +5,7 @@ import { TransitForm } from "@/components/transit/TransitForm";
 import { TransitHistory } from "@/components/transit/TransitHistory";
 import { TransitList } from "@/components/transit/TransitList";
 import { TransitStats } from "@/components/transit/TransitStats";
-import { AlertCircle, ArrowLeftRight } from "lucide-react";
+import { AlertCircle} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 

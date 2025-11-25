@@ -54,8 +54,6 @@ export function TransitStats({ entries }: TransitStatsProps) {
   const studentsCurrentlyOut = Array.from(lastRecordByStudent.values()).filter((r) => r.transitStatus === "EXIT").length;
 
   // Get today's records
-  const today = new Date().toISOString().split("T")[0];
-  const todayRecords = entries.filter((e) => e.date.split("T")[0] === today).length;
 
   const metrics: TransitMetric[] = [
     {

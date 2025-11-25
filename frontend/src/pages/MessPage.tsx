@@ -7,7 +7,7 @@ import { WeeklyMenu } from "@/components/mess/WeeklyMenu";
 import { FeedbackForm } from "@/components/mess/FeedbackForm";
 import { FeedbackDashboard } from "@/components/mess/FeedbackDashboard";
 import { MenuEditor } from "@/components/mess/MenuEditor";
-import { UtensilsCrossed, AlertCircle, Plus, BarChart3, Edit } from "lucide-react";
+import { AlertCircle, Plus, BarChart3, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MenuData {
