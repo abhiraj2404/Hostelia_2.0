@@ -1,4 +1,5 @@
 import { useState } from "react";
+// import useForm from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -112,9 +113,9 @@ export default function Login() {
                   <div className="grid gap-2">
                     <div className="flex items-center">
                       <Label htmlFor="password">Password</Label>
-                      <Link to="/contact" className="ml-auto text-sm underline-offset-2 hover:underline">
+                      {/* <Link to="/contact" className="ml-auto text-sm underline-offset-2 hover:underline">
                         Forgot your password?
-                      </Link>
+                      </Link> */}
                     </div>
                     <div className="relative">
                       <Input

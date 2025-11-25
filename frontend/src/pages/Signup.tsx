@@ -338,7 +338,7 @@ export default function Signup() {
                       <Controller
                         control={step1Form.control}
                         name="hostel"
-                        render={({ field }) => (
+                        render={({ field }: { field: any }) => (
                           <Select
                             disabled={isFormLoading}
                             value={field.value ?? undefined}
@@ -393,7 +393,7 @@ export default function Signup() {
                     <Controller
                       control={step1Form.control}
                       name="year"
-                      render={({ field }) => (
+                      render={({ field }: { field: any }) => (
                         <Select
                           disabled={isFormLoading}
                           value={field.value ?? undefined}

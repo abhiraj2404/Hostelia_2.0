@@ -1,17 +1,26 @@
-import { UserCard } from "@/components/dashboard/UserCard";
+import { AdminDashboardLayout } from "@/components/dashboard/layouts/AdminDashboardLayout";
+import { StudentDashboardLayout } from "@/components/dashboard/layouts/StudentDashboardLayout";
+import { WardenDashboardLayout } from "@/components/dashboard/layouts/WardenDashboardLayout";
+import { useAppSelector } from "@/hooks";
 
 function Dashboard() {
+  const { user } = useAppSelector((state) => state.auth);
+  const role = user?.role;
+
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">Welcome to your dashboard</p>
-        </div>
-        <UserCard />
+      <div className="mx-auto max-w-7xl">
+        {role === "student" ? (
+          <StudentDashboardLayout />
+        ) : role === "warden" ? (
+          <WardenDashboardLayout />
+        ) : (
+          <AdminDashboardLayout />
+        )}
       </div>
     </div>
   );
 }
+
 
 export default Dashboard;
