@@ -17,6 +17,7 @@ interface FeesListProps {
   fees: FeeSubmission[];
   loading?: boolean;
   emailToHostel?: Record<string, string>;
+  isWarden?: boolean;
 }
 
 const getStatusBadge = (status: string) => {
@@ -44,6 +45,7 @@ export function FeesList({
   fees,
   loading = false,
   emailToHostel = {},
+  isWarden = false,
 }: FeesListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -72,7 +74,7 @@ export function FeesList({
                 <TableRow>
                   <TableHead>Student Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Hostel</TableHead>
+                  {!isWarden && <TableHead>Hostel</TableHead>}
                   <TableHead>Hostel Fee</TableHead>
                   <TableHead>Mess Fee</TableHead>
                   <TableHead>Last Updated</TableHead>
@@ -91,9 +93,11 @@ export function FeesList({
                       <TableCell className="text-muted-foreground text-sm">
                         {fee.studentEmail}
                       </TableCell>
-                      <TableCell>
-                        {emailToHostel[fee.studentEmail] || 'N/A'}
-                      </TableCell>
+                      {!isWarden && (
+                        <TableCell>
+                          {emailToHostel[fee.studentEmail] || 'N/A'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge variant={hostelBadge.variant} className={hostelBadge.className}>
                           {getStatusLabel(fee.hostelFee.status)}

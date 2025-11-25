@@ -37,7 +37,7 @@ export function WardenMetrics({ metrics, activeTab, onMetricClick }: WardenMetri
       {/* Fees Metric */}
       <MetricCard
         label="Fees"
-        value={metrics.fees ?  `${(metrics.fees as any).pending || 0}` : "0"}
+        value={(metrics.fees as any)?.pending || 0}
         description="Pending Review"
         icon={metricIcons.fees}
         tone="bg-green-50 dark:bg-green-950/20 text-green-600"

@@ -18,6 +18,8 @@ interface FeesStatsViewProps {
   filters: FeesFilters;
   onFiltersChange: (filters: FeesFilters) => void;
   loading?: boolean;
+  isWarden?: boolean;
+  students?: Student[];
 }
 
 type TabType = 'list' | 'analytics';
@@ -27,6 +29,8 @@ export function FeesStatsView({
   filters,
   onFiltersChange,
   loading = false,
+  isWarden = false,
+  students = [],
 }: FeesStatsViewProps) {
   const [activeTab, setActiveTab] = useState<TabType>('list');
   const [emailToHostel, setEmailToHostel] = useState<Record<string, string>>({});
@@ -59,14 +63,20 @@ export function FeesStatsView({
   const filteredFees = useMemo(() => {
     let result = [...fees];
 
-    // Apply status filter first
+    // For wardens: Filter by student emails from their hostel
+    if (isWarden && students.length > 0) {
+      const hostelStudentEmails = new Set(students.map(s => s.email));
+      result = result.filter(f => hostelStudentEmails.has(f.studentEmail));
+    }
+
+    // Apply status filter
     if (filters.status && filters.status !== 'all') {
       result = result.filter(f => 
         f.hostelFee.status === filters.status || f.messFee.status === filters.status
       );
     }
 
-    // Then apply fee type filter
+    // Apply fee type filter
     if (filters.feeType && filters.feeType !== 'all') {
       result = result.filter(f => {
         if (filters.feeType === 'hostel') {
@@ -87,7 +97,7 @@ export function FeesStatsView({
     }
 
     return result;
-  }, [fees, filters]);
+  }, [fees, filters, isWarden, students]);
 
   return (
     <div className="space-y-6">
@@ -95,23 +105,25 @@ export function FeesStatsView({
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.hostel || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Hostel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Hostels</SelectItem>
-              <SelectItem value="BH-1">BH-1</SelectItem>
-              <SelectItem value="BH-2">BH-2</SelectItem>
-              <SelectItem value="BH-3">BH-3</SelectItem>
-              <SelectItem value="BH-4">BH-4</SelectItem>
-            </SelectContent>
-          </Select>
+          {!isWarden && (
+            <Select
+              value={filters.hostel || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Hostel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Hostels</SelectItem>
+                <SelectItem value="BH-1">BH-1</SelectItem>
+                <SelectItem value="BH-2">BH-2</SelectItem>
+                <SelectItem value="BH-3">BH-3</SelectItem>
+                <SelectItem value="BH-4">BH-4</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           <Select
             value={filters.feeType || 'all'}
@@ -187,6 +199,7 @@ export function FeesStatsView({
             fees={filteredFees} 
             loading={loading}
             emailToHostel={emailToHostel}
+            isWarden={isWarden}
           />
         )}
 

@@ -186,23 +186,31 @@ export const fetchWardenDashboardData = createAsyncThunk(
 
       const fees = feesRes.data.data || [];
       
-      // Calculate fee stats
-      const feeStats = fees.reduce((acc: any, fee: FeeSubmission) => {
+      // Calculate fee stats - need to filter by warden's hostel students
+      // Get student emails from this hostel
+      const hostelStudentEmails = new Set(students.map((s: Student) => s.email));
+      const hostelFees = fees.filter((f: FeeSubmission) => hostelStudentEmails.has(f.studentEmail));
+      
+      // Calculate fee stats from hostel students only
+      const feeStats = hostelFees.reduce((acc: any, fee: FeeSubmission) => {
         // Hostel Fee
         if (fee.hostelFee?.status) {
           acc.hostelFee.total++;
-          if (fee.hostelFee.status === 'pending') acc.hostelFee.pending++;
+          if (fee.hostelFee.status.toLowerCase() === 'pending') acc.hostelFee.pending++;
         }
         // Mess Fee
         if (fee.messFee?.status) {
           acc.messFee.total++;
-          if (fee.messFee.status === 'pending') acc.messFee.pending++;
+          if (fee.messFee.status.toLowerCase() === 'pending') acc.messFee.pending++;
         }
         return acc;
       }, {
         hostelFee: { total: 0, pending: 0 },
         messFee: { total: 0, pending: 0 }
       });
+      
+      // Add combined pending count for the metric card
+      const totalPending = feeStats.hostelFee.pending + feeStats.messFee.pending;
       
       return {
         students: students.length,
@@ -212,7 +220,10 @@ export const fetchWardenDashboardData = createAsyncThunk(
           resolved: complaints.filter((c: Complaint) => c.status === "Resolved").length,
           rejected: complaints.filter((c: Complaint) => c.status === "Rejected").length,
         },
-        fees: feeStats,
+        fees: {
+          ...feeStats,
+          pending: totalPending, // Combined pending count for metric card
+        },
         messFeedback: {
           total: feedbacks.length,
           avgRating: feedbacks.length > 0
@@ -412,6 +423,9 @@ const dashboardSlice = createSlice({
     toggleDetailedView: (state) => {
       state.detailedView.isExpanded = !state.detailedView.isExpanded;
     },
+    setDetailedViewExpanded: (state, action: PayloadAction<boolean>) => {
+      state.detailedView.isExpanded = action.payload;
+    },
     setComplaintsFilters: (state, action: PayloadAction<ComplaintsFilters>) => {
       state.detailedComplaints.filters = action.payload;
       state.detailedComplaints.pagination.page = 1;
@@ -567,6 +581,7 @@ export const {
   clearDashboardError,
   setActiveTab,
   toggleDetailedView,
+  setDetailedViewExpanded,
   setComplaintsFilters,
   setStudentsFilters,
   setFeesFilters,

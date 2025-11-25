@@ -245,6 +245,7 @@ export function AdminDashboardLayout() {
                     dispatch(fetchDetailedComplaints({ page: 1, filters }));
                   }}
                   loading={complaintsState.loading}
+                  isWarden={false}
                 />
               )}
 
@@ -263,6 +264,7 @@ export function AdminDashboardLayout() {
                   onPageChange={(page) => {
                     dispatch(setStudentsPage(page));
                   }}
+                  isWarden={false}
                 />
               )}
 
@@ -275,6 +277,7 @@ export function AdminDashboardLayout() {
                     dispatch(fetchDetailedFees({ page: 1, filters }));
                   }}
                   loading={feesState.loading}
+                  isWarden={false}
                 />
               )}
 
@@ -287,6 +290,7 @@ export function AdminDashboardLayout() {
                     dispatch(fetchDetailedMessFeedback({ page: 1, filters }));
                   }}
                   loading={messState.loading}
+                  isWarden={false}
                 />
               )}
             </DetailedViewPanel>

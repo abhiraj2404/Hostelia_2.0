@@ -18,6 +18,7 @@ interface StudentsStatsViewProps {
   loading?: boolean;
   pagination?: { page: number; total: number; limit: number };
   onPageChange?: (page: number) => void;
+  isWarden?: boolean;
 }
 
 export function StudentsStatsView({
@@ -27,6 +28,7 @@ export function StudentsStatsView({
   loading = false,
   pagination,
   onPageChange,
+  isWarden = false,
 }: StudentsStatsViewProps) {
   const totalPages = pagination ? Math.ceil(pagination.total / pagination.limit) : 1;
   const currentPage = pagination?.page || 1;
@@ -35,26 +37,28 @@ export function StudentsStatsView({
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
-        <Select
-          value={filters.hostel || 'all'}
-          onValueChange={(value) =>
-            onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
-          }
-        >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Hostel" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Hostels</SelectItem>
-            <SelectItem value="BH-1">BH-1</SelectItem>
-            <SelectItem value="BH-2">BH-2</SelectItem>
-            <SelectItem value="BH-3">BH-3</SelectItem>
-            <SelectItem value="BH-4">BH-4</SelectItem>
-          </SelectContent>
-        </Select>
+        {!isWarden && (
+          <Select
+            value={filters.hostel || 'all'}
+            onValueChange={(value) =>
+              onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
+            }
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Hostel" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Hostels</SelectItem>
+              <SelectItem value="BH-1">BH-1</SelectItem>
+              <SelectItem value="BH-2">BH-2</SelectItem>
+              <SelectItem value="BH-3">BH-3</SelectItem>
+              <SelectItem value="BH-4">BH-4</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
 
         <Input
-          placeholder="Search by name..."
+          placeholder="Search by name, email, or roll number..."
           value={filters.query || ''}
           onChange={(e) =>
             onFiltersChange({ ...filters, query: e.target.value || undefined })
@@ -91,7 +95,7 @@ export function StudentsStatsView({
       </div>
 
       {/* List */}
-      <StudentsList students={students} loading={loading} />
+      <StudentsList students={students} loading={loading} isWarden={isWarden} />
 
       {/* Pagination Controls */}
       {pagination && pagination.total > pagination.limit && (

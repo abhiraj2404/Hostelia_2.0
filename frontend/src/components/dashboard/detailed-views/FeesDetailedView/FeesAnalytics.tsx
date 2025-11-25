@@ -113,42 +113,42 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
       ];
     }
 
-    // If only fee type is selected
-    if (selectedFeeType) {
-      const feeTypeLabel = selectedFeeType === 'hostel' ? 'Hostel' : 'Mess';
-      const stats = selectedFeeType === 'hostel' ? hostelStats : messStats;
-      
-      return [
-        {
-          title: `Approved ${feeTypeLabel} Fee`,
-          value: stats.approved,
-          icon: DollarSign,
-          description: `${stats.approved} submissions`,
-          color: 'text-green-500',
-        },
-        {
-          title: `Pending ${feeTypeLabel} Fee`,
-          value: stats.pending,
-          icon: Clock,
-          description: `${stats.pending} awaiting review`,
-          color: 'text-yellow-500',
-        },
-        {
-          title: `Rejected ${feeTypeLabel} Fee`,
-          value: stats.rejected,
-          icon: XCircle,
-          description: `${stats.rejected} rejected`,
-          color: 'text-red-500',
-        },
-        {
-          title: `${feeTypeLabel} Defaulters`,
-          value: stats.notSubmitted,
-          icon: XCircle,
-          description: `${stats.notSubmitted} not submitted`,
-          color: 'text-gray-500',
-        },
-      ];
-    }
+    // If only fee type is selected - COMMENTED OUT
+    // if (selectedFeeType) {
+    //   const feeTypeLabel = selectedFeeType === 'hostel' ? 'Hostel' : 'Mess';
+    //   const stats = selectedFeeType === 'hostel' ? hostelStats : messStats;
+    //   
+    //   return [
+    //     {
+    //       title: `Approved ${feeTypeLabel} Fee`,
+    //       value: stats.approved,
+    //       icon: DollarSign,
+    //       description: `${stats.approved} submissions`,
+    //       color: 'text-green-500',
+    //     },
+    //     {
+    //       title: `Pending ${feeTypeLabel} Fee`,
+    //       value: stats.pending,
+    //       icon: Clock,
+    //       description: `${stats.pending} awaiting review`,
+    //       color: 'text-yellow-500',
+    //     },
+    //     {
+    //       title: `Rejected ${feeTypeLabel} Fee`,
+    //       value: stats.rejected,
+    //       icon: XCircle,
+    //       description: `${stats.rejected} rejected`,
+    //       color: 'text-red-500',
+    //     },
+    //     {
+    //       title: `${feeTypeLabel} Defaulters`,
+    //       value: stats.notSubmitted,
+    //       icon: XCircle,
+    //       description: `${stats.notSubmitted} not submitted`,
+    //       color: 'text-gray-500',
+    //     },
+    //   ];
+    // }
 
     // Default: no filters
     return [

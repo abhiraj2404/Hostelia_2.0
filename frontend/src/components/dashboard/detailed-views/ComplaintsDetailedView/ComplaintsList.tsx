@@ -17,11 +17,13 @@ import { formatDate, statusColors } from "@/components/dashboard/utils/dashboard
 interface ComplaintsListProps {
   complaints: Complaint[];
   loading?: boolean;
+  isWarden?: boolean;
 }
 
 export function ComplaintsList({
   complaints,
   loading = false,
+  isWarden = false,
 }: ComplaintsListProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +54,7 @@ export function ComplaintsList({
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
-                  <TableHead>Hostel</TableHead>
+                  {!isWarden && <TableHead>Hostel</TableHead>}
                   <TableHead>Room</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -69,7 +71,7 @@ export function ComplaintsList({
                       {complaint.problemTitle}
                     </TableCell>
                     <TableCell>{complaint.category}</TableCell>
-                    <TableCell>{complaint.hostel || 'N/A'}</TableCell>
+                    {!isWarden && <TableCell>{complaint.hostel || 'N/A'}</TableCell>}
                     <TableCell>
                       {complaint.roomNo || 'N/A'}
                     </TableCell>

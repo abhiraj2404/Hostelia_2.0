@@ -15,6 +15,7 @@ interface MessStatsViewProps {
   filters: MessFilters;
   onFiltersChange: (filters: MessFilters) => void;
   loading?: boolean;
+  isWarden?: boolean;
 }
 
 export function MessStatsView({
@@ -22,6 +23,7 @@ export function MessStatsView({
   filters,
   onFiltersChange,
   loading = false,
+  isWarden = false,
 }: MessStatsViewProps) {
   // Client-side filtering
   const filteredFeedback = useMemo(() => {
@@ -44,23 +46,25 @@ export function MessStatsView({
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.hostel || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Hostel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Hostels</SelectItem>
-              <SelectItem value="BH-1">BH-1</SelectItem>
-              <SelectItem value="BH-2">BH-2</SelectItem>
-              <SelectItem value="BH-3">BH-3</SelectItem>
-              <SelectItem value="BH-4">BH-4</SelectItem>
-            </SelectContent>
-          </Select>
+          {!isWarden && (
+            <Select
+              value={filters.hostel || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Hostel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Hostels</SelectItem>
+                <SelectItem value="BH-1">BH-1</SelectItem>
+                <SelectItem value="BH-2">BH-2</SelectItem>
+                <SelectItem value="BH-3">BH-3</SelectItem>
+                <SelectItem value="BH-4">BH-4</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           <Select
             value={filters.day || 'all'}
