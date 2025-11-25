@@ -6,15 +6,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Megaphone,
   FileText,
-  Download,
   Trash2,
   Loader2,
   Calendar,
   User,
+  MessageSquare,
+  ExternalLink,
+  Shield,
+  GraduationCap,
 } from "lucide-react";
+import { formatTime } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface Announcement {
   _id: string;
@@ -25,6 +31,7 @@ interface Announcement {
     name: string;
     role: string;
   };
+  comments?: Array<any>;
   createdAt: string;
 }
 
@@ -35,101 +42,156 @@ interface AnnouncementCardProps {
   isDeleting: boolean;
 }
 
+const getRoleIcon = (role: string) => {
+  switch (role) {
+    case "admin":
+      return <Shield className="size-3" />;
+    case "warden":
+      return <User className="size-3" />;
+    case "student":
+      return <GraduationCap className="size-3" />;
+    default:
+      return <User className="size-3" />;
+  }
+};
+
+const getRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" | "primary" => {
+  switch (role) {
+    case "admin":
+      return "primary";
+    case "warden":
+      return "primary";
+    case "student":
+      return "secondary";
+    default:
+      return "outline";
+  }
+};
+
 export function AnnouncementCard({
   announcement,
   canDelete,
   onDelete,
   isDeleting,
 }: AnnouncementCardProps) {
-  const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(dateString));
-  };
+  const commentCount = announcement.comments?.length || 0;
 
   return (
-    <Card className="border shadow-sm hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-900 overflow-hidden">
-      {/* Compact Header */}
-      <CardHeader className="pb-2 pt-3 px-3 bg-muted/30 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5 mb-1.5">
-              <div className="p-1 rounded bg-blue-100 dark:bg-blue-900/30 shrink-0">
-                <Megaphone className="size-3 text-blue-600 dark:text-blue-400" />
+    <Card className="overflow-hidden border-border/60 transition-all hover:shadow-lg">
+      {/* Header Section */}
+      <div className="relative bg-muted/30">
+        <CardHeader className="pb-3 pt-4 space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="rounded-lg bg-primary/15 p-1.5 shrink-0 ring-1 ring-primary/20">
+                  <Megaphone className="size-4 text-primary" />
+                </div>
+                <Badge
+                  variant={getRoleBadgeVariant(announcement.postedBy.role)}
+                  className="h-5 gap-1 text-xs capitalize shadow-sm"
+                >
+                  {getRoleIcon(announcement.postedBy.role)}
+                  {announcement.postedBy.role}
+                </Badge>
               </div>
-              <span className="truncate">{announcement.title}</span>
-            </CardTitle>
-            <CardDescription className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
-              <span className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                <User className="size-3" />
-                <span className="font-medium">{announcement.postedBy.name}</span>
-                <span className="text-gray-400 dark:text-gray-600">({announcement.postedBy.role})</span>
-              </span>
-              <span className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                <Calendar className="size-3" />
-                {formatDate(announcement.createdAt)}
-              </span>
-            </CardDescription>
+              <Link to={`/announcements/${announcement._id}`}>
+                <CardTitle className="text-base font-semibold line-clamp-2 transition-colors hover:text-primary cursor-pointer leading-snug">
+                  {announcement.title}
+                </CardTitle>
+              </Link>
+              <CardDescription className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <User className="size-3.5" />
+                  <span className="font-medium">{announcement.postedBy.name}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted-foreground/80">
+                  <Calendar className="size-3.5" />
+                  {formatTime(announcement.createdAt)}
+                </span>
+              </CardDescription>
+            </div>
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onDelete(announcement._id);
+                }}
+                disabled={isDeleting}
+                className="h-8 w-8 p-0 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+              >
+                {isDeleting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+              </Button>
+            )}
           </div>
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(announcement._id)}
-              disabled={isDeleting}
-              className="shrink-0 h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950/20"
-            >
-              {isDeleting ? (
-                <Loader2 className="size-3.5 animate-spin text-gray-400" />
-              ) : (
-                <Trash2 className="size-3.5 text-red-600 dark:text-red-400" />
-              )}
-            </Button>
-          )}
-        </div>
-      </CardHeader>
+        </CardHeader>
+      </div>
 
-      {/* Compact Content */}
-      <CardContent className="p-3 pt-2">
-        <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap line-clamp-3">
+      {/* Content Section */}
+      <CardContent className="flex-1 pt-4 pb-4 px-5 space-y-4">
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
           {announcement.message}
         </p>
 
-        {announcement.fileUrl && (
-          <div className="mt-2 p-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <div className="p-1 rounded bg-blue-100 dark:bg-blue-900/30 shrink-0">
-                <FileText className="size-3.5 text-blue-600 dark:text-blue-400" />
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/30">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {announcement.fileUrl && (
+              <div className="flex items-center gap-1.5">
+                <FileText className="size-3.5 text-primary/60" />
+                <span className="font-medium">Attachment</span>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">Attachment</p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
-                  Click to view or download
-                </p>
-              </div>
+            )}
+            <div className="flex items-center gap-1.5">
+              <MessageSquare className="size-3.5 text-primary/60" />
+              <span className="font-medium">{commentCount}</span>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              asChild
-              className="h-7 px-2.5 text-xs border-gray-300 dark:border-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 dark:hover:bg-blue-950/30 dark:hover:text-blue-400 dark:hover:border-blue-800 transition-colors shrink-0"
-            >
-              <a
-                href={announcement.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1"
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {announcement.fileUrl && (
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="h-7 px-2.5 text-xs hover:bg-primary/10 hover:text-primary transition-colors"
               >
-                <Download className="size-3" />
-                <span className="font-semibold">View</span>
-              </a>
+                {/* For PDFs use Google Docs viewer to force in-browser viewing; images open directly */}
+                <a
+                  href={/\.pdf(\?|$)/i.test(announcement.fileUrl) || /pdf/i.test(announcement.fileUrl)
+                    ? `https://docs.google.com/viewer?url=${encodeURIComponent(
+                        announcement.fileUrl
+                      )}&embedded=true`
+                    : announcement.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1.5"
+                >
+                  <ExternalLink className="size-3.5" />
+                  View
+                </a>
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="h-7 px-2.5 text-xs text-primary hover:bg-primary/10 font-medium transition-colors"
+            >
+              <Link to={`/announcements/${announcement._id}`} className="flex items-center gap-1.5">
+                Details
+                <ExternalLink className="size-3.5" />
+              </Link>
             </Button>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

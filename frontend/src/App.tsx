@@ -5,6 +5,7 @@ import { SidebarLayout } from "./components/layout/SidebarLayout";
 import { useAppSelector } from "./hooks";
 import About from "./pages/About";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
+import AnnouncementDetailPage from "./pages/AnnouncementDetailPage";
 import ComplaintCreatePage from "./pages/complaints/ComplaintCreatePage";
 import ComplaintDetailPage from "./pages/complaints/ComplaintDetailPage";
 import ComplaintsListPage from "./pages/complaints/ComplaintsListPage";
@@ -61,6 +62,7 @@ function App() {
             <Route path="/complaints/:id" element={requireAuth(<ComplaintDetailPage />)} />
             <Route path="/mess" element={<MessPage />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
+            <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
             <Route path="/transit" element={<TransitPage />} />
           </Routes>
         </main>

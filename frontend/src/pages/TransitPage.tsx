@@ -133,31 +133,34 @@ function TransitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
-      <div className="container mx-auto px-4 py-5 max-w-7xl">
+    <div className="min-h-screen bg-linear-to-b from-background via-muted/5 to-muted/10">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full border bg-card text-xs font-medium shadow-sm">
-            <ArrowLeftRight className="size-3.5" />
-            <span>Transit Services</span>
+        <div className="mb-8 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-2 rounded-full border border-primary/20 bg-primary/5 text-xs font-medium shadow-sm">
+            <ArrowLeftRight className="size-3.5 text-primary" />
+            <span className="text-foreground">Transit Management</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight mb-2">
-            {isStudent ? "Entry & Exit Records" : "Transit Management"}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {isStudent
-              ? "Record your hostel entry and exit times"
-              : "Monitor and manage all student transit records"}
-          </p>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              {isStudent ? "Entry & Exit Records" : "Transit Dashboard"}
+            </h1>
+            <p className="text-muted-foreground text-sm max-w-2xl">
+              {isStudent
+                ? "Record your hostel entry and exit times to maintain accurate transit logs"
+                : "Monitor and manage all student transit records across hostels"}
+            </p>
+          </div>
         </div>
 
         {/* Student View: Form + History */}
         {isStudent && (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
             <TransitForm
               onSubmit={handleSubmit}
               createStatus={createStatus}
               createError={createError}
+              entries={entries}
             />
             <TransitHistory
               entries={entries}
@@ -170,7 +173,7 @@ function TransitPage() {
 
         {/* Warden/Admin View: Stats + List */}
         {isWardenOrAdmin && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <TransitStats entries={entries} />
             <TransitList
               entries={entries}

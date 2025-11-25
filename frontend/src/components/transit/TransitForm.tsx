@@ -84,19 +84,42 @@ const transitTypes = [
   { value: "ENTRY", label: "Entry", icon: LogIn, color: "text-green-600" },
 ] as const;
 
+interface TransitEntry {
+  _id: string;
+  studentId: {
+    _id: string;
+    name: string;
+    rollNo: string;
+    hostel: string;
+    roomNo: string;
+  };
+  purpose: string;
+  transitStatus: "ENTRY" | "EXIT";
+  date: string;
+  time: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface TransitFormProps {
   onSubmit: (data: { transitStatus: string; date: Date; time: string; purpose: string }) => Promise<void>;
   createStatus: "idle" | "loading" | "succeeded" | "failed";
   createError: string | null;
+  entries?: TransitEntry[];
 }
 
 
-export function TransitForm({ onSubmit, createStatus, createError }: TransitFormProps) {
+export function TransitForm({ onSubmit, createStatus, createError, entries = [] }: TransitFormProps) {
   const [showCalendar, setShowCalendar] = useState(false);
 
   const now = new Date();
   const currentHour = now.getHours().toString().padStart(2, "0");
   const currentMinute = now.getMinutes().toString().padStart(2, "0");
+
+  // Get last transit status for the current user
+  const lastEntry = entries.length > 0 ? entries[0] : null;
+  const lastTransitStatus = lastEntry?.transitStatus;
+  const expectedNextStatus = lastTransitStatus === "ENTRY" ? "EXIT" : "ENTRY";
 
   const {
     control,
@@ -108,7 +131,7 @@ export function TransitForm({ onSubmit, createStatus, createError }: TransitForm
   } = useForm<EntryExitFormData>({
     resolver: zodResolver(entryExitSchema),
     defaultValues: {
-      transitStatus: "EXIT",
+      transitStatus: expectedNextStatus,
       date: new Date(),
       hour: currentHour,
       minute: currentMinute,
