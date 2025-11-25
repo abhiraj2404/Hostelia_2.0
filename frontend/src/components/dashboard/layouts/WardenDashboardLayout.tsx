@@ -39,7 +39,7 @@ import type { DetailedTab } from "@/types/dashboard";
 const wardenQuickActions = [
   {
     label: "Create Announcement",
-    path: "/announcements/new",
+    path: "/announcements",
     icon: Bell,
   },
   {

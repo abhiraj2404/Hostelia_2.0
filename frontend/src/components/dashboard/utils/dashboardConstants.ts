@@ -18,7 +18,7 @@ export const studentQuickActions: QuickAction[] = [
     primary: true,
   },
   {
-    label: "Submit Fee Payment",
+    label: "Submit Fee Receipts",
     path: "/fees",
     icon: Receipt,
   },
@@ -51,11 +51,7 @@ export const statusColors = {
 };
 
 // Fee status badge variants
-export const feeStatusConfig: Record<string, {
-  label: string;
-  variant: "default" | "secondary" | "outline" | "destructive";
-  color: string;
-}> = {
+export const feeStatusConfig = {
   documentNotSubmitted: {
     label: "Not Submitted",
     variant: "secondary" as const,
