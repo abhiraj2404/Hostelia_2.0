@@ -67,6 +67,11 @@ export const feeStatusConfig = {
     variant: "default" as const,
     color: "text-green-600",
   },
+  approved: {
+    label: "Approved",
+    variant: "default" as const,
+    color: "text-green-600",
+  },
   rejected: {
     label: "Rejected",
     variant: "destructive" as const,
