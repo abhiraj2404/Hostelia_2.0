@@ -1,18 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, Megaphone } from "lucide-react";
 import { AnnouncementCard } from "./AnnouncementCard";
-
-interface Announcement {
-  _id: string;
-  title: string;
-  message: string;
-  fileUrl?: string;
-  postedBy: {
-    name: string;
-    role: string;
-  };
-  createdAt: string;
-}
+import type { Announcement } from "@/types/announcement";
 
 interface AnnouncementListProps {
   items: Announcement[];
@@ -31,23 +20,34 @@ export function AnnouncementList({
 }: AnnouncementListProps) {
   if (status === "loading") {
     return (
-      <Card className="border shadow-sm bg-card">
-        <CardContent className="flex flex-col items-center justify-center py-12 space-y-3">
-          <div className="relative">
-            <div className="w-10 h-10 border-4 border-gray-200 dark:border-gray-700 border-t-gray-900 dark:border-t-white rounded-full animate-spin"></div>
-          </div>
-          <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Loading announcements...</p>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="animate-pulse border-border/60">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 space-y-3">
+                  <div className="h-3 w-20 bg-muted rounded"></div>
+                  <div className="h-5 w-full bg-muted rounded"></div>
+                  <div className="h-3 w-3/4 bg-muted rounded"></div>
+                </div>
+              </div>
+              <div className="h-20 bg-muted rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
   if (status === "failed") {
     return (
-      <Card className="border shadow-sm bg-red-50 dark:bg-red-950/20">
-        <CardContent className="flex items-center gap-2 text-red-700 dark:text-red-300 py-4 justify-center">
-          <AlertCircle className="size-4" />
-          <span className="font-semibold text-sm">Failed to load announcements</span>
+      <Card className="border-destructive/50 bg-destructive/5">
+        <CardContent className="flex items-center justify-center gap-3 py-8 text-destructive">
+          <AlertCircle className="size-5" />
+          <div>
+            <p className="font-semibold">Failed to load announcements</p>
+            <p className="text-sm text-muted-foreground">Please try again later</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -55,26 +55,23 @@ export function AnnouncementList({
 
   if (status === "succeeded" && items.length === 0) {
     return (
-      <Card className="border shadow-sm bg-card">
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-          <div className="mx-auto w-14 h-14 bg-muted rounded-xl flex items-center justify-center shadow-sm">
-            <Megaphone className="size-7 text-gray-400 dark:text-gray-600" />
+      <Card className="border-border/60">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 rounded-full bg-muted p-4">
+            <Megaphone className="size-8 text-muted-foreground" />
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-              No Announcements Yet
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 max-w-sm">
-              Check back later for updates and important notices
-            </p>
-          </div>
+          <h3 className="mb-2 text-lg font-semibold">No Announcements Yet</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Check back later for important updates and notices from the administration
+          </p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-2">{items.map((announcement) => (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+      {items.map((announcement) => (
         <AnnouncementCard
           key={announcement._id}
           announcement={announcement}

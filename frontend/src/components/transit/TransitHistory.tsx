@@ -62,18 +62,18 @@ export function TransitHistory({ entries, listStatus, listError, onRefresh }: Tr
   };
 
   return (
-    <Card className="border overflow-hidden bg-card shadow-lg hover:shadow-xl transition-all duration-300">
-      <CardHeader className="bg-muted/50 text-foreground pb-3 px-4 py-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <Card className="border overflow-hidden bg-card shadow-lg hover:shadow-xl transition-shadow">
+      <CardHeader className="bg-muted/50 text-foreground pb-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <List className="size-4 text-primary" />
+            <CardTitle className="flex items-center gap-2.5 text-xl">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <List className="size-5 text-primary" />
               </div>
-              <span className="font-semibold">My Transit History</span>
+              <span className="font-bold">My Transit History</span>
             </CardTitle>
             <CardDescription className="text-muted-foreground text-sm">
-              Your entry and exit records
+              Your complete entry and exit records
             </CardDescription>
           </div>
           <Button
@@ -81,12 +81,12 @@ export function TransitHistory({ entries, listStatus, listError, onRefresh }: Tr
             size="sm"
             onClick={onRefresh}
             disabled={listStatus === "loading"}
-            className="border-2 border-white/30 bg-white/10 text-white hover:bg-white hover:text-gray-900 transition-all backdrop-blur-sm font-semibold"
+            className="shadow-sm"
           >
             {listStatus === "loading" ? (
               <Loader2 className="size-4 animate-spin mr-2" />
             ) : null}
-            Refresh History
+            Refresh
           </Button>
         </div>
       </CardHeader>

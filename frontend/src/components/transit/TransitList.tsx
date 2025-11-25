@@ -105,17 +105,17 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
   };
 
   return (
-    <Card className="border-0 overflow-hidden bg-linear-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-2xl hover:shadow-xl transition-all duration-300">
-      <CardHeader className="bg-linear-to-r from-gray-600 to-gray-400 text-white space-y-4 pb-6">
+    <Card className="border-0 overflow-hidden bg-card shadow-xl">
+      <CardHeader className="bg-muted/50 text-foreground space-y-4 pb-6 px-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-2">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm">
-                <Users className="size-5 text-white" />
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <div className="p-2.5 rounded-xl bg-primary/10 shadow-lg">
+                <Users className="size-6 text-primary" />
               </div>
               <span className="font-bold">Transit Register</span>
             </CardTitle>
-            <CardDescription className="text-gray-300 text-sm">
+            <CardDescription className="text-muted-foreground text-sm">
               Complete record of all student entry and exit transactions
             </CardDescription>
           </div>
@@ -124,12 +124,12 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
             size="sm"
             onClick={onRefresh}
             disabled={listStatus === "loading"}
-            className="border-2 border-white/30 bg-white/10 text-white hover:bg-white hover:text-gray-900 transition-all backdrop-blur-sm font-semibold"
+            className="shadow-sm"
           >
             {listStatus === "loading" ? (
               <Loader2 className="size-4 animate-spin mr-2" />
             ) : null}
-            Refresh Records
+            Refresh
           </Button>
         </div>
 
@@ -137,18 +137,18 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* Search */}
           <div className="relative sm:col-span-2 lg:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search name, roll, hostel..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11 border-2 border-white/30 bg-white/10 text-white placeholder:text-gray-300 focus:bg-white/20 focus:border-white transition-all backdrop-blur-sm"
+              className="pl-10 h-11 border"
             />
           </div>
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-            <SelectTrigger className="h-11 border-2 border-white/30 bg-white/10 text-white focus:bg-white/20 focus:border-white transition-all backdrop-blur-sm">
+            <SelectTrigger className="h-11">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -161,7 +161,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
           {/* Hostel Filter (hide for warden) */}
           {user?.role !== "warden" && (
             <Select value={hostelFilter} onValueChange={setHostelFilter}>
-              <SelectTrigger className="h-11 border-2 border-white/30 bg-white/10 text-white focus:bg-white/20 focus:border-white transition-all backdrop-blur-sm">
+              <SelectTrigger className="h-11">
                 <SelectValue placeholder="Filter by hostel" />
               </SelectTrigger>
               <SelectContent>
@@ -178,18 +178,18 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
 
         {/* Active Filters Display */}
         {(searchTerm || statusFilter !== "ALL" || hostelFilter !== "ALL") && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-white/20">
-            <div className="flex items-center gap-2 text-sm font-medium text-white">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border/30">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Filter className="size-4" />
               <span>
-                Showing <span className="font-bold bg-white/20 px-2 py-0.5 rounded">{filteredEntries.length}</span> of {entries.length} records
+                Showing {filteredEntries.length} of {entries.length} records
               </span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClearFilters}
-              className="h-9 px-4 text-sm bg-white/10 text-white hover:bg-white hover:text-gray-900 border border-white/30 transition-all font-semibold"
+              className="h-9 px-4 text-sm font-semibold"
             >
               Clear Filters
             </Button>
@@ -301,8 +301,8 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
                                 variant={isEntry ? "default" : "outline"}
                                 className={
                                   isEntry
-                                    ? "bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-600 font-semibold px-3 py-1 shadow-sm"
-                                    : "border-2 border-orange-600 text-orange-700 hover:bg-orange-600 hover:text-white dark:border-orange-500 dark:text-orange-400 dark:hover:bg-orange-500 dark:hover:text-white font-semibold px-3 py-1"
+                                    ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-500 dark:hover:text-white font-semibold px-3 py-1"
+                                    : "border-2 border-orange-600 text-orange-700 dark:border-orange-500 dark:text-orange-400 dark:hover:bg-orange-500 dark:hover:text-white font-semibold px-3 py-1"
                                 }
                               >
                                 {entry.transitStatus}

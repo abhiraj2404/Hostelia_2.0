@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAppSelector } from "@/hooks";
 import apiClient from "@/lib/api-client";
 import { Link } from "react-router-dom";
@@ -7,24 +7,18 @@ import { AnnouncementForm } from "@/components/announcements/AnnouncementForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Megaphone, Plus, AlertCircle, User } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import type { Announcement, AnnouncementFormData } from "@/types/announcement";
 
-interface Announcement {
-  _id: string;
-  title: string;
-  message: string;
-  fileUrl?: string;
-  postedBy: {
-    name: string;
-    role: string;
-  };
-  createdAt: string;
-}
-
-type AnnouncementFormData = {
-  title: string;
-  message: string;
-  file?: FileList;
-};
+const ITEMS_PER_PAGE = 9;
 
 function AnnouncementsPage() {
   const user = useAppSelector((s) => s.auth.user);
@@ -37,6 +31,7 @@ function AnnouncementsPage() {
   const [deleteStatus, setDeleteStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Check if user is warden or admin
   const canCreateAnnouncement =
@@ -64,6 +59,7 @@ function AnnouncementsPage() {
   useEffect(() => {
     if (createStatus === "succeeded") {
       setShowCreateForm(false);
+      setCurrentPage(1); // Reset to first page
 
       // Refresh list
       fetchAnnouncements();
@@ -91,6 +87,51 @@ function AnnouncementsPage() {
       return () => clearTimeout(timer);
     }
   }, [deleteStatus]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [items, currentPage]);
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    const showEllipsisThreshold = 7;
+
+    if (totalPages <= showEllipsisThreshold) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push("ellipsis");
+      }
+
+      // Show current page and neighbors
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push("ellipsis");
+      }
+
+      // Always show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
 
   const handleSubmit = async (data: AnnouncementFormData) => {
     try {
@@ -162,44 +203,83 @@ function AnnouncementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
-      <div className="container mx-auto px-3 py-4 max-w-7xl">
+    <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/10">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full border bg-card text-xs font-medium shadow-sm">
-            <Megaphone className="size-3.5" />
-            <span>Announcements</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight mb-2">
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-xs font-medium shadow-sm">
+                <Megaphone className="size-3.5 text-primary" />
+                <span className="text-foreground">Latest Updates</span>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Announcements
               </h1>
-              <p className="text-muted-foreground text-sm">
-                Stay updated with the latest news and notices
+              <p className="text-muted-foreground text-sm max-w-2xl">
+                Stay informed with important updates, notices, and news from the administration
               </p>
             </div>
             {canCreateAnnouncement && !showCreateForm && (
               <Button
                 onClick={() => setShowCreateForm(true)}
-                className="shadow-lg"
+                size="lg"
+                className="shadow-lg hover:shadow-xl transition-shadow self-start sm:self-center"
               >
                 <Plus className="size-4 mr-2" />
-                New Announcement
+                Create Announcement
               </Button>
             )}
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_380px] items-start">
           {/* Announcements List */}
-          <AnnouncementList
-            items={items}
-            status={status}
-            canDelete={canCreateAnnouncement}
-            onDelete={handleDelete}
-            deletingId={deletingId}
-          />
+          <div className="space-y-6">
+            <AnnouncementList
+              items={paginatedItems}
+              status={status}
+              canDelete={canCreateAnnouncement}
+              onDelete={handleDelete}
+              deletingId={deletingId}
+            />
+
+            {/* Pagination */}
+            {status === "succeeded" && items.length > 0 && totalPages > 1 && (
+              <Pagination className="mt-8">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+
+                  {getPageNumbers().map((pageNum, idx) => (
+                    <PaginationItem key={idx}>
+                      {pageNum === "ellipsis" ? (
+                        <PaginationEllipsis />
+                      ) : (
+                        <PaginationLink
+                          onClick={() => setCurrentPage(pageNum)}
+                          isActive={currentPage === pageNum}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
 
           {/* Create Form Sidebar (for warden/admin) */}
           {canCreateAnnouncement && showCreateForm && (
