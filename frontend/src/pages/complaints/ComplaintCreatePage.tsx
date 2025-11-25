@@ -20,8 +20,13 @@ import apiClient from "@/lib/api-client";
 const createComplaintSchema = z.object({
   problemTitle: z
     .string()
+    .trim()
+    .min(1, "Title cannot be blank or only spaces")
     .min(5, "Title must be at least 5 characters")
-    .max(200, "Title must be under 200 characters"),
+    .max(200, "Title must be under 200 characters")
+    .refine((val) => val.trim().length > 0, {
+      message: "Title cannot be blank or only spaces",
+    }),
   problemDescription: z
     .string()
     .min(10, "Describe the issue so maintenance can act quickly")
@@ -214,8 +219,8 @@ function ComplaintCreatePage() {
 
     const resultAction = await dispatch(
       createComplaint({
-        problemTitle: values.problemTitle,
-        problemDescription: values.problemDescription,
+        problemTitle: values.problemTitle.trim(),
+        problemDescription: values.problemDescription.trim(),
         category: categoryValue,
         hostel: hostelValue,
         roomNo: roomValue,

@@ -7,7 +7,7 @@ const statusVariantMap: Record<
 > = {
   Pending: "secondary",
   Resolved: "default",
-  Rejected: "destructive",
+  Rejected: "default",
   ToBeConfirmed: "outline",
 };
 
@@ -23,10 +23,25 @@ interface ComplaintStatusBadgeProps {
 }
 
 export function ComplaintStatusBadge({ status }: ComplaintStatusBadgeProps) {
+  const getHoverClass = () => {
+    switch (status) {
+      case "Resolved":
+        return "hover:bg-green-100 dark:hover:bg-green-900/30";
+      case "Rejected":
+        return "hover:bg-red-100 dark:hover:bg-red-900/30";
+      case "Pending":
+        return "hover:bg-amber-100 dark:hover:bg-amber-900/30";
+      case "ToBeConfirmed":
+        return "hover:bg-purple-100 dark:hover:bg-purple-900/30";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Badge
       variant={statusVariantMap[status]}
-      className="shadow-md backdrop-blur-sm bg-background/95"
+      className={`shadow-md backdrop-blur-sm bg-background/95 transition-colors ${getHoverClass()}`}
     >
       {statusLabelMap[status]}
     </Badge>
@@ -41,17 +56,40 @@ const studentStatusMap: Record<Complaint["studentStatus"], string> = {
 
 interface ComplaintStudentStatusBadgeProps {
   studentStatus: Complaint["studentStatus"];
+  complaintStatus?: Complaint["status"];
 }
 
 export function ComplaintStudentStatusBadge({
   studentStatus,
+  complaintStatus,
 }: ComplaintStudentStatusBadgeProps) {
+  // If complaint is resolved but studentStatus is NotResolved, it means it's an old complaint
+  // that was resolved before the verification flow was added, so show "Student Confirmed"
+  const displayStatus =
+    complaintStatus === "Resolved" && studentStatus === "NotResolved"
+      ? "Resolved"
+      : studentStatus;
+
+  const getHoverClass = () => {
+    // Use studentStatus directly for hover effect to ensure correct mapping
+    switch (studentStatus) {
+      case "Resolved":
+        return "hover:bg-green-100 dark:hover:bg-green-900/30";
+      case "Rejected":
+        return "hover:bg-red-100 dark:hover:bg-red-900/30";
+      case "NotResolved":
+        return "hover:bg-amber-100 dark:hover:bg-amber-900/30";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Badge
       variant="outline"
-      className="shadow-md backdrop-blur-sm bg-background/95"
+      className={`shadow-md backdrop-blur-sm bg-background/95 transition-colors ${getHoverClass()}`}
     >
-      {studentStatusMap[studentStatus]}
+      {studentStatusMap[displayStatus]}
     </Badge>
   );
 }
