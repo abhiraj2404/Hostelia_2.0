@@ -20,6 +20,7 @@ interface FullScreenViewerProps {
   isPdf: boolean;
   showDownload?: boolean;
   studentRollNo?: string;
+  downloadFileName?: string; // Optional custom download filename
 }
 
 export function FullScreenViewer({
@@ -32,6 +33,7 @@ export function FullScreenViewer({
   isPdf,
   showDownload = true,
   studentRollNo,
+  downloadFileName,
 }: FullScreenViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -138,8 +140,14 @@ export function FullScreenViewer({
       const extension = isPdf
         ? ".pdf"
         : documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] || "";
-      const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
-      link.download = `${documentType}-fee-document${rollNoPart}${extension}`;
+      
+      // Use custom filename if provided, otherwise use fee-based naming
+      if (downloadFileName) {
+        link.download = downloadFileName;
+      } else {
+        const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
+        link.download = `${documentType}-fee-document${rollNoPart}${extension}`;
+      }
       link.style.display = "none";
       link.setAttribute("download", link.download);
 
@@ -160,8 +168,14 @@ export function FullScreenViewer({
       const extension = isPdf
         ? ".pdf"
         : documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] || "";
-      const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
-      link.download = `${documentType}-fee-document${rollNoPart}${extension}`;
+      
+      // Use custom filename if provided, otherwise use fee-based naming
+      if (downloadFileName) {
+        link.download = downloadFileName;
+      } else {
+        const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
+        link.download = `${documentType}-fee-document${rollNoPart}${extension}`;
+      }
       link.style.display = "none";
       link.setAttribute("download", link.download);
       document.body.appendChild(link);

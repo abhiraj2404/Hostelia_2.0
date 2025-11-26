@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAppSelector } from "@/hooks";
-import apiClient from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,20 +6,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CommentSection } from "./CommentSection";
+import { useAppSelector } from "@/hooks";
+import apiClient from "@/lib/api-client";
+import { formatTime } from "@/lib/utils";
 import type { Announcement, CommentFormData } from "@/types/announcement";
 import {
   ArrowLeft,
   Calendar,
-  User,
   FileText,
-  ExternalLink,
+  Loader2,
   Megaphone,
   Trash2,
-  Loader2,
+  User,
 } from "lucide-react";
-import { formatTime } from "@/lib/utils";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { CommentSection } from "./CommentSection";
+import { AnnouncementDocumentViewer } from "./document-viewer";
 
 interface AnnouncementDetailProps {
   announcement: Announcement;
@@ -30,7 +30,6 @@ interface AnnouncementDetailProps {
   canDelete: boolean;
   isDeleting: boolean;
 }
-
 
 // role badge variants removed — badges are no longer displayed
 
@@ -51,7 +50,7 @@ export function AnnouncementDetail({
         `/announcement/${announcement._id}/comments`,
         data
       );
-      
+
       // Update local comments state
       if (response.data.success && response.data.data.comments) {
         setComments(response.data.data.comments);
@@ -96,7 +95,9 @@ export function AnnouncementDetail({
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <User className="size-4" />
-                  <span className="font-medium">{announcement.postedBy.name}</span>
+                  <span className="font-medium">
+                    {announcement.postedBy.name}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Calendar className="size-4" />
@@ -150,43 +151,18 @@ export function AnnouncementDetail({
 
           {/* Attachment Card */}
           {announcement.fileUrl && (
-            <Card className="border-primary/20 bg-primary/5">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <FileText className="size-5 text-primary" />
+                  <FileText className="size-5" />
                   Attachment
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                  {/* Attachment block (images and other files use same attachment UI) */}
-                  <div className="flex items-center justify-between rounded-lg border bg-background p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary/10 p-2">
-                        <FileText className="size-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">View Attachment</p>
-                        <p className="text-xs text-muted-foreground">
-                          Click to view or download the file
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={/\.pdf(\?|$)/i.test(announcement.fileUrl) || /pdf/i.test(announcement.fileUrl)
-                          ? `https://docs.google.com/viewer?url=${encodeURIComponent(
-                              announcement.fileUrl
-                            )}&embedded=true`
-                          : announcement.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <ExternalLink className="size-4" />
-                        View
-                      </a>
-                    </Button>
-                  </div>
+                <AnnouncementDocumentViewer
+                  documentUrl={announcement.fileUrl}
+                  announcementTitle={announcement.title}
+                />
               </CardContent>
             </Card>
           )}
