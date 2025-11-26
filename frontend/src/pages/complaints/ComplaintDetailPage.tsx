@@ -174,6 +174,7 @@ function ComplaintDetailPage() {
               <ComplaintSummaryCard
                 complaint={selected}
                 onOpenImage={() => setViewerOpen(true)}
+                showSubmittedBy={isAdmin || isWarden}
               />
 
               <ComplaintConversationCard

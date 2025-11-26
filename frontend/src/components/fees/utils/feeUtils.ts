@@ -33,8 +33,11 @@ export const getStatusBadge = (status: string): StatusBadgeConfig => {
       label: "Pending",
     },
     rejected: {
-      variant: "destructive",
-      className: "",
+      // Match the complaints dashboard rejected badge: subtle red background
+      // with red text and an outline-style badge.
+      variant: "outline",
+      className:
+        "bg-red-50 dark:bg-red-950/20 text-red-600 border-red-200 dark:border-red-800",
       label: "Rejected",
     },
     documentNotSubmitted: {
