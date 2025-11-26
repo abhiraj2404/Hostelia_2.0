@@ -18,6 +18,8 @@ interface FeesStatsViewProps {
   filters: FeesFilters;
   onFiltersChange: (filters: FeesFilters) => void;
   loading?: boolean;
+  isWarden?: boolean;
+  students?: Student[];
 }
 
 type TabType = 'list' | 'analytics';
@@ -27,6 +29,8 @@ export function FeesStatsView({
   filters,
   onFiltersChange,
   loading = false,
+  isWarden = false,
+  students = [],
 }: FeesStatsViewProps) {
   const [activeTab, setActiveTab] = useState<TabType>('list');
   const [emailToHostel, setEmailToHostel] = useState<Record<string, string>>({});
@@ -55,18 +59,43 @@ export function FeesStatsView({
     fetchStudents();
   }, []);
 
+  // Reset fee type and status filters when switching to analytics view
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      const needsReset = filters.feeType || filters.status;
+      if (needsReset) {
+        onFiltersChange({ 
+          ...filters, 
+          feeType: undefined,
+          status: undefined 
+        });
+      }
+    }
+  }, [activeTab]); // Only depend on activeTab to avoid infinite loops
+
   // Client-side filtering - Fixed to handle both filters properly
   const filteredFees = useMemo(() => {
     let result = [...fees];
 
-    // Apply status filter first
+    // For wardens: Filter by student emails from their hostel
+    if (isWarden && students.length > 0) {
+      const hostelStudentEmails = new Set(students.map(s => s.email));
+      result = result.filter(f => hostelStudentEmails.has(f.studentEmail));
+    }
+
+    // For admins: Filter by hostel using emailToHostel mapping
+    if (!isWarden && filters.hostel && filters.hostel !== 'all') {
+      result = result.filter(f => emailToHostel[f.studentEmail] === filters.hostel);
+    }
+
+    // Apply status filter
     if (filters.status && filters.status !== 'all') {
       result = result.filter(f => 
         f.hostelFee.status === filters.status || f.messFee.status === filters.status
       );
     }
 
-    // Then apply fee type filter
+    // Apply fee type filter
     if (filters.feeType && filters.feeType !== 'all') {
       result = result.filter(f => {
         if (filters.feeType === 'hostel') {
@@ -87,7 +116,7 @@ export function FeesStatsView({
     }
 
     return result;
-  }, [fees, filters]);
+  }, [fees, filters, isWarden, students, emailToHostel]);
 
   return (
     <div className="space-y-6">
@@ -95,66 +124,79 @@ export function FeesStatsView({
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
-          <Select
-            value={filters.hostel || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Hostel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Hostels</SelectItem>
-              <SelectItem value="BH-1">BH-1</SelectItem>
-              <SelectItem value="BH-2">BH-2</SelectItem>
-              <SelectItem value="BH-3">BH-3</SelectItem>
-              <SelectItem value="BH-4">BH-4</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.feeType || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, feeType: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Fee Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="hostel">Hostel Fee</SelectItem>
-              <SelectItem value="mess">Mess Fee</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.status || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, status: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="documentNotSubmitted">Not Submitted</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {(filters.hostel || filters.feeType || filters.status) && (
-            <Button
-              variant="ghost"
-              onClick={() => onFiltersChange({})}
+          {!isWarden && (
+            <Select
+              value={filters.hostel || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, hostel: value === 'all' ? undefined : value })
+              }
             >
-              Clear
-            </Button>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Hostel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Hostels</SelectItem>
+                <SelectItem value="BH-1">BH-1</SelectItem>
+                <SelectItem value="BH-2">BH-2</SelectItem>
+                <SelectItem value="BH-3">BH-3</SelectItem>
+                <SelectItem value="BH-4">BH-4</SelectItem>
+              </SelectContent>
+            </Select>
           )}
+
+          {/* Fee Type Filter - Only show in list view */}
+          {activeTab === 'list' && (
+            <Select
+              value={filters.feeType || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, feeType: value === 'all' ? undefined : value })
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Fee Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="hostel">Hostel Fee</SelectItem>
+                <SelectItem value="mess">Mess Fee</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Status Filter - Only show in list view */}
+          {activeTab === 'list' && (
+            <Select
+              value={filters.status || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, status: value === 'all' ? undefined : value })
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="documentNotSubmitted">Not Submitted</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Clear Filters Button */}
+          {(() => {
+            const hasListFilters = activeTab === 'list' && (filters.feeType || filters.status);
+            const hasHostelFilter = filters.hostel;
+            return (hasListFilters || hasHostelFilter) && (
+              <Button
+                variant="ghost"
+                onClick={() => onFiltersChange({})}
+              >
+                Clear
+              </Button>
+            );
+          })()}
         </div>
 
         {/* View Tabs */}
@@ -181,12 +223,13 @@ export function FeesStatsView({
       </div>
 
       {/* Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[500px] flex flex-col">
         {activeTab === 'list' && (
           <FeesList 
             fees={filteredFees} 
             loading={loading}
             emailToHostel={emailToHostel}
+            isWarden={isWarden}
           />
         )}
 

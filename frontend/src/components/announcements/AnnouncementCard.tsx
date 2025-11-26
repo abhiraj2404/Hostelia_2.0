@@ -1,198 +1,161 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Megaphone,
-  FileText,
-  Trash2,
-  Loader2,
-  Calendar,
-  User,
-  MessageSquare,
-  ExternalLink,
-  Shield,
-  GraduationCap,
-} from "lucide-react";
-import { formatTime } from "@/lib/utils";
-import { Link } from "react-router-dom";
+"use client"
+
+// Render announcement as an open list row (no boxed card)
+import { Button } from "@/components/ui/button"
+// badge not used in this variant; kept commented intentionally
+import { Trash2, Loader2, FileText } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
 
 interface Announcement {
-  _id: string;
-  title: string;
-  message: string;
-  fileUrl?: string;
+  _id: string
+  title: string
+  message: string
+  fileUrl?: string
   postedBy: {
-    name: string;
-    role: string;
-  };
-  comments?: Array<any>;
-  createdAt: string;
+    name: string
+    role: string
+  }
+  comments?: Array<any>
+  createdAt: string
 }
 
 interface AnnouncementCardProps {
-  announcement: Announcement;
-  canDelete: boolean;
-  onDelete: (id: string) => void;
-  isDeleting: boolean;
+  announcement: Announcement
+  canDelete: boolean
+  onDelete: (id: string) => void
+  isDeleting: boolean
 }
 
-const getRoleIcon = (role: string) => {
-  switch (role) {
-    case "admin":
-      return <Shield className="size-3" />;
-    case "warden":
-      return <User className="size-3" />;
-    case "student":
-      return <GraduationCap className="size-3" />;
-    default:
-      return <User className="size-3" />;
-  }
-};
+const formatDateBadge = (dateStr: string) => {
+  const date = new Date(dateStr)
+  const day = date.toLocaleDateString("en-US", { day: "2-digit" })
+  const month = date.toLocaleDateString("en-US", { month: "short" })
+  const year = date.getFullYear()
+  const time = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+  
+  return { day, month, year, time, fullDate: date }
+}
 
-const getRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" | "outline" | "primary" => {
-  switch (role) {
-    case "admin":
-      return "primary";
-    case "warden":
-      return "primary";
-    case "student":
-      return "secondary";
-    default:
-      return "outline";
-  }
-};
 
-export function AnnouncementCard({
-  announcement,
-  canDelete,
-  onDelete,
-  isDeleting,
-}: AnnouncementCardProps) {
-  const commentCount = announcement.comments?.length || 0;
+export function AnnouncementCard({ announcement, canDelete, onDelete, isDeleting }: AnnouncementCardProps) {
+  const { day, month, year, time } = formatDateBadge(announcement.createdAt)
+  const hasAttachment = Boolean(announcement.fileUrl)
+  const navigate = useNavigate()
 
   return (
-    <Card className="overflow-hidden border-border/60 transition-all hover:shadow-lg">
-      {/* Header Section */}
-      <div className="relative bg-muted/30">
-        <CardHeader className="pb-3 pt-4 space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2.5">
-                <div className="rounded-lg bg-primary/15 p-1.5 shrink-0 ring-1 ring-primary/20">
-                  <Megaphone className="size-4 text-primary" />
+    <Link to={`/announcements/${announcement._id}`} className="block group">
+      <div className="py-0 sm:py-0">
+        <div className="flex flex-col sm:flex-row gap-0">
+          {/* Left Date Badge */}
+          <div className="sm:w-20 sm:min-w-20 flex sm:flex-col items-center justify-center gap-1 sm:gap-1 px-2 py-0.5 sm:py-1">
+              <div className="text-center">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {month}
                 </div>
-                <Badge
-                  variant={getRoleBadgeVariant(announcement.postedBy.role)}
-                  className="h-5 gap-1 text-xs capitalize shadow-sm"
-                >
-                  {getRoleIcon(announcement.postedBy.role)}
-                  {announcement.postedBy.role}
-                </Badge>
+                <div className="text-2xl sm:text-3xl font-bold text-foreground leading-none my-1">
+                  {day}
+                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  {year}
+                </div>
+                <div className="text-xs text-muted-foreground/70 mt-1 hidden sm:block">
+                  {time}
+                </div>
               </div>
-              <Link to={`/announcements/${announcement._id}`}>
-                <CardTitle className="text-base font-semibold line-clamp-2 transition-colors hover:text-primary cursor-pointer leading-snug">
+          </div>
+
+          {/* short vertical separator (centered) */}
+          <div className="hidden sm:flex items-center px-2">
+            <div className="h-10 border-r-2 border-border/80"></div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 min-w-0 p-1 sm:p-2">
+            {/* useNavigate is used by the 'View Details' button to avoid nested link issues */}
+            <div className="flex items-start justify-between gap-3 mb-0">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-foreground leading-snug mb-0 group-hover:text-foreground/80 transition-colors line-clamp-2">
                   {announcement.title}
-                </CardTitle>
-              </Link>
-              <CardDescription className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <User className="size-3.5" />
-                  <span className="font-medium">{announcement.postedBy.name}</span>
-                </span>
-                <span className="flex items-center gap-1.5 text-muted-foreground/80">
-                  <Calendar className="size-3.5" />
-                  {formatTime(announcement.createdAt)}
-                </span>
-              </CardDescription>
-            </div>
-            {canDelete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onDelete(announcement._id);
-                }}
-                disabled={isDeleting}
-                className="h-8 w-8 p-0 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-              >
-                {isDeleting ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Trash2 className="size-4" />
-                )}
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-      </div>
-
-      {/* Content Section */}
-      <CardContent className="flex-1 pt-4 pb-4 px-5 space-y-4">
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-          {announcement.message}
-        </p>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/30">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            {announcement.fileUrl && (
-              <div className="flex items-center gap-1.5">
-                <FileText className="size-3.5 text-primary/60" />
-                <span className="font-medium">Attachment</span>
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-0">
+                  {announcement.message}
+                </p>
               </div>
-            )}
-            <div className="flex items-center gap-1.5">
-              <MessageSquare className="size-3.5 text-primary/60" />
-              <span className="font-medium">{commentCount}</span>
+
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <div className="text-[10px] font-medium text-muted-foreground bg-muted/10 px-1 py-0.5 rounded">
+                  {announcement.postedBy.role ? announcement.postedBy.role.charAt(0).toUpperCase() + announcement.postedBy.role.slice(1).toLowerCase() : ''}
+                </div>
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onDelete(announcement._id)
+                    }}
+                    disabled={isDeleting}
+                    className="h-8 w-8 p-0 shrink-0 hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all"
+                  >
+                    {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {announcement.fileUrl && (
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="h-7 px-2.5 text-xs hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                {/* For PDFs use Google Docs viewer to force in-browser viewing; images open directly */}
-                <a
-                  href={/\.pdf(\?|$)/i.test(announcement.fileUrl) || /pdf/i.test(announcement.fileUrl)
-                    ? `https://docs.google.com/viewer?url=${encodeURIComponent(
-                        announcement.fileUrl
-                      )}&embedded=true`
-                    : announcement.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1.5"
+
+            {/* attachment rendered in footer (moved) */}
+
+            {/* comments preview removed as requested */}
+
+            {/* Footer Metadata */}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-0.5 border-t border-border/80 justify-between">
+              {/* <Badge variant="secondary" className="text-xs font-medium">
+                {announcement.postedBy.role}
+              </Badge> */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    navigate(`/announcements/${announcement._id}`)
+                  }}
+                  className="h-8 px-3 text-xs text-foreground hover:bg-muted font-medium transition-all"
                 >
-                  <ExternalLink className="size-3.5" />
-                  View
-                </a>
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="h-7 px-2.5 text-xs text-primary hover:bg-primary/10 font-medium transition-colors"
-            >
-              <Link to={`/announcements/${announcement._id}`} className="flex items-center gap-1.5">
-                Details
-                <ExternalLink className="size-3.5" />
-              </Link>
-            </Button>
+                  View Details
+                </Button>
+
+                {hasAttachment && (
+                  <a
+                    href={announcement.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="ml-2 inline-flex items-center gap-2 text-sm text-foreground hover:underline"
+                  >
+                    <FileText className="size-4" />
+                    <span className="font-medium">Attachment</span>
+                  </a>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {announcement.comments && announcement.comments.length > 0 && (
+                  <>
+                    <span className="text-muted-foreground/50">•</span>
+                    <span>
+                      {announcement.comments.length} {announcement.comments.length === 1 ? "comment" : "comments"}
+                    </span>
+                  </>
+                )}
+                <span className="sm:hidden text-muted-foreground/70">• {time}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
-  );
+      </div>
+    </Link>
+  )
 }

@@ -14,6 +14,7 @@ import {
   selectDetailedFees,
   selectDetailedMessFeedback,
   setActiveTab,
+  setDetailedViewExpanded,
   setComplaintsFilters,
   setStudentsFilters,
   setFeesFilters,
@@ -76,7 +77,9 @@ export function WardenDashboardLayout() {
   useEffect(() => {
     if (hostel) {
       dispatch(fetchWardenDashboardData(hostel));
-      // Fetch first tab data (students)
+      // Open students tab by default - use direct setter
+      dispatch(setActiveTab('students'));
+      dispatch(setDetailedViewExpanded(true));
       dispatch(fetchDetailedStudents({ hostel, page: 1 }));
     }
   }, [dispatch, hostel]);
@@ -249,6 +252,7 @@ export function WardenDashboardLayout() {
                     dispatch(fetchDetailedComplaints({ hostel, page: 1, filters }));
                   }}
                   loading={complaintsState.loading}
+                  isWarden={true}
                 />
               )}
 
@@ -267,6 +271,7 @@ export function WardenDashboardLayout() {
                   onPageChange={(page) => {
                     dispatch(setStudentsPage(page));
                   }}
+                  isWarden={true}
                 />
               )}
 
@@ -279,6 +284,8 @@ export function WardenDashboardLayout() {
                     dispatch(fetchDetailedFees({ hostel, page: 1, filters }));
                   }}
                   loading={feesState.loading}
+                  isWarden={true}
+                  students={studentsState.items}
                 />
               )}
 
@@ -291,6 +298,7 @@ export function WardenDashboardLayout() {
                     dispatch(fetchDetailedMessFeedback({ hostel, page: 1, filters }));
                   }}
                   loading={messState.loading}
+                  isWarden={true}
                 />
               )}
             </DetailedViewPanel>
