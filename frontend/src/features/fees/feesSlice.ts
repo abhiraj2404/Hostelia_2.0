@@ -1,6 +1,6 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { apiClient } from "@/lib/api-client";
 import type { FeeSubmission } from "@/types/dashboard";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 interface FeesState {
   items: FeeSubmission[];
@@ -38,10 +38,13 @@ export const fetchFees = createAsyncThunk<
       return response.data.data || [];
     }
     return rejectWithValue(response.data?.message || "Failed to fetch fees");
-  } catch (error: any) {
-    return rejectWithValue(
-      error.response?.data?.message || "Failed to fetch fees"
-    );
+  } catch (error: unknown) {
+    const errorMessage =
+      error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message
+        : undefined;
+    return rejectWithValue(errorMessage || "Failed to fetch fees");
   }
 });
 
@@ -64,11 +67,16 @@ export const submitHostelFee = createAsyncThunk<
     if (response.data?.success) {
       return response.data.data;
     }
-    return rejectWithValue(response.data?.message || "Failed to submit hostel fee");
-  } catch (error: any) {
     return rejectWithValue(
-      error.response?.data?.message || "Failed to submit hostel fee"
+      response.data?.message || "Failed to submit hostel fee"
     );
+  } catch (error: unknown) {
+    const errorMessage =
+      error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message
+        : undefined;
+    return rejectWithValue(errorMessage || "Failed to submit hostel fee");
   }
 });
 
@@ -91,11 +99,16 @@ export const submitMessFee = createAsyncThunk<
     if (response.data?.success) {
       return response.data.data;
     }
-    return rejectWithValue(response.data?.message || "Failed to submit mess fee");
-  } catch (error: any) {
     return rejectWithValue(
-      error.response?.data?.message || "Failed to submit mess fee"
+      response.data?.message || "Failed to submit mess fee"
     );
+  } catch (error: unknown) {
+    const errorMessage =
+      error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message
+        : undefined;
+    return rejectWithValue(errorMessage || "Failed to submit mess fee");
   }
 });
 
@@ -104,32 +117,62 @@ export const updateFeeStatus = createAsyncThunk<
   FeeSubmission,
   {
     studentId: string;
-    hostelFeeStatus?: "documentNotSubmitted" | "pending" | "approved" | "rejected";
-    messFeeStatus?: "documentNotSubmitted" | "pending" | "approved" | "rejected";
+    hostelFeeStatus?:
+      | "documentNotSubmitted"
+      | "pending"
+      | "approved"
+      | "rejected";
+    messFeeStatus?:
+      | "documentNotSubmitted"
+      | "pending"
+      | "approved"
+      | "rejected";
   },
   { rejectValue: string }
->("fees/updateFeeStatus", async ({ studentId, hostelFeeStatus, messFeeStatus }, { rejectWithValue }) => {
-  try {
-    const body: any = {};
-    if (hostelFeeStatus !== undefined) {
-      body.hostelFeeStatus = hostelFeeStatus;
-    }
-    if (messFeeStatus !== undefined) {
-      body.messFeeStatus = messFeeStatus;
-    }
+>(
+  "fees/updateFeeStatus",
+  async (
+    { studentId, hostelFeeStatus, messFeeStatus },
+    { rejectWithValue }
+  ) => {
+    try {
+      const body: {
+        hostelFeeStatus?:
+          | "documentNotSubmitted"
+          | "pending"
+          | "approved"
+          | "rejected";
+        messFeeStatus?:
+          | "documentNotSubmitted"
+          | "pending"
+          | "approved"
+          | "rejected";
+      } = {};
+      if (hostelFeeStatus !== undefined) {
+        body.hostelFeeStatus = hostelFeeStatus;
+      }
+      if (messFeeStatus !== undefined) {
+        body.messFeeStatus = messFeeStatus;
+      }
 
-    const response = await apiClient.patch(`/fee/${studentId}/status`, body);
+      const response = await apiClient.patch(`/fee/${studentId}/status`, body);
 
-    if (response.data?.success) {
-      return response.data.data;
+      if (response.data?.success) {
+        return response.data.data;
+      }
+      return rejectWithValue(
+        response.data?.message || "Failed to update fee status"
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : undefined;
+      return rejectWithValue(errorMessage || "Failed to update fee status");
     }
-    return rejectWithValue(response.data?.message || "Failed to update fee status");
-  } catch (error: any) {
-    return rejectWithValue(
-      error.response?.data?.message || "Failed to update fee status"
-    );
   }
-});
+);
 
 // Send fee reminder notification (admin/warden)
 export const sendFeeReminder = createAsyncThunk<
@@ -140,27 +183,35 @@ export const sendFeeReminder = createAsyncThunk<
     notes?: string;
   },
   { rejectValue: string }
->("fees/sendFeeReminder", async ({ studentId, emailType, notes }, { rejectWithValue }) => {
-  try {
-    const response = await apiClient.post("/fee/email/reminder", {
-      studentId,
-      emailType,
-      notes,
-    });
+>(
+  "fees/sendFeeReminder",
+  async ({ studentId, emailType, notes }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/fee/email/reminder", {
+        studentId,
+        emailType,
+        notes,
+      });
 
-    if (response.data?.success) {
-      return {
-        success: true,
-        message: response.data.message || "Notification sent successfully",
-      };
+      if (response.data?.success) {
+        return {
+          success: true,
+          message: response.data.message || "Notification sent successfully",
+        };
+      }
+      return rejectWithValue(
+        response.data?.message || "Failed to send notification"
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error && typeof error === "object" && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : undefined;
+      return rejectWithValue(errorMessage || "Failed to send notification");
     }
-    return rejectWithValue(response.data?.message || "Failed to send notification");
-  } catch (error: any) {
-    return rejectWithValue(
-      error.response?.data?.message || "Failed to send notification"
-    );
   }
-});
+);
 
 const feesSlice = createSlice({
   name: "fees",
@@ -275,4 +326,3 @@ const feesSlice = createSlice({
 
 export const { clearError } = feesSlice.actions;
 export default feesSlice.reducer;
-

@@ -1,5 +1,3 @@
-import type { BadgeProps } from "@/components/ui/badge";
-
 export type BadgeVariant =
   | "default"
   | "destructive"
@@ -58,4 +56,3 @@ export const getStatusLabel = (status: string): string => {
   };
   return labels[status] || status;
 };
-

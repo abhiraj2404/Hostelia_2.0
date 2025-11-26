@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { FeeSubmission } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
+import type { FeeSubmission } from "@/types/dashboard";
 import { Check, Circle, X } from "lucide-react";
 
 type FeeProgressTimelineProps = {
@@ -36,7 +36,7 @@ export function FeeProgressTimeline({
       status: "pending",
     });
     stages.push({
-      label: feeData.status === "rejected" ? "Rejected" : "Approved",
+      label: "Approved",
       status: "pending",
     });
   } else {
@@ -177,4 +177,3 @@ export function FeeProgressTimeline({
     </Card>
   );
 }
-
