@@ -37,7 +37,7 @@ export function AnnouncementsWidget({ announcements }: AnnouncementsWidgetProps)
         {announcements.map((announcement, index) => (
           <div
             key={announcement._id}
-            className={`pb-4 ${index < announcements.length - 1 ? "border-b" : ""}`}
+            className={`pb-2 ${index < announcements.length - 1 ? "border-b" : ""}`}
           >
             <h4 className="font-semibold line-clamp-1">{announcement.title}</h4>
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
@@ -49,6 +49,16 @@ export function AnnouncementsWidget({ announcements }: AnnouncementsWidgetProps)
               <User className="h-3 w-3 ml-2" />
               <span>{announcement.postedBy.name}</span>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="mt-3 w-full"
+              asChild
+            >
+              <Link to={`/announcements/${announcement._id}`}>
+                View Details
+              </Link>
+            </Button>
           </div>
         ))}
       </CardContent>

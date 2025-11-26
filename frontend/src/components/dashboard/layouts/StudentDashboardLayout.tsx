@@ -84,10 +84,14 @@ export function StudentDashboardLayout() {
           {/* Quick Actions */}
           <QuickActionsWidget actions={studentQuickActions} />
 
-          {/* Top Row: Fee Status + Announcements */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <FeeStatusWidget fees={metrics.fees} />
-            <AnnouncementsWidget announcements={recentAnnouncements} />
+          {/* Top Row: Fee Status + Announcements (2:3 ratio) */}
+          <div className="grid gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <FeeStatusWidget fees={metrics.fees} />
+            </div>
+            <div className="lg:col-span-3">
+              <AnnouncementsWidget announcements={recentAnnouncements.slice(0, 2)} />
+            </div>
           </div>
 
           {/* Complaints Stats Row */}
@@ -107,4 +111,3 @@ export function StudentDashboardLayout() {
     </div>
   );
 }
-
