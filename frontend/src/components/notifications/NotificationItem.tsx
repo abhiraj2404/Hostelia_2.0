@@ -19,6 +19,8 @@ export function NotificationItem({ notification, onItemClick }: NotificationItem
       navigate(`/complaints/${notification.relatedEntityId}`);
     } else if (notification.relatedEntityType === "fee") {
       navigate("/fees");
+    } else if (notification.relatedEntityType === "mess") {
+      navigate("/mess");
     }
     // Add more types as needed in the future
 
@@ -54,7 +56,9 @@ export function NotificationItem({ notification, onItemClick }: NotificationItem
           </div>
           {isUnread && <div className="h-2 w-2 rounded-full bg-primary shrink-0 ring-2 ring-primary/20" />}
         </div>
-        <p className={cn("text-sm leading-snug break-words", isUnread ? "text-foreground" : "text-muted-foreground")}>{notification.message}</p>
+        <p className={cn("text-sm leading-snug wrap-break-words", isUnread ? "text-foreground" : "text-muted-foreground")}>
+          {notification.message}
+        </p>
         <div className="flex items-center justify-between gap-2 mt-1">
           <Badge variant="outline" className="text-xs h-5 px-1.5">
             {getEntityTypeLabel(notification.relatedEntityType)}

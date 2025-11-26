@@ -8,6 +8,7 @@ import feeSubmissionRouter from "./feeSubmission.routes.js";
 import transitRouter from "./transit.routes.js";
 import wardenRouter from "./warden.routes.js";
 import notificationRouter from "./notification.routes.js";
+import contactRouter from "./contact.routes.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -22,5 +23,6 @@ router.use("/fee", authMiddleware, feeSubmissionRouter);
 router.use("/transit", authMiddleware, transitRouter);
 router.use("/warden", authMiddleware, wardenRouter);
 router.use("/notifications", authMiddleware, notificationRouter);
+router.use("/contact", contactRouter);
 
 export default router;

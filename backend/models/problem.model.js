@@ -5,7 +5,7 @@ const commentSubSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     role: {
       type: String,
-      enum: ["student", "warden", "admin"],
+      enum: [ "student", "warden", "admin" ],
       required: true,
     },
     message: { type: String, required: true, trim: true, maxlength: 2000 },
@@ -30,7 +30,7 @@ const problemSchema = new mongoose.Schema(
     },
     hostel: {
       type: String,
-      enum: ["BH-1", "BH-2", "BH-3", "BH-4"],
+      enum: [ "BH-1", "BH-2", "BH-3", "BH-4" ],
       required: true,
       index: true,
     },
@@ -49,6 +49,7 @@ const problemSchema = new mongoose.Schema(
         "Internet",
         "Furniture",
         "Pest Control",
+        "Student Misconduct",
         "Other",
       ],
       required: true,
@@ -61,12 +62,12 @@ const problemSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Resolved", "Rejected", "ToBeConfirmed"],
+      enum: [ "Pending", "Resolved", "Rejected", "ToBeConfirmed" ],
       default: "Pending",
     },
     studentStatus: {
       type: String,
-      enum: ["NotResolved", "Resolved", "Rejected"],
+      enum: [ "NotResolved", "Resolved", "Rejected" ],
       default: "NotResolved",
     },
     studentVerifiedAt: {
@@ -74,7 +75,7 @@ const problemSchema = new mongoose.Schema(
       default: null,
     },
     comments: {
-      type: [commentSubSchema],
+      type: [ commentSubSchema ],
       default: [],
     },
     resolvedAt: {

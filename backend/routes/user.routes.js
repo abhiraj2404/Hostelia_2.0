@@ -4,6 +4,8 @@ import {
     getAllStudents,
     getAllWardens,
     getUserName,
+    deleteUser,
+    updateUserDetails,
 } from "../controllers/user.controller.js";
 import { authorizeRoles } from "../middleware/roles.js";
 
@@ -19,6 +21,12 @@ router.get("/wardens/all", authorizeRoles("admin"), getAllWardens);
 
 // Get only the name and role for a user
 router.get("/getName/:userId", getUserName);
+
+// Update a user's profile (admin only, no role/password updates)
+router.put("/update/:userId", authorizeRoles("admin"), updateUserDetails);
+
+// Delete a user (admin only)
+router.delete("/:userId", authorizeRoles("admin"), deleteUser);
 
 // Get user by ID
 router.get("/:userId", getUserById);

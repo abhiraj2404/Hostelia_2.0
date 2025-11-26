@@ -41,6 +41,7 @@ const createComplaintSchema = z.object({
       "Internet",
       "Furniture",
       "Pest Control",
+      "Student Misconduct",
       "Other",
     ])
     .optional()

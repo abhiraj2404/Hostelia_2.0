@@ -12,7 +12,7 @@ import {
   Wifi,
   Wrench,
   Zap,
-  type LucideIcon,
+  type LucideIcon
 } from "lucide-react";
 import * as React from "react";
 
@@ -40,6 +40,7 @@ export type ComplaintCategoryOption = {
     | "Internet"
     | "Furniture"
     | "Pest Control"
+    | "Student Misconduct"
     | "Other"
     | "all";
   icon?: LucideIcon;
@@ -50,7 +51,7 @@ export const complaintStatusOptions: ComplaintStatusOption[] = [
   { label: "Under Review", value: "Pending" },
   { label: "Awaiting Confirmation", value: "ToBeConfirmed" },
   { label: "Resolved", value: "Resolved" },
-  { label: "Rejected", value: "Rejected" },
+  { label: "Rejected", value: "Rejected" }
 ];
 
 export const complaintCategoryOptions: ComplaintCategoryOption[] = [
@@ -63,7 +64,12 @@ export const complaintCategoryOptions: ComplaintCategoryOption[] = [
   { label: "Internet", value: "Internet", icon: Wifi },
   { label: "Furniture", value: "Furniture", icon: Sofa },
   { label: "Pest Control", value: "Pest Control", icon: Bug },
-  { label: "Other", value: "Other", icon: HelpCircle },
+  {
+    label: "Student Misconduct",
+    value: "Student Misconduct",
+    icon: AlertTriangle
+  },
+  { label: "Other", value: "Other", icon: HelpCircle }
 ];
 
 export const createComplaintMetrics = (counts: {
@@ -78,36 +84,36 @@ export const createComplaintMetrics = (counts: {
     value: counts.total,
     helper: "All submissions",
     icon: Sparkles,
-    tone: "bg-blue-500/10 text-blue-600",
+    tone: "bg-blue-500/10 text-blue-600"
   },
   {
     label: "Under Review",
     value: counts.pending,
     helper: "Being processed",
     icon: Clock,
-    tone: "bg-amber-500/10 text-amber-600",
+    tone: "bg-amber-500/10 text-amber-600"
   },
   {
     label: "Awaiting Confirmation",
     value: counts.awaiting,
     helper: "Student verification",
     icon: AlertTriangle,
-    tone: "bg-purple-500/10 text-purple-600",
+    tone: "bg-purple-500/10 text-purple-600"
   },
   {
     label: "Resolved",
     value: counts.resolved,
     helper: "Completed",
     icon: CheckCircle,
-    tone: "bg-emerald-500/10 text-emerald-600",
-  },
+    tone: "bg-emerald-500/10 text-emerald-600"
+  }
 ];
 
 export const formatComplaintDate = (value: string | null) => {
   if (!value) return "—";
   try {
     return new Intl.DateTimeFormat("en-IN", {
-      dateStyle: "medium",
+      dateStyle: "medium"
     }).format(new Date(value));
   } catch {
     return value;
