@@ -50,7 +50,7 @@ const adminQuickActions = [
   },
   {
     label: "Fee Management",
-    path: "/fee-submissions",
+    path: "/fees",
     icon: DollarSign,
   },
   {
