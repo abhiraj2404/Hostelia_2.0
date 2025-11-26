@@ -59,11 +59,13 @@ export function ComplaintDetailHeader({
 type ComplaintSummaryCardProps = {
   complaint: Complaint;
   onOpenImage: () => void;
+  showSubmittedBy?: boolean;
 };
 
 export function ComplaintSummaryCard({
   complaint,
   onOpenImage,
+  showSubmittedBy = false,
 }: ComplaintSummaryCardProps) {
   const [studentData, setStudentData] = useState<UserData | null>(null);
 
@@ -88,11 +90,13 @@ export function ComplaintSummaryCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm text-muted-foreground">
-        {studentData && (
+        {showSubmittedBy && studentData && (
           <div className="rounded-lg bg-muted/30 p-3 text-xs">
             <span className="font-medium text-foreground">Submitted by:</span>{" "}
-            {studentData.name}
-            {studentData.rollNo && ` (Roll No: ${studentData.rollNo})`}
+            <span className="text-foreground">
+              {studentData.name}
+              {studentData.rollNo && ` (Roll No: ${studentData.rollNo})`}
+            </span>
           </div>
         )}
         <p className="leading-relaxed">{complaint.problemDescription}</p>
