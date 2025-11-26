@@ -6,19 +6,10 @@ import { AnnouncementList } from "@/components/announcements/AnnouncementList";
 import { AnnouncementForm } from "@/components/announcements/AnnouncementForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Plus, AlertCircle, User } from "lucide-react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Plus, AlertCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Announcement, AnnouncementFormData } from "@/types/announcement";
 
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 5;
 
 function AnnouncementsPage() {
   const user = useAppSelector((s) => s.auth.user);
@@ -95,43 +86,7 @@ function AnnouncementsPage() {
     return items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [items, currentPage]);
 
-  const getPageNumbers = () => {
-    const pages: (number | "ellipsis")[] = [];
-    const showEllipsisThreshold = 7;
-
-    if (totalPages <= showEllipsisThreshold) {
-      // Show all pages if total is small
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Always show first page
-      pages.push(1);
-
-      if (currentPage > 3) {
-        pages.push("ellipsis");
-      }
-
-      // Show current page and neighbors
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-      
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (currentPage < totalPages - 2) {
-        pages.push("ellipsis");
-      }
-
-      // Always show last page
-      if (totalPages > 1) {
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
-  };
+  
 
   const handleSubmit = async (data: AnnouncementFormData) => {
     try {
@@ -209,10 +164,10 @@ function AnnouncementsPage() {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-xs font-medium shadow-sm">
+              {/* <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-xs font-medium shadow-sm">
                 <Megaphone className="size-3.5 text-primary" />
                 <span className="text-foreground">Latest Updates</span>
-              </div>
+              </div> */}
               <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Announcements
               </h1>
@@ -235,49 +190,45 @@ function AnnouncementsPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_380px] items-start">
           {/* Announcements List */}
-          <div className="space-y-6">
-            <AnnouncementList
-              items={paginatedItems}
-              status={status}
-              canDelete={canCreateAnnouncement}
-              onDelete={handleDelete}
-              deletingId={deletingId}
-            />
+          <div className="flex flex-col gap-6 min-h-[360px]">
+            <div className="flex-1">
+              <AnnouncementList
+                items={paginatedItems}
+                status={status}
+                canDelete={canCreateAnnouncement}
+                onDelete={handleDelete}
+                deletingId={deletingId}
+              />
+            </div>
 
-            {/* Pagination */}
+            {/* Pagination (Complaints-style) */}
             {status === "succeeded" && items.length > 0 && totalPages > 1 && (
-              <Pagination className="mt-8">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-
-                  {getPageNumbers().map((pageNum, idx) => (
-                    <PaginationItem key={idx}>
-                      {pageNum === "ellipsis" ? (
-                        <PaginationEllipsis />
-                      ) : (
-                        <PaginationLink
-                          onClick={() => setCurrentPage(pageNum)}
-                          isActive={currentPage === pageNum}
-                        >
-                          {pageNum}
-                        </PaginationLink>
-                      )}
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+              <div className="flex items-center justify-between mt-auto">
+                <div className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, items.length)} of {items.length} announcements
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                  <div className="text-sm">Page {currentPage} of {totalPages}</div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
 

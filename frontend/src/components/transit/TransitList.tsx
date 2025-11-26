@@ -25,13 +25,18 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import {
   AlertCircle,
-  Loader2,
+  RefreshCw,
   Users,
   Search,
   Filter,
+  CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TransitEntry {
   _id: string;
@@ -62,6 +67,10 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ENTRY" | "EXIT">("ALL");
   const [hostelFilter, setHostelFilter] = useState<string>("ALL");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Get unique hostels from entries
   const uniqueHostels = Array.from(
@@ -95,14 +104,24 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
     const matchesHostel =
       hostelFilter === "ALL" || entry.studentId.hostel === hostelFilter;
 
-    return matchesSearch && matchesStatus && matchesHostel;
+    const matchesDate = !dateFilter || (
+      new Date(entry.date).toDateString() === dateFilter.toDateString()
+    );
+
+    return matchesSearch && matchesStatus && matchesHostel && matchesDate;
   });
 
   const handleClearFilters = () => {
     setSearchTerm("");
     setStatusFilter("ALL");
     setHostelFilter("ALL");
+    setDateFilter(undefined);
   };
+
+  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedEntries = filteredEntries.slice(startIndex, endIndex);
 
   return (
     <Card className="border-0 overflow-hidden bg-card shadow-xl">
@@ -126,15 +145,18 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
             disabled={listStatus === "loading"}
             className="shadow-sm"
           >
-            {listStatus === "loading" ? (
-              <Loader2 className="size-4 animate-spin mr-2" />
-            ) : null}
+            <RefreshCw
+              className={cn(
+                "mr-2 h-4 w-4",
+                listStatus === "loading" && "animate-spin"
+              )}
+            />
             Refresh
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search */}
           <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -144,6 +166,33 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-11 border"
             />
+          </div>
+
+          {/* Date Filter */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="w-full h-11 justify-start text-left font-normal"
+              onClick={() => setShowCalendar(!showCalendar)}
+            >
+              <CalendarIcon className="mr-2 size-4" />
+              {dateFilter ? (
+                new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(dateFilter)
+              ) : (
+                <span>Filter by date</span>
+              )}
+            </Button>
+            {showCalendar && (
+              <div className="absolute z-50 mt-2 bg-background border rounded-lg shadow-lg">
+                <Calendar
+                  selected={dateFilter}
+                  onSelect={(date) => {
+                    setDateFilter(date);
+                    setShowCalendar(false);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Status Filter */}
@@ -177,7 +226,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
         </div>
 
         {/* Active Filters Display */}
-        {(searchTerm || statusFilter !== "ALL" || hostelFilter !== "ALL") && (
+        {(searchTerm || statusFilter !== "ALL" || hostelFilter !== "ALL" || dateFilter) && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-border/30">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Filter className="size-4" />
@@ -268,7 +317,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredEntries.map((entry, index) => {
+                      {paginatedEntries.map((entry, index) => {
                         const isEntry = entry.transitStatus === "ENTRY";
                         return (
                           <TableRow 
@@ -276,7 +325,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
                             className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-200 dark:border-gray-800"
                           >
                             <TableCell className="font-bold text-gray-500 dark:text-gray-500">
-                              {String(index + 1).padStart(2, '0')}
+                              {String(startIndex + index + 1).padStart(2, '0')}
                             </TableCell>
                             <TableCell className="font-semibold text-gray-900 dark:text-gray-100">
                               <div className="max-w-[180px] truncate">{entry.studentId.name}</div>
@@ -324,7 +373,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
 
             {/* Mobile Card View - Hidden on Desktop */}
             <div className="lg:hidden p-4 space-y-4 max-h-[650px] overflow-y-auto">
-              {filteredEntries.map((entry, index) => {
+              {paginatedEntries.map((entry, index) => {
                 const isEntry = entry.transitStatus === "ENTRY";
                 return (
                   <Card key={entry._id} className="border-2 border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-all duration-200">
@@ -332,8 +381,8 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
                       {/* Header Row */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300 text-sm shadow-sm">
-                            {String(index + 1).padStart(2, '0')}
+                            <div className="w-10 h-10 rounded-lg bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300 text-sm shadow-sm">
+                            {String(startIndex + index + 1).padStart(2, '0')}
                           </div>
                           <div>
                             <p className="font-bold text-gray-900 dark:text-gray-100 text-base">
@@ -389,6 +438,35 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
               })}
             </div>
           </>
+        )}
+        {/* Pagination Controls */}
+        {filteredEntries.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-border/30">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredEntries.length)} of {filteredEntries.length} records
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              <div className="text-sm">Page {currentPage} of {totalPages}</div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
