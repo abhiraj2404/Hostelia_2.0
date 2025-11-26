@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { uploadBufferToCloudinary, getSecureUrl } from "../config/cloudinary.js";
+import {
+  getSecureUrl,
+  uploadBufferToCloudinary,
+} from "../config/cloudinary.js";
 import { logger } from "../middleware/logger.js";
 import { isProblemInScope, scopedProblemsFilter } from "../middleware/roles.js";
 import Problem from "../models/problem.model.js";
@@ -28,7 +31,7 @@ const createProblemSchema = z.object({
     "Student Misconduct",
     "Other",
   ]),
-  hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),
+  hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"]),
   roomNo: z.string().min(1),
 });
 
@@ -92,7 +95,7 @@ export async function createProblem(req, res) {
       const wardenIds = wardens.map((warden) => warden._id.toString());
 
       // Combine admin and warden IDs
-      const notifyUserIds = [ ...adminIds, ...wardenIds ];
+      const notifyUserIds = [...adminIds, ...wardenIds];
 
       if (notifyUserIds.length > 0) {
         await notifyUsers(notifyUserIds, {
@@ -125,13 +128,11 @@ export async function createProblem(req, res) {
       error: err.message,
       userId: userId?.toString?.(),
     });
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to create problem",
-        error: err.message,
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create problem",
+      error: err.message,
+    });
   }
 }
 
@@ -247,7 +248,7 @@ export async function addProblemComment(req, res) {
 }
 
 const statusSchema = z.object({
-  status: z.enum([ "Pending", "Resolved", "Rejected", "ToBeConfirmed" ]),
+  status: z.enum(["Pending", "Resolved", "Rejected", "ToBeConfirmed"]),
 });
 
 export async function updateProblemStatus(req, res) {
@@ -274,7 +275,15 @@ export async function updateProblemStatus(req, res) {
 
     const oldStatus = problem.status;
     problem.status = parsed.data.status;
-    if (parsed.data.status === "Resolved" && !problem.resolvedAt) {
+
+    // When staff moves a complaint towards resolution (either directly Resolved
+    // or to ToBeConfirmed for student verification), capture the resolvedAt
+    // timestamp so the UI can always display a concrete \"Resolved at\" value.
+    if (
+      (parsed.data.status === "Resolved" ||
+        parsed.data.status === "ToBeConfirmed") &&
+      !problem.resolvedAt
+    ) {
       problem.resolvedAt = new Date();
     }
     await problem.save();
@@ -294,9 +303,9 @@ export async function updateProblemStatus(req, res) {
         ToBeConfirmed: "needs your confirmation",
       };
       const statusMessage =
-        statusMessages[ parsed.data.status ] || "status has been updated";
+        statusMessages[parsed.data.status] || "status has been updated";
 
-      await notifyUsers([ studentId ], {
+      await notifyUsers([studentId], {
         type: "problem_status_updated",
         title: "Problem Status Updated",
         message: `Your problem "${problem.problemTitle}" ${statusMessage}.`,
@@ -324,18 +333,16 @@ export async function updateProblemStatus(req, res) {
       error: err.message,
       problemId: id,
     });
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to update status",
-        error: err.message,
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update status",
+      error: err.message,
+    });
   }
 }
 
 const verifySchema = z.object({
-  studentStatus: z.enum([ "NotResolved", "Resolved", "Rejected" ]),
+  studentStatus: z.enum(["NotResolved", "Resolved", "Rejected"]),
 });
 
 export async function verifyProblemResolution(req, res) {

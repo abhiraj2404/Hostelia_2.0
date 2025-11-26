@@ -1,3 +1,4 @@
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,6 @@ import {
 import { logout } from "@/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { apiClient } from "@/lib/api-client";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   LogOut,
   Mail,
@@ -26,6 +26,7 @@ export function Navbar() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const role = user?.role;
 
   const initials = (() => {
     if (user?.name) {
@@ -68,7 +69,9 @@ export function Navbar() {
             to="/contact"
             className={({ isActive }) =>
               `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground"
               }`
             }
           >
@@ -76,9 +79,9 @@ export function Navbar() {
             <span className="hidden sm:inline">Contact</span>
           </NavLink>
         )}
-        
+
         {isAuthenticated && user && <NotificationBell />}
-        
+
         {isAuthenticated && user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -99,9 +102,7 @@ export function Navbar() {
                   <p className="text-sm font-semibold leading-none">
                     {user.name ?? "User"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.email}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -111,18 +112,20 @@ export function Navbar() {
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  My complaints
+                  View complaints
                 </NavLink>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <NavLink
-                  to="/complaints/new"
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <SquarePen className="h-4 w-4" />
-                  New complaint
-                </NavLink>
-              </DropdownMenuItem>
+              {role === "student" && (
+                <DropdownMenuItem asChild>
+                  <NavLink
+                    to="/complaints/new"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <SquarePen className="h-4 w-4" />
+                    New complaint
+                  </NavLink>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}
@@ -148,4 +151,3 @@ export function Navbar() {
     </header>
   );
 }
-

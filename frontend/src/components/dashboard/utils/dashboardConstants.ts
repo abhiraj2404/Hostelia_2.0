@@ -1,13 +1,13 @@
+import type { QuickAction } from "@/types/dashboard";
 import {
-  FileText,
+  Bell,
   DollarSign,
+  FileText,
+  MessageSquare,
   Plus,
   Receipt,
-  MessageSquare,
-  Bell,
   Utensils,
 } from "lucide-react";
-import type { QuickAction } from "@/types/dashboard";
 
 // Quick Actions for Student
 export const studentQuickActions: QuickAction[] = [
@@ -84,12 +84,15 @@ export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // Guard against future timestamps or clock skew so we never show negative days
+  const rawDiffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays = rawDiffDays < 0 ? 0 : rawDiffDays;
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays} days ago`;
-  
+
   return date.toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
@@ -98,6 +101,14 @@ export const formatDate = (dateString: string): string => {
 };
 
 export const getCurrentDay = (): string => {
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   return days[new Date().getDay()];
 };
