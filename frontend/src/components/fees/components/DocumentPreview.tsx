@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, File, X } from "lucide-react";
+import { useState } from "react";
 import { FullScreenDocumentViewer } from "./FullScreenDocumentViewer";
 
 interface DocumentPreviewProps {
@@ -18,12 +18,78 @@ export function DocumentPreview({ file, onRemove }: DocumentPreviewProps) {
   const isImage = file.type.startsWith("image/");
   const isPdf = file.type === "application/pdf";
 
-  const handlePreview = (e?: React.MouseEvent) => {
+  const handlePreview = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    if (isImage || isPdf) {
+
+    if (isPdf) {
+      // For PDFs: Open in new tab with meaningful title
+      try {
+        const blobUrl = URL.createObjectURL(file);
+
+        // Create a meaningful title from the file name
+        const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        const title = fileName || "Document Preview";
+
+        // Create an HTML page with the PDF embedded and proper title
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>${title}</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 0;
+                  overflow: hidden;
+                  background-color: #525252;
+                }
+                iframe {
+                  width: 100%;
+                  height: 100vh;
+                  border: none;
+                }
+              </style>
+            </head>
+            <body>
+              <iframe src="${blobUrl}" type="application/pdf"></iframe>
+            </body>
+          </html>
+        `;
+
+        // Create blob URL for the HTML content
+        const htmlBlob = new Blob([htmlContent], { type: "text/html" });
+        const htmlBlobUrl = URL.createObjectURL(htmlBlob);
+
+        // Open in new tab
+        const newWindow = window.open(htmlBlobUrl, "_blank");
+
+        // Clean up HTML blob URL after a short delay
+        setTimeout(() => {
+          URL.revokeObjectURL(htmlBlobUrl);
+        }, 100);
+
+        // Clean up PDF blob URL after a delay (browser will keep it alive while tab is open)
+        if (newWindow) {
+          newWindow.addEventListener("beforeunload", () => {
+            URL.revokeObjectURL(blobUrl);
+          });
+        } else {
+          // Fallback: clean up after delay if we can't track the window
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error("Failed to open PDF in new tab:", error);
+        // Fallback: open blob URL directly
+        const blobUrl = URL.createObjectURL(file);
+        window.open(blobUrl, "_blank");
+      }
+    } else if (isImage) {
+      // For images: Use the modal preview
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setPreviewOpen(true);
@@ -93,19 +159,19 @@ export function DocumentPreview({ file, onRemove }: DocumentPreviewProps) {
         </CardContent>
       </Card>
 
-      {previewUrl && (
+      {/* Full-screen viewer - only for images (PDFs open in new tab) */}
+      {previewUrl && isImage && (
         <FullScreenDocumentViewer
           open={previewOpen}
           onClose={handleClosePreview}
           documentUrl={previewUrl}
           documentType="hostel"
-          title="Document Preview"
+          title={file.name || "Document Preview"}
           isImage={isImage}
-          isPdf={isPdf}
+          isPdf={false}
           showDownload={false}
         />
       )}
     </>
   );
 }
-

@@ -50,9 +50,14 @@ export async function submitHostelFee(req, res) {
     }
 
     // Upload document to Cloudinary
+    // Use "raw" resource_type for PDFs, "auto" for images
+    const mimetype = (req.file.mimetype || "").toLowerCase();
+    const isPdf = mimetype === "application/pdf" || mimetype.includes("pdf");
+    const resourceType = isPdf ? "raw" : "auto";
+
     const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
       folder: `fees/${String(userId)}/hostel`,
-      resource_type: "auto",
+      resource_type: resourceType,
     });
 
     const documentUrl = uploadResult?.url || uploadResult?.secure_url;
@@ -144,9 +149,14 @@ export async function submitMessFee(req, res) {
     }
 
     // Upload document to Cloudinary
+    // Use "raw" resource_type for PDFs, "auto" for images
+    const mimetype = (req.file.mimetype || "").toLowerCase();
+    const isPdf = mimetype === "application/pdf" || mimetype.includes("pdf");
+    const resourceType = isPdf ? "raw" : "auto";
+
     const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
       folder: `fees/${String(userId)}/mess`,
-      resource_type: "auto",
+      resource_type: resourceType,
     });
 
     const documentUrl = uploadResult?.url || uploadResult?.secure_url;

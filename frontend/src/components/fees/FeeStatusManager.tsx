@@ -1,17 +1,18 @@
 import { FeesAnalytics } from "@/components/dashboard/detailed-views/FeesDetailedView/FeesAnalytics";
-import { useState, useEffect } from "react";
-import type { FeesFilters, FeeSubmission } from "@/types/dashboard";
-import { useFeeFilters } from "./hooks/useFeeFilters";
-import { useEmailToHostelMapping } from "./hooks/useEmailToHostelMapping";
-import { updateFeeStatus, sendFeeReminder } from "@/features/fees/feesSlice";
+import { sendFeeReminder, updateFeeStatus } from "@/features/fees/feesSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
+import { fetchUsersByIds } from "@/lib/user-api";
+import type { FeesFilters, FeeSubmission } from "@/types/dashboard";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { FeeDocumentSheet } from "./components/FeeDocumentSheet";
 import { FeeFiltersBar } from "./components/FeeFiltersBar";
-import { FeeViewTabs } from "./components/FeeViewTabs";
 import { FeeListTable } from "./components/FeeListTable";
 import { FeePagination } from "./components/FeePagination";
-import { FeeDocumentSheet } from "./components/FeeDocumentSheet";
+import { FeeViewTabs } from "./components/FeeViewTabs";
 import { NotificationDialog } from "./components/NotificationDialog";
+import { useEmailToHostelMapping } from "./hooks/useEmailToHostelMapping";
+import { useFeeFilters } from "./hooks/useFeeFilters";
 
 interface FeeStatusManagerProps {
   fees: FeeSubmission[];
@@ -29,7 +30,9 @@ export function FeeStatusManager({
   userHostel,
 }: FeeStatusManagerProps) {
   const dispatch = useAppDispatch();
-  const { updateLoading, notificationLoading } = useAppSelector((state) => state.fees);
+  const { updateLoading, notificationLoading } = useAppSelector(
+    (state) => state.fees
+  );
   const [activeTab, setActiveTab] = useState<TabType>("list");
   const [filters, setFilters] = useState<FeesFilters>({
     hostel: userRole === "admin" ? undefined : userHostel,
@@ -40,6 +43,8 @@ export function FeeStatusManager({
     url: string;
     type: "hostel" | "mess";
     studentName: string;
+    studentId: string;
+    studentRollNo?: string;
   } | null>(null);
   const [notificationDialog, setNotificationDialog] = useState<{
     open: boolean;
@@ -127,12 +132,23 @@ export function FeeStatusManager({
     }
   };
 
-  const handleViewDocument = (
+  const handleViewDocument = async (
     url: string,
     type: "hostel" | "mess",
-    studentName: string
+    studentName: string,
+    studentId: string
   ) => {
-    setViewingDocument({ url, type, studentName });
+    // Fetch student roll number for admin/warden
+    let studentRollNo: string | undefined;
+    try {
+      const users = await fetchUsersByIds([studentId]);
+      const student = users.get(studentId);
+      studentRollNo = student?.rollNo;
+    } catch (error) {
+      console.error("Failed to fetch student roll number:", error);
+    }
+
+    setViewingDocument({ url, type, studentName, studentId, studentRollNo });
   };
 
   const handleApprove = (studentId: string, feeType: "hostel" | "mess") => {
@@ -170,19 +186,26 @@ export function FeeStatusManager({
       );
 
       if (sendFeeReminder.fulfilled.match(result)) {
-        toast.success(result.payload.message || "Notification sent successfully");
+        toast.success(
+          result.payload.message || "Notification sent successfully"
+        );
         setNotificationDialog({ ...notificationDialog, open: false });
       } else {
         const errorMessage = result.payload as string;
         // Handle Forbidden error gracefully
-        if (errorMessage.includes("Forbidden") || errorMessage.includes("403")) {
-          toast.error("You don't have permission to send notifications. Please contact an admin.");
+        if (
+          errorMessage.includes("Forbidden") ||
+          errorMessage.includes("403")
+        ) {
+          toast.error(
+            "You don't have permission to send notifications. Please contact an admin."
+          );
         } else {
           toast.error(errorMessage || "Failed to send notification");
         }
         // Don't throw error - let user close dialog
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred. Please try again.");
       // Don't throw error - let user close dialog
     }
@@ -239,12 +262,15 @@ export function FeeStatusManager({
         documentUrl={viewingDocument?.url || null}
         documentType={viewingDocument?.type || null}
         studentName={viewingDocument?.studentName || null}
+        studentRollNo={viewingDocument?.studentRollNo}
       />
 
       {/* Notification Dialog */}
       <NotificationDialog
         open={notificationDialog.open}
-        onClose={() => setNotificationDialog({ ...notificationDialog, open: false })}
+        onClose={() =>
+          setNotificationDialog({ ...notificationDialog, open: false })
+        }
         studentName={notificationDialog.studentName}
         studentId={notificationDialog.studentId}
         hostelFeeStatus={notificationDialog.hostelFeeStatus}

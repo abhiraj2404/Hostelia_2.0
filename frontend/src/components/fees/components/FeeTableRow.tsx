@@ -1,18 +1,20 @@
-import {
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
 import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
+import { TableCell, TableRow } from "@/components/ui/table";
 import type { FeeSubmission } from "@/types/dashboard";
-import { FeeStatusBadge } from "./FeeStatusBadge";
 import { FeeActionsDropdown } from "./FeeActionsDropdown";
+import { FeeStatusBadge } from "./FeeStatusBadge";
 
 interface FeeTableRowProps {
   fee: FeeSubmission;
   userRole: "admin" | "warden";
   studentHostel: string;
   isLoading: boolean;
-  onViewDocument: (url: string, type: "hostel" | "mess", studentName: string) => void;
+  onViewDocument: (
+    url: string,
+    type: "hostel" | "mess",
+    studentName: string,
+    studentId: string
+  ) => void;
   onApprove?: (studentId: string, feeType: "hostel" | "mess") => void;
   onReject?: (studentId: string, feeType: "hostel" | "mess") => void;
   onSendNotification: (studentId: string) => void;
@@ -58,4 +60,3 @@ export function FeeTableRow({
     </TableRow>
   );
 }
-

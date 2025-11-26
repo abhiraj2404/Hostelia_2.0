@@ -7,9 +7,10 @@ export { FeeTableRow } from "./FeeTableRow";
 export { FeeListTable } from "./FeeListTable";
 export { FeeDocumentSheet } from "./FeeDocumentSheet";
 export { FeeStatusCard } from "./FeeStatusCard";
+export { FeeProgressTimeline } from "./FeeProgressTimeline";
 export { FileUploadInput } from "./FileUploadInput";
-export { FilePreview } from "./FilePreview";
 export { SubmissionStatusMessage } from "./SubmissionStatusMessage";
 export { NotificationDialog } from "./NotificationDialog";
 export { DocumentPreview } from "./DocumentPreview";
+export { FullScreenDocumentViewer } from "./FullScreenDocumentViewer";
 

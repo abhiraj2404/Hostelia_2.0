@@ -5,14 +5,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Check, Eye, MoreVertical, X } from "lucide-react";
 import type { FeeSubmission } from "@/types/dashboard";
+import { Bell, Check, Eye, MoreVertical, X } from "lucide-react";
 
 interface FeeActionsDropdownProps {
   fee: FeeSubmission;
   isLoading: boolean;
   userRole: "admin" | "warden";
-  onViewDocument: (url: string, type: "hostel" | "mess", studentName: string) => void;
+  onViewDocument: (
+    url: string,
+    type: "hostel" | "mess",
+    studentName: string,
+    studentId: string
+  ) => void;
   onApprove?: (studentId: string, feeType: "hostel" | "mess") => void;
   onReject?: (studentId: string, feeType: "hostel" | "mess") => void;
   onSendNotification: (studentId: string) => void;
@@ -41,8 +46,10 @@ export function FeeActionsDropdown({
 
   // Determine if we should show notification option
   // Show notification when status is "documentNotSubmitted" OR "rejected"
-  const canSendHostelNotification = fee.hostelFee.status === "documentNotSubmitted" || hostelRejected;
-  const canSendMessNotification = fee.messFee.status === "documentNotSubmitted" || messRejected;
+  const canSendHostelNotification =
+    fee.hostelFee.status === "documentNotSubmitted" || hostelRejected;
+  const canSendMessNotification =
+    fee.messFee.status === "documentNotSubmitted" || messRejected;
   const showNotification = canSendHostelNotification || canSendMessNotification;
 
   return (
@@ -59,7 +66,8 @@ export function FeeActionsDropdown({
               onViewDocument(
                 fee.hostelFee.documentUrl!,
                 "hostel",
-                fee.studentName
+                fee.studentName,
+                fee.studentId
               )
             }
           >
@@ -70,7 +78,12 @@ export function FeeActionsDropdown({
         {canViewMessDoc && (
           <DropdownMenuItem
             onClick={() =>
-              onViewDocument(fee.messFee.documentUrl!, "mess", fee.studentName)
+              onViewDocument(
+                fee.messFee.documentUrl!,
+                "mess",
+                fee.studentName,
+                fee.studentId
+              )
             }
           >
             <Eye className="h-4 w-4 mr-2" />

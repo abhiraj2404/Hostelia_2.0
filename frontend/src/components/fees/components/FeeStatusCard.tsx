@@ -11,11 +11,13 @@ import { CheckCircle2, Clock, FileX, XCircle, RefreshCw } from "lucide-react";
 import type { FeeSubmission } from "@/types/dashboard";
 import { FeeDocumentViewer } from "../FeeDocumentViewer";
 import { FeeSubmissionForm } from "../FeeSubmissionForm";
+import { FeeProgressTimeline } from "./FeeProgressTimeline";
 import { useState } from "react";
 
 interface FeeStatusCardProps {
   feeType: "hostel" | "mess";
   feeData: FeeSubmission["hostelFee"] | FeeSubmission["messFee"];
+  feeSubmission?: FeeSubmission;
   onRefresh?: () => void;
 }
 
@@ -57,6 +59,7 @@ const getStatusConfig = (status: string) => {
 export function FeeStatusCard({
   feeType,
   feeData,
+  feeSubmission,
   onRefresh,
 }: FeeStatusCardProps) {
   const [showReplaceForm, setShowReplaceForm] = useState(false);
@@ -95,9 +98,9 @@ export function FeeStatusCard({
         {hasDocument && !showReplaceForm ? (
           <div className="space-y-4">
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 min-h-[32px]">
                 <h4 className="text-sm font-medium">Submitted Document</h4>
-                {canReplace && (
+                {canReplace ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -107,6 +110,8 @@ export function FeeStatusCard({
                     <RefreshCw className="h-3 w-3" />
                     Replace
                   </Button>
+                ) : (
+                  <div className="h-[32px]"></div>
                 )}
               </div>
               <FeeDocumentViewer documentUrl={feeData.documentUrl!} feeType={feeType} />
@@ -118,14 +123,32 @@ export function FeeStatusCard({
                 </p>
               </div>
             )}
+            {feeSubmission && (
+              <FeeProgressTimeline
+                feeData={feeData}
+                feeType={feeType}
+                createdAt={feeSubmission.createdAt}
+                updatedAt={feeSubmission.updatedAt}
+              />
+            )}
           </div>
         ) : (
-          <FeeSubmissionForm
-            feeType={feeType}
-            currentStatus={feeData.status}
-            onSuccess={handleReplaceSuccess}
-            isReplacement={showReplaceForm}
-          />
+          <>
+            <FeeSubmissionForm
+              feeType={feeType}
+              currentStatus={feeData.status}
+              onSuccess={handleReplaceSuccess}
+              isReplacement={showReplaceForm}
+            />
+            {feeSubmission && (
+              <FeeProgressTimeline
+                feeData={feeData}
+                feeType={feeType}
+                createdAt={feeSubmission.createdAt}
+                updatedAt={feeSubmission.updatedAt}
+              />
+            )}
+          </>
         )}
       </CardContent>
     </Card>

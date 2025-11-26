@@ -14,7 +14,12 @@ interface FeeListTableProps {
   emailToHostel: Record<string, string>;
   updateLoading: Record<string, boolean>;
   notificationLoading: Record<string, boolean>;
-  onViewDocument: (url: string, type: "hostel" | "mess", studentName: string) => void;
+  onViewDocument: (
+    url: string,
+    type: "hostel" | "mess",
+    studentName: string,
+    studentId: string
+  ) => void;
   onApprove?: (studentId: string, feeType: "hostel" | "mess") => void;
   onReject?: (studentId: string, feeType: "hostel" | "mess") => void;
   onSendNotification: (studentId: string) => void;
@@ -57,7 +62,9 @@ export function FeeListTable({
           {fees.map((fee) => {
             const studentHostel = emailToHostel[fee.studentEmail] || "N/A";
             const isLoading =
-              updateLoading[fee.studentId] || notificationLoading[fee.studentId] || false;
+              updateLoading[fee.studentId] ||
+              notificationLoading[fee.studentId] ||
+              false;
 
             return (
               <FeeTableRow
@@ -78,4 +85,3 @@ export function FeeListTable({
     </div>
   );
 }
-

@@ -19,15 +19,17 @@ export function FeeStatusDisplay({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2 md:items-start">
       <FeeStatusCard
         feeType="hostel"
         feeData={feeSubmission.hostelFee}
+        feeSubmission={feeSubmission}
         onRefresh={onRefresh}
       />
       <FeeStatusCard
         feeType="mess"
         feeData={feeSubmission.messFee}
+        feeSubmission={feeSubmission}
         onRefresh={onRefresh}
       />
     </div>
