@@ -97,9 +97,9 @@ export function FeeSubmissionForm({
     }
   };
 
-  // Allow submission if status allows it OR if this is a replacement
+  // Allow submission if status allows it OR if this is a replacement (but not if approved)
   const canSubmit =
-    isReplacement ||
+    (isReplacement && currentStatus !== "approved") ||
     currentStatus === "documentNotSubmitted" ||
     currentStatus === "rejected";
 

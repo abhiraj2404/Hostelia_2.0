@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Eye, Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FullScreenDocumentViewer } from "./components/FullScreenDocumentViewer";
+import { useAppSelector } from "@/hooks";
 
 interface FeeDocumentViewerProps {
   documentUrl: string;
@@ -17,6 +18,9 @@ export function FeeDocumentViewer({
   className,
 }: FeeDocumentViewerProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { user } = useAppSelector((state) => state.auth);
+  const studentRollNo = user?.rollNo;
+  
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(documentUrl) || 
                   documentUrl.includes("image") || 
                   documentUrl.match(/\.(jpg|jpeg|png|gif|webp)/i);
@@ -24,18 +28,50 @@ export function FeeDocumentViewer({
                 documentUrl.includes("pdf") ||
                 documentUrl.includes("application/pdf");
 
-  const handleDownload = (e?: React.MouseEvent) => {
+  const handleDownload = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    const link = document.createElement("a");
-    link.href = documentUrl;
-    link.download = `${feeType}-fee-document${isPdf ? ".pdf" : ""}`;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    try {
+      // Fetch the file as blob to ensure proper download
+      const response = await fetch(documentUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch document");
+      }
+      const blob = await response.blob();
+      
+      // Create object URL from blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      const extension = isPdf ? ".pdf" : documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] || "";
+      const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
+      link.download = `${feeType}-fee-document${rollNoPart}${extension}`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up blob URL after a short delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error) {
+      console.error("Failed to download document:", error);
+      // Fallback to direct link if blob download fails
+      const link = document.createElement("a");
+      link.href = documentUrl;
+      const extension = isPdf ? ".pdf" : documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] || "";
+      const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
+      link.download = `${feeType}-fee-document${rollNoPart}${extension}`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
@@ -63,11 +99,12 @@ export function FeeDocumentViewer({
               </div>
             </div>
           ) : isPdf ? (
-            <div className="p-4 flex flex-col items-center justify-center gap-3 min-h-[192px]">
-              <div className="rounded-lg bg-muted p-6">
+            <div className="relative group min-h-[192px] bg-muted/50 border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center">
+              <div className="rounded-lg bg-background p-6 mb-3 shadow-sm">
                 <FileText className="h-12 w-12 text-muted-foreground" />
               </div>
-              <p className="text-sm text-muted-foreground">PDF Document</p>
+              <p className="text-sm font-medium text-foreground mb-1">PDF Document</p>
+              <p className="text-xs text-muted-foreground mb-4">Click to view or download</p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -131,6 +168,8 @@ export function FeeDocumentViewer({
         title={`${feeType === "hostel" ? "Hostel" : "Mess"} Fee Document`}
         isImage={isImage}
         isPdf={isPdf}
+        showDownload={true}
+        studentRollNo={studentRollNo}
       />
     </>
   );

@@ -6,6 +6,7 @@ interface FeeDocumentSheetProps {
   documentUrl: string | null;
   documentType: "hostel" | "mess" | null;
   studentName: string | null;
+  studentRollNo?: string;
 }
 
 export function FeeDocumentSheet({
@@ -14,6 +15,7 @@ export function FeeDocumentSheet({
   documentUrl,
   documentType,
   studentName,
+  studentRollNo,
 }: FeeDocumentSheetProps) {
   if (!documentUrl || !documentType || !studentName) return null;
 
@@ -33,6 +35,8 @@ export function FeeDocumentSheet({
       title={`${studentName}'s ${documentType === "hostel" ? "Hostel" : "Mess"} Fee Document`}
       isImage={isImage}
       isPdf={isPdf}
+      showDownload={true}
+      studentRollNo={studentRollNo}
     />
   );
 }

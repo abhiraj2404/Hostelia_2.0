@@ -69,8 +69,8 @@ export function FeeStatusCard({
       : "Submit proof of mess fee payment";
 
   const hasDocument = !!feeData.documentUrl;
-  // Allow replacement whenever document exists, regardless of status
-  const canReplace = hasDocument;
+  // Allow replacement only if document exists AND status is not approved
+  const canReplace = hasDocument && feeData.status !== "approved";
 
   const handleReplaceSuccess = () => {
     setShowReplaceForm(false);

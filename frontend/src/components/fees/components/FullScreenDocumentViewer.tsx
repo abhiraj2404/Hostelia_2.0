@@ -11,6 +11,8 @@ interface FullScreenDocumentViewerProps {
   title?: string;
   isImage: boolean;
   isPdf: boolean;
+  showDownload?: boolean; // Hide download for preview before submission
+  studentRollNo?: string; // For filename
 }
 
 export function FullScreenDocumentViewer({
@@ -21,6 +23,8 @@ export function FullScreenDocumentViewer({
   title,
   isImage,
   isPdf,
+  showDownload = true,
+  studentRollNo,
 }: FullScreenDocumentViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -97,18 +101,50 @@ export function FullScreenDocumentViewer({
     setIsDragging(false);
   };
 
-  const handleDownload = (e?: React.MouseEvent) => {
+  const handleDownload = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    const link = document.createElement("a");
-    link.href = documentUrl;
-    link.download = `${documentType}-fee-document${isPdf ? ".pdf" : ""}`;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    try {
+      // Fetch the file as blob to ensure proper download
+      const response = await fetch(documentUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch document");
+      }
+      const blob = await response.blob();
+      
+      // Create object URL from blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      const extension = isPdf ? ".pdf" : documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] || "";
+      const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
+      link.download = `${documentType}-fee-document${rollNoPart}${extension}`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up blob URL after a short delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } catch (error) {
+      console.error("Failed to download document:", error);
+      // Fallback to direct link if blob download fails
+      const link = document.createElement("a");
+      link.href = documentUrl;
+      const extension = isPdf ? ".pdf" : documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)?.[0] || "";
+      const rollNoPart = studentRollNo ? ` (${studentRollNo})` : "";
+      link.download = `${documentType}-fee-document${rollNoPart}${extension}`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   if (!open) return null;
@@ -206,17 +242,21 @@ export function FullScreenDocumentViewer({
             </Button>
           </>
         )}
-        <div className="w-px h-6 bg-white/30 mx-2" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => handleDownload(e)}
-          className="text-white hover:bg-white/20"
-          type="button"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
+        {showDownload && (
+          <>
+            <div className="w-px h-6 bg-white/30 mx-2" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => handleDownload(e)}
+              className="text-white hover:bg-white/20"
+              type="button"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Document content */}
@@ -260,12 +300,16 @@ export function FullScreenDocumentViewer({
               }}
             >
               <iframe
-                src={documentUrl}
+                src={`${documentUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                 title="Fee Document PDF"
                 className="w-full h-full"
                 style={{ border: "none" }}
+                allow="fullscreen"
               >
-                This browser does not support PDFs. Please download the PDF to view it.
+                <div className="p-8 text-center">
+                  <p className="text-gray-600 mb-4">Unable to display PDF in browser.</p>
+                  <p className="text-sm text-gray-500">Please download the document to view it.</p>
+                </div>
               </iframe>
             </div>
           </div>

@@ -102,6 +102,7 @@ export function DocumentPreview({ file, onRemove }: DocumentPreviewProps) {
           title="Document Preview"
           isImage={isImage}
           isPdf={isPdf}
+          showDownload={false}
         />
       )}
     </>
