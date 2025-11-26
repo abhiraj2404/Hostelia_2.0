@@ -11,8 +11,8 @@ interface FeeStatusWidgetProps {
 }
 
 export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
-  const hostelConfig = feeStatusConfig[fees.hostelFee.status as keyof typeof feeStatusConfig];
-  const messConfig = feeStatusConfig[fees.messFee.status as keyof typeof feeStatusConfig];
+  const hostelConfig = feeStatusConfig[fees.hostelFee.status as keyof typeof feeStatusConfig] || feeStatusConfig.documentNotSubmitted;
+  const messConfig = feeStatusConfig[fees.messFee.status as keyof typeof feeStatusConfig] || feeStatusConfig.documentNotSubmitted;
 
   return (
     <Card className="border-border/60">

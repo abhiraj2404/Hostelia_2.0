@@ -15,7 +15,14 @@ interface FeesAnalyticsProps {
   filters: FeesFilters;
 }
 
-const COLORS = ['#22c55e', '#eab308', '#ef4444', '#94a3b8'];
+// Status-specific colors for consistency
+const STATUS_COLORS: Record<string, string> = {
+  'approved': '#22c55e',    // Green
+  'pending': '#eab308',     // Yellow
+  'rejected': '#ef4444',    // Red
+  'documentNotSubmitted': '#94a3b8', // Gray
+};
+
 const STATUS_LABELS: Record<string, string> = {
   'approved': 'Approved',
   'pending': 'Pending',
@@ -113,42 +120,42 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
       ];
     }
 
-    // If only fee type is selected
-    if (selectedFeeType) {
-      const feeTypeLabel = selectedFeeType === 'hostel' ? 'Hostel' : 'Mess';
-      const stats = selectedFeeType === 'hostel' ? hostelStats : messStats;
-      
-      return [
-        {
-          title: `Approved ${feeTypeLabel} Fee`,
-          value: stats.approved,
-          icon: DollarSign,
-          description: `${stats.approved} submissions`,
-          color: 'text-green-500',
-        },
-        {
-          title: `Pending ${feeTypeLabel} Fee`,
-          value: stats.pending,
-          icon: Clock,
-          description: `${stats.pending} awaiting review`,
-          color: 'text-yellow-500',
-        },
-        {
-          title: `Rejected ${feeTypeLabel} Fee`,
-          value: stats.rejected,
-          icon: XCircle,
-          description: `${stats.rejected} rejected`,
-          color: 'text-red-500',
-        },
-        {
-          title: `${feeTypeLabel} Defaulters`,
-          value: stats.notSubmitted,
-          icon: XCircle,
-          description: `${stats.notSubmitted} not submitted`,
-          color: 'text-gray-500',
-        },
-      ];
-    }
+    // If only fee type is selected - COMMENTED OUT
+    // if (selectedFeeType) {
+    //   const feeTypeLabel = selectedFeeType === 'hostel' ? 'Hostel' : 'Mess';
+    //   const stats = selectedFeeType === 'hostel' ? hostelStats : messStats;
+    //   
+    //   return [
+    //     {
+    //       title: `Approved ${feeTypeLabel} Fee`,
+    //       value: stats.approved,
+    //       icon: DollarSign,
+    //       description: `${stats.approved} submissions`,
+    //       color: 'text-green-500',
+    //     },
+    //     {
+    //       title: `Pending ${feeTypeLabel} Fee`,
+    //       value: stats.pending,
+    //       icon: Clock,
+    //       description: `${stats.pending} awaiting review`,
+    //       color: 'text-yellow-500',
+    //     },
+    //     {
+    //       title: `Rejected ${feeTypeLabel} Fee`,
+    //       value: stats.rejected,
+    //       icon: XCircle,
+    //       description: `${stats.rejected} rejected`,
+    //       color: 'text-red-500',
+    //     },
+    //     {
+    //       title: `${feeTypeLabel} Defaulters`,
+    //       value: stats.notSubmitted,
+    //       icon: XCircle,
+    //       description: `${stats.notSubmitted} not submitted`,
+    //       color: 'text-gray-500',
+    //     },
+    //   ];
+    // }
 
     // Default: no filters
     return [
@@ -192,9 +199,10 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
       const status = f.hostelFee.status;
       counts[status] = (counts[status] || 0) + 1;
     });
-    return Object.entries(counts).map(([name, value]) => ({ 
-      name: STATUS_LABELS[name] || name, 
-      value 
+    return Object.entries(counts).map(([status, value]) => ({ 
+      name: STATUS_LABELS[status] || status,
+      value,
+      status, // Keep original status for color mapping
     }));
   }, [fees]);
 
@@ -205,9 +213,10 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
       const status = f.messFee.status;
       counts[status] = (counts[status] || 0) + 1;
     });
-    return Object.entries(counts).map(([name, value]) => ({ 
-      name: STATUS_LABELS[name] || name, 
-      value 
+    return Object.entries(counts).map(([status, value]) => ({ 
+      name: STATUS_LABELS[status] || status,
+      value,
+      status, // Keep original status for color mapping
     }));
   }, [fees]);
 
@@ -254,8 +263,8 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {hostelFeeData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {hostelFeeData.map((entry) => (
+                      <Cell key={`cell-${entry.status}`} fill={STATUS_COLORS[entry.status] || '#8884d8'} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -284,8 +293,8 @@ export function FeesAnalytics({ fees, filters }: FeesAnalyticsProps) {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {messFeeData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {messFeeData.map((entry) => (
+                      <Cell key={`cell-${entry.status}`} fill={STATUS_COLORS[entry.status] || '#8884d8'} />
                     ))}
                   </Pie>
                   <Tooltip />

@@ -13,11 +13,13 @@ import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
 interface StudentsListProps {
   students: Student[];
   loading?: boolean;
+  isWarden?: boolean;
 }
 
 export function StudentsList({
   students,
   loading = false,
+  isWarden = false,
 }: StudentsListProps) {
   return (
     <div className="space-y-4">
@@ -38,7 +40,7 @@ export function StudentsList({
                 <TableHead>Roll No</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Year</TableHead>
-                <TableHead>Hostel</TableHead>
+                {!isWarden && <TableHead>Hostel</TableHead>}
                 <TableHead>Room</TableHead>
                 <TableHead>Joined</TableHead>
               </TableRow>
@@ -52,7 +54,7 @@ export function StudentsList({
                   <TableCell>
                     <Badge variant="outline">{student.year}</Badge>
                   </TableCell>
-                  <TableCell>{student.hostel || 'N/A'}</TableCell>
+                  {!isWarden && <TableCell>{student.hostel || 'N/A'}</TableCell>}
                   <TableCell>{student.roomNo || 'N/A'}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {formatDate(student.createdAt)}
