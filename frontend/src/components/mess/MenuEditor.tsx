@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +75,12 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
       setItems([""]);
     }
   };
+
+  // Ensure items are loaded on first mount and whenever `currentMenu` updates
+  useEffect(() => {
+    loadItems(selectedDay, selectedMeal);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMenu]);
 
   // Handle day change
   const handleDayChange = (day: DayName) => {

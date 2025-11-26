@@ -17,10 +17,33 @@ function Contact() {
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<null | "success" | "error">(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !message.trim()) {
+    // clear previous errors
+    setErrors({});
+
+    const newErrors: Record<string, string> = {};
+
+    // Require alphabetic characters in name and message
+    const hasLetter = (val: string) => /\p{L}/u.test(val);
+
+    if (!name.trim()) newErrors.name = "Name is required";
+    else if (!hasLetter(name)) newErrors.name = "Name must contain alphabetic characters";
+
+    if (!email.trim()) newErrors.email = "Email is required";
+    else {
+      // Basic email pattern check (simple, practical validation)
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) newErrors.email = "Please enter a valid email address (e.g. name@domain.com)";
+    }
+
+    if (!message.trim()) newErrors.message = "Message is required";
+    else if (!hasLetter(message)) newErrors.message = "Message must contain alphabetic characters";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       setStatus("error");
       setStatusMessage("Please complete the required fields.");
       return;
@@ -42,6 +65,7 @@ function Contact() {
       setMessage("");
       setStatus("success");
       setStatusMessage(response.data?.message ?? "Message sent — we'll be in touch.");
+      setErrors({});
     } catch (err) {
       setStatus("error");
       if (axios.isAxiosError(err)) {
@@ -81,10 +105,16 @@ function Contact() {
                   <div>
                     <Label>Name</Label>
                     <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
+                    {errors.name && (
+                      <p className="text-xs text-destructive mt-1">{errors.name}</p>
+                    )}
                   </div>
                   <div>
                     <Label>Email</Label>
                     <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@institution.edu" />
+                    {errors.email && (
+                      <p className="text-xs text-destructive mt-1">{errors.email}</p>
+                    )}
                   </div>
                 </div>
 
@@ -96,6 +126,9 @@ function Contact() {
                 <div>
                   <Label>Message</Label>
                   <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="How can we help?" />
+                  {errors.message && (
+                    <p className="text-xs text-destructive mt-1">{errors.message}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
@@ -142,8 +175,8 @@ function Contact() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-muted p-2">
+                  <div className="grid grid-cols-[44px_1fr] items-center gap-3 p-2 rounded-md">
+                    <div className="h-11 w-11 flex items-center justify-center rounded-lg bg-muted shrink-0">
                       <MapPin className="size-5 text-foreground" />
                     </div>
                     <div>
@@ -152,30 +185,34 @@ function Contact() {
                     </div>
                   </div>
 
-                  <a href="mailto:support@hostelia.example" className="flex items-start gap-3 hover:bg-muted/5 rounded-md p-2">
-                    <div className="rounded-lg bg-muted p-2">
-                      <Mail className="size-5 text-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Email</p>
-                      <p className="text-sm text-muted-foreground">support@hostelia.example</p>
+                  <a href="mailto:support@hostelia.example" className="block hover:bg-muted/5 rounded-md">
+                    <div className="grid grid-cols-[44px_1fr] items-center gap-3 p-2">
+                      <div className="h-11 w-11 flex items-center justify-center rounded-lg bg-muted shrink-0">
+                        <Mail className="size-5 text-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Email</p>
+                        <p className="text-sm text-muted-foreground">support@hostelia.example</p>
+                      </div>
                     </div>
                   </a>
 
-                  <a href="tel:+15551234567" className="flex items-start gap-3 hover:bg-muted/5 rounded-md p-2">
-                    <div className="rounded-lg bg-muted p-2">
-                      <Phone className="size-5 text-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Phone</p>
-                      <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
+                  <a href="tel:+15551234567" className="block hover:bg-muted/5 rounded-md">
+                    <div className="grid grid-cols-[44px_1fr] items-center gap-3 p-2">
+                      <div className="h-11 w-11 flex items-center justify-center rounded-lg bg-muted shrink-0">
+                        <Phone className="size-5 text-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Phone</p>
+                        <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
+                      </div>
                     </div>
                   </a>
 
                   <div className="pt-1 border-t border-border/60" />
 
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-muted p-2">
+                  <div className="grid grid-cols-[44px_1fr] items-center gap-3 p-2">
+                    <div className="h-11 w-11 flex items-center justify-center rounded-lg bg-muted shrink-0">
                       <Clock className="size-5 text-foreground" />
                     </div>
                     <div>

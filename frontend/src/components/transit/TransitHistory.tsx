@@ -254,15 +254,15 @@ export function TransitHistory({ entries, listStatus, listError, onRefresh }: Tr
                             </TableCell>
                             <TableCell className="px-3 py-2">
                               <Badge
-                                variant={isEntry ? "default" : "outline"}
-                                className={
-                                  isEntry
-                                    ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-500 dark:hover:text-white font-semibold px-3 py-1"
-                                    : "border-2 border-orange-600 text-orange-700 hover:bg-orange-600 hover:text-white dark:border-orange-500 dark:text-orange-400 dark:hover:bg-orange-500 dark:hover:text-white font-semibold px-2.5 py-1 text-xs"
-                                }
-                              >
-                                {entry.transitStatus}
-                              </Badge>
+                          variant="outline"
+                          className={
+                            isEntry
+                              ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 font-semibold px-2.5 py-1 text-xs"
+                              : "border-2 border-orange-600 text-orange-700 dark:border-orange-500 dark:text-orange-400 font-semibold px-2.5 py-1 text-xs"
+                          }
+                        >
+                          {entry.transitStatus}
+                        </Badge>
                             </TableCell>
                             <TableCell className="px-3 py-2 text-gray-700 dark:text-gray-300 text-sm">
                               <div className="leading-relaxed max-w-md wrap-break-word">
@@ -299,11 +299,11 @@ export function TransitHistory({ entries, listStatus, listError, onRefresh }: Tr
                           </div>
                         </div>
                         <Badge
-                          variant={isEntry ? "default" : "outline"}
+                          variant="outline"
                           className={
                             isEntry
-                              ? "bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 font-semibold px-2.5 py-1 text-xs shadow-sm"
-                              : "border-2 border-orange-600 text-orange-700 hover:bg-orange-600 hover:text-white dark:border-orange-500 dark:text-orange-400 font-semibold px-2.5 py-1 text-xs"
+                              ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 font-semibold px-2.5 py-1 text-xs"
+                              : "border-2 border-orange-600 text-orange-700 dark:border-orange-500 dark:text-orange-400 font-semibold px-2.5 py-1 text-xs"
                           }
                         >
                           {entry.transitStatus}

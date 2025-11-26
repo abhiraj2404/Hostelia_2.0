@@ -43,7 +43,12 @@ const feedbackSchema = z.object({
     required_error: "Please select a meal type",
   }),
   rating: z.number().min(1, "Please select a rating").max(5),
-  comment: z.string().max(500, "Comment is too long").optional(),
+  // If comment is provided, require at least one alphabetic character to avoid meaningless submissions
+  comment: z
+    .string()
+    .max(500, "Comment is too long")
+    .optional()
+    .refine((val) => !val || /\p{L}/u.test(val), "Comment must contain alphabetic characters"),
 });
 
 type FeedbackFormData = z.infer<typeof feedbackSchema>;
