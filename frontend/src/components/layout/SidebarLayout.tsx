@@ -1,9 +1,17 @@
+import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAppSelector } from "@/hooks";
 import { cn } from "@/lib/utils";
-import { Bell, LayoutDashboard, Mail, Menu, MessageCircle, SquarePen } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
+import {
+  Bell,
+  DollarSign,
+  LayoutDashboard,
+  Mail,
+  Menu,
+  MessageCircle,
+  SquarePen,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -13,12 +21,33 @@ type SidebarLayoutProps = {
 };
 
 const navigation = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, requireAuth: true },
-  { label: "Complaints", to: "/complaints", icon: MessageCircle, requireAuth: true },
+  {
+    label: "Dashboard",
+    to: "/dashboard",
+    icon: LayoutDashboard,
+    requireAuth: true,
+  },
+  {
+    label: "Complaints",
+    to: "/complaints",
+    icon: MessageCircle,
+    requireAuth: true,
+  },
   { label: "Mess", to: "/mess", icon: SquarePen, requireAuth: true },
-  { label: "Announcements", to: "/announcements", icon: Bell, requireAuth: true },
-  { label: "Transit", to: "/transit", icon: LayoutDashboard, requireAuth: true },
-  { label: "Contact", to: "/contact", icon: Mail, requireAuth: false }
+  {
+    label: "Announcements",
+    to: "/announcements",
+    icon: Bell,
+    requireAuth: true,
+  },
+  {
+    label: "Transit",
+    to: "/transit",
+    icon: LayoutDashboard,
+    requireAuth: true,
+  },
+  { label: "Fees", to: "/fees", icon: DollarSign, requireAuth: true },
+  { label: "Contact", to: "/contact", icon: Mail, requireAuth: false },
 ];
 
 export function SidebarLayout({ children }: SidebarLayoutProps) {
@@ -36,7 +65,9 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground hover:scale-[1.02] hover:shadow-sm",
-                  isActive ? "bg-primary text-primary-foreground shadow-md scale-[1.01]" : "text-muted-foreground"
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md scale-[1.01]"
+                    : "text-muted-foreground"
                 )
               }
             >
@@ -61,7 +92,11 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
             </aside>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" className="md:hidden fixed top-20 left-4 z-40" size="icon">
+                <Button
+                  variant="ghost"
+                  className="md:hidden fixed top-20 left-4 z-40"
+                  size="icon"
+                >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle navigation</span>
                 </Button>

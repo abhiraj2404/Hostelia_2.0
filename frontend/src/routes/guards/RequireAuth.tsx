@@ -8,10 +8,8 @@ type RequireAuthProps = { children: ReactNode };
 function RequireAuth({ children }: RequireAuthProps) {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   const location = useLocation();
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  if (!isAuthenticated || !token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
@@ -19,3 +17,4 @@ function RequireAuth({ children }: RequireAuthProps) {
 }
 
 export default RequireAuth;
+

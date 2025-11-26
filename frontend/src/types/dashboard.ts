@@ -40,12 +40,14 @@ export interface FeeSubmission {
   studentName: string;
   studentEmail: string;
   hostelFee: {
-    status: string;
+    status: "documentNotSubmitted" | "pending" | "approved" | "rejected";
+    documentUrl?: string;
     submittedAt?: string;
     rejectionReason?: string;
   };
   messFee: {
-    status: string;
+    status: "documentNotSubmitted" | "pending" | "approved" | "rejected";
+    documentUrl?: string;
     submittedAt?: string;
     rejectionReason?: string;
   };
