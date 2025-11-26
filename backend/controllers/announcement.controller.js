@@ -1,7 +1,7 @@
 import z from "zod";
 import Announcement from "../models/announcement.model.js";
 import User from "../models/user.model.js";
-import { uploadBufferToCloudinary } from "../config/cloudinary.js";
+import { uploadBufferToCloudinary, getSecureUrl } from "../config/cloudinary.js";
 import { logger } from "../middleware/logger.js";
 import { notifyUsers } from "../utils/notificationService.js";
 
@@ -63,7 +63,7 @@ export async function createAnnouncement(req, res) {
                 folder: "announcements",
                 resource_type: resourceType,
             });
-            fileUrl = uploadRes.secure_url;
+            fileUrl = getSecureUrl(uploadRes);
         }
 
         const announcement = await Announcement.create({

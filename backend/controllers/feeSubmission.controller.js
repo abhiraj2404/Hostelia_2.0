@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { uploadBufferToCloudinary } from "../config/cloudinary.js";
+import { uploadBufferToCloudinary, getSecureUrl } from "../config/cloudinary.js";
 import { logger } from "../middleware/logger.js";
 import { scopedFeeFilter } from "../middleware/roles.js";
 import FeeSubmission from "../models/feeSubmission.model.js";
@@ -10,7 +10,7 @@ import { notifyUsers } from "../utils/notificationService.js";
 // Get fee status - role-based (student sees own, admin sees all)
 export async function getFeeStatus(req, res) {
   try {
-    const filter = scopedFeeFilter(req);
+    const filter = await scopedFeeFilter(req);
     const feeSubmissions = await FeeSubmission.find(filter).sort({
       createdAt: -1,
     });
@@ -60,7 +60,7 @@ export async function submitHostelFee(req, res) {
       resource_type: resourceType,
     });
 
-    const documentUrl = uploadResult?.url || uploadResult?.secure_url;
+    const documentUrl = getSecureUrl(uploadResult);
     if (!documentUrl) {
       return res.status(502).json({
         success: false,
@@ -159,7 +159,7 @@ export async function submitMessFee(req, res) {
       resource_type: resourceType,
     });
 
-    const documentUrl = uploadResult?.url || uploadResult?.secure_url;
+    const documentUrl = getSecureUrl(uploadResult);
     if (!documentUrl) {
       return res.status(502).json({
         success: false,
@@ -237,10 +237,10 @@ export async function submitMessFee(req, res) {
 // Update fee status (admin only)
 const updateFeeStatusSchema = z.object({
   hostelFeeStatus: z
-    .enum(["documentNotSubmitted", "pending", "approved", "rejected"])
+    .enum([ "documentNotSubmitted", "pending", "approved", "rejected" ])
     .optional(),
   messFeeStatus: z
-    .enum(["documentNotSubmitted", "pending", "approved", "rejected"])
+    .enum([ "documentNotSubmitted", "pending", "approved", "rejected" ])
     .optional(),
 });
 
@@ -270,10 +270,10 @@ export async function updateFeeStatus(req, res) {
     // Build update object
     const updateFields = {};
     if (hostelFeeStatus !== undefined) {
-      updateFields["hostelFee.status"] = hostelFeeStatus;
+      updateFields[ "hostelFee.status" ] = hostelFeeStatus;
     }
     if (messFeeStatus !== undefined) {
-      updateFields["messFee.status"] = messFeeStatus;
+      updateFields[ "messFee.status" ] = messFeeStatus;
     }
 
     if (Object.keys(updateFields).length === 0) {
@@ -319,7 +319,7 @@ export async function updateFeeStatus(req, res) {
           ? updates.join(" | ")
           : "Your fee status has been updated.";
 
-      await notifyUsers([studentId], {
+      await notifyUsers([ studentId ], {
         type: "fee_status_updated",
         title: "Fee Status Updated",
         message,
@@ -358,7 +358,7 @@ export async function updateFeeStatus(req, res) {
 // Send single fee reminder
 const sendFeeReminderSchema = z.object({
   studentId: z.string().min(1),
-  emailType: z.enum(["hostelFee", "messFee", "both"]),
+  emailType: z.enum([ "hostelFee", "messFee", "both" ]),
   notes: z.string().optional(),
 });
 
@@ -389,34 +389,25 @@ export async function sendFeeReminder(req, res) {
 
     if (emailType === "hostelFee" || emailType === "both") {
       emailSubject = "Reminder: Hostel Fee Payment Due";
-      emailContent = `<p>Dear ${
-        student.name
-      },</p><p>This is a friendly reminder that your hostel fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${
-        notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
-      }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${
-        sender.name
-      }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+      emailContent = `<p>Dear ${student.name
+        },</p><p>This is a friendly reminder that your hostel fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
+        }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name
+        }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
     }
 
     if (emailType === "messFee" || emailType === "both") {
       if (emailSubject) {
         emailSubject = "Reminder: Hostel and Mess Fee Payments Due";
-        emailContent = `<p>Dear ${
-          student.name
-        },</p><p>This is a friendly reminder that your hostel and mess fee payments are due. Please make the payments as soon as possible to avoid any inconvenience.</p>${
-          notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
-        }<p>If you have already made the payments, please ignore this email.</p><p>Best regards,<br>${
-          sender.name
-        }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+        emailContent = `<p>Dear ${student.name
+          },</p><p>This is a friendly reminder that your hostel and mess fee payments are due. Please make the payments as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
+          }<p>If you have already made the payments, please ignore this email.</p><p>Best regards,<br>${sender.name
+          }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
       } else {
         emailSubject = "Reminder: Mess Fee Payment Due";
-        emailContent = `<p>Dear ${
-          student.name
-        },</p><p>This is a friendly reminder that your mess fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${
-          notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
-        }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${
-          sender.name
-        }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
+        emailContent = `<p>Dear ${student.name
+          },</p><p>This is a friendly reminder that your mess fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
+          }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name
+          }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)}</p>`;
       }
     }
 
@@ -464,15 +455,14 @@ export async function sendFeeReminder(req, res) {
           emailType === "hostelFee"
             ? "hostel fee"
             : emailType === "messFee"
-            ? "mess fee"
-            : "hostel and mess fees";
+              ? "mess fee"
+              : "hostel and mess fees";
 
-        await notifyUsers([studentId], {
+        await notifyUsers([ studentId ], {
           type: "fee_submission_required",
           title: "Fee Payment Reminder",
-          message: `You have been reminded to submit your ${feeTypeMessage} payment document.${
-            notes ? ` Note: ${notes}` : ""
-          }`,
+          message: `You have been reminded to submit your ${feeTypeMessage} payment document.${notes ? ` Note: ${notes}` : ""
+            }`,
           relatedEntityId: feeSubmission._id,
           relatedEntityType: "fee",
         });
@@ -549,7 +539,7 @@ export async function sendFeeReminder(req, res) {
 // Send bulk fee reminders
 const sendBulkFeeRemindersSchema = z.object({
   studentIds: z.array(z.string()).min(1),
-  emailType: z.enum(["hostelFee", "messFee", "both"]),
+  emailType: z.enum([ "hostelFee", "messFee", "both" ]),
   notes: z.string().optional(),
 });
 
@@ -584,40 +574,28 @@ export async function sendBulkFeeReminders(req, res) {
 
         if (emailType === "hostelFee" || emailType === "both") {
           emailSubject = "Reminder: Hostel Fee Payment Due";
-          emailContent = `<p>Dear ${
-            student.name
-          },</p><p>This is a friendly reminder that your hostel fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${
-            notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
-          }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${
-            sender.name
-          }<br>${
-            sender.role.charAt(0).toUpperCase() + sender.role.slice(1)
-          }</p>`;
+          emailContent = `<p>Dear ${student.name
+            },</p><p>This is a friendly reminder that your hostel fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
+            }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name
+            }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)
+            }</p>`;
         }
 
         if (emailType === "messFee" || emailType === "both") {
           if (emailSubject) {
             emailSubject = "Reminder: Hostel and Mess Fee Payments Due";
-            emailContent = `<p>Dear ${
-              student.name
-            },</p><p>This is a friendly reminder that your hostel and mess fee payments are due. Please make the payments as soon as possible to avoid any inconvenience.</p>${
-              notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
-            }<p>If you have already made the payments, please ignore this email.</p><p>Best regards,<br>${
-              sender.name
-            }<br>${
-              sender.role.charAt(0).toUpperCase() + sender.role.slice(1)
-            }</p>`;
+            emailContent = `<p>Dear ${student.name
+              },</p><p>This is a friendly reminder that your hostel and mess fee payments are due. Please make the payments as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
+              }<p>If you have already made the payments, please ignore this email.</p><p>Best regards,<br>${sender.name
+              }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)
+              }</p>`;
           } else {
             emailSubject = "Reminder: Mess Fee Payment Due";
-            emailContent = `<p>Dear ${
-              student.name
-            },</p><p>This is a friendly reminder that your mess fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${
-              notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
-            }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${
-              sender.name
-            }<br>${
-              sender.role.charAt(0).toUpperCase() + sender.role.slice(1)
-            }</p>`;
+            emailContent = `<p>Dear ${student.name
+              },</p><p>This is a friendly reminder that your mess fee payment is due. Please make the payment as soon as possible to avoid any inconvenience.</p>${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ""
+              }<p>If you have already made the payment, please ignore this email.</p><p>Best regards,<br>${sender.name
+              }<br>${sender.role.charAt(0).toUpperCase() + sender.role.slice(1)
+              }</p>`;
           }
         }
 
