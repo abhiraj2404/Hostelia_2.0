@@ -7,7 +7,14 @@ import User from "../models/user.model.js";
 import { notifyUsers } from "../utils/notificationService.js";
 
 const createProblemSchema = z.object({
-  problemTitle: z.string().min(3).max(200),
+  problemTitle: z
+    .string()
+    .min(3)
+    .max(200)
+    .regex(
+      /^[a-zA-Z0-9\s.,'"\-():;!?]+$/,
+      "Problem title must not contain special characters except standard punctuation."
+    ),
   problemDescription: z.string().min(3).max(5000),
   category: z.enum([
     "Electrical",
@@ -18,6 +25,7 @@ const createProblemSchema = z.object({
     "Internet",
     "Furniture",
     "Pest Control",
+    "Student Misconduct",
     "Other",
   ]),
   hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),

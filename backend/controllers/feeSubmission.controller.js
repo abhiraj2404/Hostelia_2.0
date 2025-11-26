@@ -10,7 +10,7 @@ import { notifyUsers } from "../utils/notificationService.js";
 // Get fee status - role-based (student sees own, admin sees all)
 export async function getFeeStatus(req, res) {
   try {
-    const filter = scopedFeeFilter(req);
+    const filter = await scopedFeeFilter(req);
     const feeSubmissions = await FeeSubmission.find(filter).sort({
       createdAt: -1,
     });

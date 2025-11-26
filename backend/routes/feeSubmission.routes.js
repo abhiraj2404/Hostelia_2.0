@@ -13,7 +13,7 @@ import { authorizeRoles } from "../middleware/roles.js";
 
 const router = Router();
 
-// Get fee status (student: own, admin: all)
+// Get fee status (student: own, warden: hostel, admin: all)
 router.get("/", getFeeStatus);
 
 // Submit hostel fee document (student only)
