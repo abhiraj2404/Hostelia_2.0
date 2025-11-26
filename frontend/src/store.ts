@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
 import complaintsReducer from "./features/complaints/complaintsSlice";
 import dashboardReducer from "./features/dashboard/dashboardSlice";
+import feesReducer from "./features/fees/feesSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     complaints: complaintsReducer,
     dashboard: dashboardReducer,
+    fees: feesReducer,
   },
 });
 

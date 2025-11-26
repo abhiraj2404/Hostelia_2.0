@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import MessPage from "./pages/MessPage";
 import Signup from "./pages/Signup";
 import TransitPage from "./pages/TransitPage";
+import FeesPage from "./pages/FeesPage";
 
 function App() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -64,6 +65,7 @@ function App() {
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
             <Route path="/transit" element={<TransitPage />} />
+            <Route path="/fees" element={requireAuth(<FeesPage />)} />
           </Routes>
         </main>
         <Footer />

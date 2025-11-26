@@ -49,7 +49,7 @@ const wardenQuickActions = [
   },
   {
     label: "Fee Management",
-    path: "/fee-submissions",
+    path: "/fees",
     icon: DollarSign,
   },
   {
