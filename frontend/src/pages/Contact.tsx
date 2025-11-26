@@ -1,17 +1,13 @@
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 // Separator not needed — using subtle borders in layout
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import axios from "axios";
+import { apiClient } from "@/lib/api-client";
 
 function Contact() {
   const [name, setName] = useState("");
@@ -20,25 +16,43 @@ function Contact() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<null | "success" | "error">(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !message.trim()) {
       setStatus("error");
+      setStatusMessage("Please complete the required fields.");
       return;
     }
     try {
       setSubmitting(true);
       setStatus(null);
-      // Minimal client-side behavior: pretend to send and show success
-      await new Promise((r) => setTimeout(r, 700));
+      setStatusMessage(null);
+      const payload = {
+        name: name.trim(),
+        email: email.trim(),
+        subject: subject.trim() ? subject.trim() : undefined,
+        message: message.trim()
+      };
+      const response = await apiClient.post("/contact", payload);
       setName("");
       setEmail("");
       setSubject("");
       setMessage("");
       setStatus("success");
+      setStatusMessage(response.data?.message ?? "Message sent — we'll be in touch.");
     } catch (err) {
       setStatus("error");
+      if (axios.isAxiosError(err)) {
+        const apiMessage =
+          err.response?.data?.message ||
+          Object.values(err.response?.data?.errors ?? {})?.[0] ||
+          "Failed to send your message. Please try again.";
+        setStatusMessage(typeof apiMessage === "string" ? apiMessage : "Failed to send your message. Please try again.");
+      } else {
+        setStatusMessage("Failed to send your message. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -49,7 +63,9 @@ function Contact() {
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <header className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Contact Us</h1>
-          <p className="text-muted-foreground mt-3 max-w-2xl">We're here to help — send us a message and we'll get back to you within one business day. For urgent matters, please call us.</p>
+          <p className="text-muted-foreground mt-3 max-w-2xl">
+            We're here to help — send us a message and we'll get back to you within one business day. For urgent matters, please call us.
+          </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-2 items-start">
@@ -88,13 +104,29 @@ function Contact() {
                       {submitting ? "Sending..." : "Send Message"}
                       <Send className="size-4" />
                     </Button>
-                    <Button variant="ghost" onClick={() => { setName(""); setEmail(""); setSubject(""); setMessage(""); }}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={submitting}
+                      onClick={() => {
+                        setName("");
+                        setEmail("");
+                        setSubject("");
+                        setMessage("");
+                        setStatus(null);
+                        setStatusMessage(null);
+                      }}
+                    >
                       Reset
                     </Button>
                   </div>
                   <div>
-                    {status === "success" && <span className="text-sm text-emerald-600">Message sent — we'll be in touch.</span>}
-                    {status === "error" && <span className="text-sm text-destructive">Please complete required fields.</span>}
+                    {status === "success" && (
+                      <span className="text-sm text-emerald-600">{statusMessage ?? "Message sent — we'll be in touch."}</span>
+                    )}
+                    {status === "error" && (
+                      <span className="text-sm text-destructive">{statusMessage ?? "Failed to send your message. Please try again."}</span>
+                    )}
                   </div>
                 </div>
               </form>
