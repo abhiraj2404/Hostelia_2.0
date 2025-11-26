@@ -412,55 +412,6 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
               </CardContent>
             </Card>
           )}
-
-          {/* Quick Stats Card */}
-          <Card className="shadow-lg border-primary/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Quick Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <span className="text-xs text-muted-foreground">Unsaved Items</span>
-                <Badge variant="secondary" className="text-xs">
-                  {items.filter((i) => i.trim() !== "").length}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <span className="text-xs text-muted-foreground">Current Items</span>
-                <Badge variant="outline" className="text-xs">
-                  {currentMenu && currentMenu[selectedDay] && currentMenu[selectedDay][selectedMeal]
-                    ? currentMenu[selectedDay][selectedMeal].length
-                    : 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                <span className="text-xs text-muted-foreground">Empty Fields</span>
-                <Badge variant={items.filter((i) => i.trim() === "").length > 0 ? "destructive" : "outline"} className="text-xs">
-                  {items.filter((i) => i.trim() === "").length}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Info Card */}
-          <Card className="shadow-lg bg-primary/5 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="space-y-3 text-xs text-muted-foreground">
-                <div className="flex gap-2">
-                  <AlertCircle className="size-4 shrink-0 mt-0.5 text-primary" />
-                  <p>Changes are saved immediately to the database</p>
-                </div>
-                <div className="flex gap-2">
-                  <CheckCircle2 className="size-4 shrink-0 mt-0.5 text-primary" />
-                  <p>Empty fields will be automatically removed before saving</p>
-                </div>
-                <div className="flex gap-2">
-                  <Calendar className="size-4 shrink-0 mt-0.5 text-primary" />
-                  <p>You can edit menus for any day of the week</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import apiClient from "@/lib/api-client";
+import { useAppSelector } from "@/hooks";
 // pagination component removed — using TransitHistory-style footer instead
 
 interface Feedback {
@@ -79,6 +80,8 @@ export function FeedbackDashboard() {
   const [ratingFilter, setRatingFilter] = useState("All");
   const [dayFilter, setDayFilter] = useState("All");
   const [hostelFilter, setHostelFilter] = useState("All");
+
+  const user = useAppSelector((s) => s.auth.user);
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [showFromCalendar, setShowFromCalendar] = useState(false);
@@ -117,6 +120,11 @@ export function FeedbackDashboard() {
 
     if (dayFilter !== "All") {
       filtered = filtered.filter((f) => f.day === dayFilter);
+    }
+
+    // Wardens only see feedback for their assigned hostel
+    if (user?.role === "warden" && user.hostel) {
+      filtered = filtered.filter((f) => f.user.hostel === user.hostel);
     }
 
     if (ratingFilter !== "All") {
@@ -207,6 +215,13 @@ export function FeedbackDashboard() {
     "All",
     ...Array.from(new Set(feedbacks.map((f) => f.user.hostel))).sort(),
   ];
+
+  // If current user is a warden, force hostel filter to their hostel and don't show the select
+  useEffect(() => {
+    if (user?.role === "warden" && user.hostel) {
+      setHostelFilter(user.hostel);
+    }
+  }, [user]);
 
   // Clear filters
   const clearFilters = () => {
@@ -441,21 +456,23 @@ export function FeedbackDashboard() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Hostel</label>
-              <Select value={hostelFilter} onValueChange={setHostelFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {hostels.map((hostel) => (
-                    <SelectItem key={hostel} value={hostel}>
-                      {hostel}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {user?.role !== "warden" && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Hostel</label>
+                <Select value={hostelFilter} onValueChange={setHostelFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hostels.map((hostel) => (
+                      <SelectItem key={hostel} value={hostel}>
+                        {hostel}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
