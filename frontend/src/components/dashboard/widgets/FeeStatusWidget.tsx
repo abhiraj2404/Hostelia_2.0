@@ -25,11 +25,24 @@ export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Hostel Fee</p>
-              <Badge variant={hostelConfig.variant} className="mt-1">
+              <Badge 
+                variant={hostelConfig.variant} 
+                className={`mt-1 ${
+                  fees.hostelFee.status === "rejected" 
+                    ? "bg-red-200 text-red-600 hover:bg-red-400 hover:text-red-800 border-transparent" 
+                    : fees.hostelFee.status === "approved"
+                    ? "bg-green-100 text-green-700 hover:bg-green-200 border-transparent"
+                    : fees.hostelFee.status === "pending"
+                    ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-yellow-300"
+                    : fees.hostelFee.status === "documentNotSubmitted"
+                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-300"
+                    : ""
+                }`}
+              >
                 {hostelConfig.label}
               </Badge>
             </div>
-            {fees.hostelFee.status === "accepted" ? (
+            {fees.hostelFee.status === "approved" ? (
               <CheckCircle2 className="h-5 w-5 text-green-600" />
             ) : fees.hostelFee.status === "rejected" ? (
               <AlertCircle className="h-5 w-5 text-red-600" />
@@ -51,7 +64,7 @@ export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
           )}
 
           {fees.hostelFee.status === "rejected" && (
-            <Button size="sm" variant="outline" className="w-full" asChild>
+            <Button size="sm" variant="outline" className="w-full my-2" asChild>
               <Link to="/fees">Resubmit Document</Link>
             </Button>
           )}
@@ -62,11 +75,24 @@ export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Mess Fee</p>
-              <Badge variant={messConfig.variant} className="mt-1">
+              <Badge 
+                variant={messConfig.variant} 
+                className={`mt-1 ${
+                  fees.messFee.status === "rejected" 
+                    ? "bg-red-200 text-red-600 hover:bg-red-300 hover:text-red-800 border-transparent" 
+                    : fees.messFee.status === "approved"
+                    ? "bg-green-100 text-green-700 hover:bg-green-200 border-transparent"
+                    : fees.messFee.status === "pending"
+                    ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-yellow-300"
+                    : fees.messFee.status === "documentNotSubmitted"
+                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200 border-gray-300"
+                    : ""
+                }`}
+              >
                 {messConfig.label}
               </Badge>
             </div>
-            {fees.messFee.status === "accepted" ? (
+            {fees.messFee.status === "approved" ? (
               <CheckCircle2 className="h-5 w-5 text-green-600" />
             ) : fees.messFee.status === "rejected" ? (
               <AlertCircle className="h-5 w-5 text-red-600" />

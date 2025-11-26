@@ -22,9 +22,9 @@ interface FeesListProps {
 
 const getStatusBadge = (status: string) => {
   const variants: Record<string, { variant: any; className: string }> = {
-    approved: { variant: "default", className: "bg-green-100 text-green-700" },
-    pending: { variant: "outline", className: "border-yellow-500 text-yellow-700" },
-    rejected: { variant: "destructive", className: "" },
+    approved: { variant: "default", className: "bg-green-100 text-green-700 border-gray-200" },
+    pending: { variant: "outline", className: "border-yellow-500 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-700" },
+    rejected: { variant: "destructive", className: "bg-red-100 text-red-700 hover:bg-red-200 border-gray-200" },
     documentNotSubmitted: { variant: "secondary", className: "text-muted-foreground" },
   };
   
