@@ -1,5 +1,5 @@
 import type { FeeSubmission } from "@/types/dashboard";
-import { FeeStatusCard } from "./components/FeeStatusCard";
+import { FeeStatusCard } from "./FeeStatusCard";
 
 interface FeeStatusDisplayProps {
   feeSubmission: FeeSubmission | null;

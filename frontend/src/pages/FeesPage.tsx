@@ -1,5 +1,4 @@
-import { FeeStatusDisplay } from "@/components/fees/FeeStatusDisplay";
-import { FeeStatusManager } from "@/components/fees/FeeStatusManager";
+import { FeeStatusDisplay, FeeStatusManagerContainer } from "@/components/fees";
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchFees } from "@/features/fees/feesSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -72,7 +71,7 @@ function FeesPage() {
           onRefresh={handleRefresh}
         />
       ) : isWarden || isAdmin ? (
-        <FeeStatusManager
+        <FeeStatusManagerContainer
           fees={fees}
           userRole={isAdmin ? "admin" : "warden"}
           userHostel={user?.hostel}

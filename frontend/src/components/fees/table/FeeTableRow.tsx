@@ -2,7 +2,7 @@ import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { FeeSubmission } from "@/types/dashboard";
 import { FeeActionsDropdown } from "./FeeActionsDropdown";
-import { FeeStatusBadge } from "./FeeStatusBadge";
+import { FeeStatusBadge } from "../status-management";
 
 interface FeeTableRowProps {
   fee: FeeSubmission;

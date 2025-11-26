@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/card";
 import { CheckCircle2, Clock, FileX, XCircle, RefreshCw } from "lucide-react";
 import type { FeeSubmission } from "@/types/dashboard";
-import { FeeDocumentViewer } from "../FeeDocumentViewer";
-import { FeeSubmissionForm } from "../FeeSubmissionForm";
+import { DocumentViewer } from "../document-viewer";
+import { FeeSubmissionForm } from "../forms";
 import { FeeProgressTimeline } from "./FeeProgressTimeline";
 import { useState } from "react";
 
@@ -114,7 +114,7 @@ export function FeeStatusCard({
                   <div className="h-[32px]"></div>
                 )}
               </div>
-              <FeeDocumentViewer documentUrl={feeData.documentUrl!} feeType={feeType} />
+              <DocumentViewer documentUrl={feeData.documentUrl!} feeType={feeType} />
             </div>
             {feeData.status === "rejected" && !showReplaceForm && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">

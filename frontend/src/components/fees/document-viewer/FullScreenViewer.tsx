@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { getCloudinaryDownloadUrl } from "@/lib/cloudinary-utils";
 import {
   Download,
-  Eye,
   FileText,
   RotateCw,
   X,
@@ -11,7 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-interface FullScreenDocumentViewerProps {
+interface FullScreenViewerProps {
   open: boolean;
   onClose: () => void;
   documentUrl: string;
@@ -19,11 +18,11 @@ interface FullScreenDocumentViewerProps {
   title?: string;
   isImage: boolean;
   isPdf: boolean;
-  showDownload?: boolean; // Hide download for preview before submission
-  studentRollNo?: string; // For filename
+  showDownload?: boolean;
+  studentRollNo?: string;
 }
 
-export function FullScreenDocumentViewer({
+export function FullScreenViewer({
   open,
   onClose,
   documentUrl,
@@ -33,16 +32,13 @@ export function FullScreenDocumentViewer({
   isPdf,
   showDownload = true,
   studentRollNo,
-}: FullScreenDocumentViewerProps) {
+}: FullScreenViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
-  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const pdfBlobUrlRef = useRef<string | null>(null);
 
   // Reset zoom and position when modal opens/closes
   useEffect(() => {
@@ -51,74 +47,6 @@ export function FullScreenDocumentViewer({
       setPosition({ x: 0, y: 0 });
     }
   }, [open]);
-
-  // Fetch PDF as blob and create object URL for preview
-  useEffect(() => {
-    if (!open || !isPdf || !documentUrl) {
-      // Clean up blob URL when closing or not viewing PDF
-      if (pdfBlobUrlRef.current) {
-        URL.revokeObjectURL(pdfBlobUrlRef.current);
-        pdfBlobUrlRef.current = null;
-        setPdfBlobUrl(null);
-      }
-      return;
-    }
-
-    // Fetch PDF as blob to create proper object URL for iframe preview
-    const fetchPdfForPreview = async () => {
-      setIsLoadingPdf(true);
-      try {
-        // Clean up previous blob URL if exists
-        if (pdfBlobUrlRef.current) {
-          URL.revokeObjectURL(pdfBlobUrlRef.current);
-          pdfBlobUrlRef.current = null;
-        }
-
-        // Use the raw Cloudinary URL without fl_attachment for preview
-        // Remove any existing fl_attachment parameter
-        const viewUrl = documentUrl.includes("res.cloudinary.com")
-          ? documentUrl.split("?")[0].split("&")[0] // Get base URL without query params
-          : documentUrl;
-
-        const response = await fetch(viewUrl, {
-          method: "GET",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch PDF");
-        }
-
-        const blob = await response.blob();
-
-        // Create a new blob with explicit PDF MIME type
-        const pdfBlob = new Blob([blob], { type: "application/pdf" });
-
-        // Create object URL from blob
-        const blobUrl = URL.createObjectURL(pdfBlob);
-        pdfBlobUrlRef.current = blobUrl;
-        setPdfBlobUrl(blobUrl);
-      } catch (error) {
-        console.error("Failed to load PDF for preview:", error);
-        pdfBlobUrlRef.current = null;
-        setPdfBlobUrl(null);
-      } finally {
-        setIsLoadingPdf(false);
-      }
-    };
-
-    fetchPdfForPreview();
-
-    // Cleanup function
-    return () => {
-      if (pdfBlobUrlRef.current) {
-        URL.revokeObjectURL(pdfBlobUrlRef.current);
-        pdfBlobUrlRef.current = null;
-      }
-    };
-  }, [open, isPdf, documentUrl]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -129,7 +57,7 @@ export function FullScreenDocumentViewer({
         onClose();
       } else if (e.key === "+" || e.key === "=") {
         e.preventDefault();
-        setZoom((prev) => Math.min(prev + 0.25, isPdf ? 3 : 5));
+        setZoom((prev) => Math.min(prev + 0.25, 5));
       } else if (e.key === "-") {
         e.preventDefault();
         setZoom((prev) => Math.max(prev - 0.25, 0.5));
@@ -142,7 +70,7 @@ export function FullScreenDocumentViewer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, isPdf, onClose]);
+  }, [open, onClose]);
 
   const handleZoomIn = () => {
     setZoom((prev) => Math.min(prev + 0.25, 5));
@@ -187,10 +115,7 @@ export function FullScreenDocumentViewer({
     }
 
     try {
-      // Use Cloudinary download URL with fl_attachment for forced download
       const downloadUrl = getCloudinaryDownloadUrl(documentUrl);
-
-      // Fetch the document as blob
       const response = await fetch(downloadUrl, {
         method: "GET",
         mode: "cors",
@@ -203,16 +128,11 @@ export function FullScreenDocumentViewer({
       }
 
       const blob = await response.blob();
-
-      // Ensure correct MIME type for PDFs
       const blobWithType = isPdf
         ? new Blob([blob], { type: "application/pdf" })
         : blob;
 
-      // Create object URL from blob
       const blobUrl = URL.createObjectURL(blobWithType);
-
-      // Create download link
       const link = document.createElement("a");
       link.href = blobUrl;
       const extension = isPdf
@@ -223,11 +143,9 @@ export function FullScreenDocumentViewer({
       link.style.display = "none";
       link.setAttribute("download", link.download);
 
-      // Trigger download
       document.body.appendChild(link);
       link.click();
 
-      // Clean up
       setTimeout(() => {
         if (document.body.contains(link)) {
           document.body.removeChild(link);
@@ -236,7 +154,6 @@ export function FullScreenDocumentViewer({
       }, 200);
     } catch (error) {
       console.error("Failed to download document:", error);
-      // Fallback: use Cloudinary download URL directly
       const downloadUrl = getCloudinaryDownloadUrl(documentUrl);
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -316,29 +233,6 @@ export function FullScreenDocumentViewer({
             </Button>
           </>
         )}
-        {isPdf && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              // Open PDF blob URL in new tab if available, otherwise use original URL
-              if (pdfBlobUrl) {
-                window.open(pdfBlobUrl, "_blank");
-              } else {
-                // Fallback: use original URL without fl_attachment
-                const viewUrl = documentUrl.includes("res.cloudinary.com")
-                  ? documentUrl.split("?")[0].split("&")[0]
-                  : documentUrl;
-                window.open(viewUrl, "_blank");
-              }
-            }}
-            className="text-white hover:bg-white/20"
-            type="button"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            View in New Tab
-          </Button>
-        )}
         {showDownload && (
           <>
             <div className="w-px h-6 bg-white/30 mx-2" />
@@ -387,39 +281,6 @@ export function FullScreenDocumentViewer({
           />
         )}
 
-        {isPdf && (
-          <div className="w-full h-full flex items-center justify-center">
-            {isLoadingPdf ? (
-              <div className="text-center space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-                <p className="text-white">Loading PDF...</p>
-              </div>
-            ) : pdfBlobUrl ? (
-              <iframe
-                src={pdfBlobUrl}
-                className="w-full h-full border-0"
-                title={title || `${documentType} fee document`}
-                style={{ minHeight: "100%" }}
-              />
-            ) : (
-              <div className="text-center space-y-4">
-                <FileText className="h-16 w-16 text-white mx-auto" />
-                <p className="text-white">
-                  Failed to load PDF. Please try downloading instead.
-                </p>
-                <Button
-                  onClick={(e) => handleDownload(e)}
-                  className="gap-2"
-                  type="button"
-                >
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
         {!isImage && !isPdf && (
           <div className="text-center space-y-4">
             <FileText className="h-16 w-16 text-white mx-auto" />
@@ -440,3 +301,4 @@ export function FullScreenDocumentViewer({
     </div>
   );
 }
+

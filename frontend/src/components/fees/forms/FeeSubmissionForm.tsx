@@ -11,10 +11,10 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { DocumentPreview } from "./components/DocumentPreview";
-import { FileUploadInput } from "./components/FileUploadInput";
-import { SubmissionStatusMessage } from "./components/SubmissionStatusMessage";
-import { useFileValidation } from "./hooks/useFileValidation";
+import { DocumentPreview } from "../document-viewer";
+import { FileUploadInput } from "./FileUploadInput";
+import { SubmissionStatusMessage } from "./SubmissionStatusMessage";
+import { useFileValidation } from "../hooks";
 
 interface FeeSubmissionFormProps {
   feeType: "hostel" | "mess";
