@@ -59,6 +59,20 @@ export function FeesStatsView({
     fetchStudents();
   }, []);
 
+  // Reset fee type and status filters when switching to analytics view
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      const needsReset = filters.feeType || filters.status;
+      if (needsReset) {
+        onFiltersChange({ 
+          ...filters, 
+          feeType: undefined,
+          status: undefined 
+        });
+      }
+    }
+  }, [activeTab]); // Only depend on activeTab to avoid infinite loops
+
   // Client-side filtering - Fixed to handle both filters properly
   const filteredFees = useMemo(() => {
     let result = [...fees];
@@ -67,6 +81,11 @@ export function FeesStatsView({
     if (isWarden && students.length > 0) {
       const hostelStudentEmails = new Set(students.map(s => s.email));
       result = result.filter(f => hostelStudentEmails.has(f.studentEmail));
+    }
+
+    // For admins: Filter by hostel using emailToHostel mapping
+    if (!isWarden && filters.hostel && filters.hostel !== 'all') {
+      result = result.filter(f => emailToHostel[f.studentEmail] === filters.hostel);
     }
 
     // Apply status filter
@@ -97,7 +116,7 @@ export function FeesStatsView({
     }
 
     return result;
-  }, [fees, filters, isWarden, students]);
+  }, [fees, filters, isWarden, students, emailToHostel]);
 
   return (
     <div className="space-y-6">
@@ -125,48 +144,59 @@ export function FeesStatsView({
             </Select>
           )}
 
-          <Select
-            value={filters.feeType || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, feeType: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Fee Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="hostel">Hostel Fee</SelectItem>
-              <SelectItem value="mess">Mess Fee</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.status || 'all'}
-            onValueChange={(value) =>
-              onFiltersChange({ ...filters, status: value === 'all' ? undefined : value })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="documentNotSubmitted">Not Submitted</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {(filters.hostel || filters.feeType || filters.status) && (
-            <Button
-              variant="ghost"
-              onClick={() => onFiltersChange({})}
+          {/* Fee Type Filter - Only show in list view */}
+          {activeTab === 'list' && (
+            <Select
+              value={filters.feeType || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, feeType: value === 'all' ? undefined : value })
+              }
             >
-              Clear
-            </Button>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Fee Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="hostel">Hostel Fee</SelectItem>
+                <SelectItem value="mess">Mess Fee</SelectItem>
+              </SelectContent>
+            </Select>
           )}
+
+          {/* Status Filter - Only show in list view */}
+          {activeTab === 'list' && (
+            <Select
+              value={filters.status || 'all'}
+              onValueChange={(value) =>
+                onFiltersChange({ ...filters, status: value === 'all' ? undefined : value })
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="documentNotSubmitted">Not Submitted</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Clear Filters Button */}
+          {(() => {
+            const hasListFilters = activeTab === 'list' && (filters.feeType || filters.status);
+            const hasHostelFilter = filters.hostel;
+            return (hasListFilters || hasHostelFilter) && (
+              <Button
+                variant="ghost"
+                onClick={() => onFiltersChange({})}
+              >
+                Clear
+              </Button>
+            );
+          })()}
         </div>
 
         {/* View Tabs */}
@@ -193,7 +223,7 @@ export function FeesStatsView({
       </div>
 
       {/* Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[500px] flex flex-col">
         {activeTab === 'list' && (
           <FeesList 
             fees={filteredFees} 

@@ -36,6 +36,11 @@ export function ComplaintsStatsView({
   const filteredComplaints = useMemo(() => {
     let result = [...complaints];
 
+    // Filter by hostel (for admin)
+    if (filters.hostel && filters.hostel !== 'all') {
+      result = result.filter(c => c.hostel === filters.hostel);
+    }
+
     if (filters.status && filters.status !== 'all') {
       result = result.filter(c => c.status === filters.status);
     }
@@ -148,7 +153,7 @@ export function ComplaintsStatsView({
       </div>
 
       {/* Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[500px] flex flex-col">
         {activeTab === 'list' && (
           <ComplaintsList 
             complaints={filteredComplaints} 

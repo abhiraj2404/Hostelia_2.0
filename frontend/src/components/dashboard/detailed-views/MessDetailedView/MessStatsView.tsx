@@ -29,6 +29,11 @@ export function MessStatsView({
   const filteredFeedback = useMemo(() => {
     let result = [...feedback];
 
+    // Filter by hostel (for admin)
+    if (filters.hostel && filters.hostel !== 'all') {
+      result = result.filter(f => f.studentId?.hostel === filters.hostel);
+    }
+
     if (filters.day && filters.day !== 'all') {
       result = result.filter(f => f.day === filters.day);
     }

@@ -20,6 +20,7 @@ import {
   setMessFilters,
   setStudentsPage,
   toggleDetailedView,
+  setDetailedViewExpanded,
 } from "@/features/dashboard/dashboardSlice";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
@@ -72,8 +73,10 @@ export function AdminDashboardLayout() {
   // Fetch initial dashboard data (all hostels)
   useEffect(() => {
     dispatch(fetchAdminDashboardData());
-    // Fetch first tab data (students)
+    // Fetch first tab data (students) and set as default
     dispatch(fetchDetailedStudents({ page: 1 }));
+    dispatch(setActiveTab('students'));
+    dispatch(setDetailedViewExpanded(true));
   }, [dispatch]);
 
   // Handle tab change

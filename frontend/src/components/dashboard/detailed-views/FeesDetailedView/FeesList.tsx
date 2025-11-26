@@ -57,7 +57,7 @@ export function FeesList({
   const paginatedFees = fees.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col flex-1">
       {loading ? (
         <div className="flex items-center justify-center py-8">
           <div className="text-sm text-muted-foreground">Loading...</div>
@@ -68,87 +68,87 @@ export function FeesList({
         </div>
       ) : (
         <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  {!isWarden && <TableHead>Hostel</TableHead>}
-                  <TableHead>Hostel Fee</TableHead>
-                  <TableHead>Mess Fee</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedFees.map((fee) => {
-                  const hostelBadge = getStatusBadge(fee.hostelFee.status);
-                  const messBadge = getStatusBadge(fee.messFee.status);
-                  
-                  return (
-                    <TableRow key={fee._id}>
-                      <TableCell className="font-medium">
-                        {fee.studentName}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {fee.studentEmail}
-                      </TableCell>
-                      {!isWarden && (
-                        <TableCell>
-                          {emailToHostel[fee.studentEmail] || 'N/A'}
+          <div className="flex-1">
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    {!isWarden && <TableHead>Hostel</TableHead>}
+                    <TableHead>Hostel Fee</TableHead>
+                    <TableHead>Mess Fee</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedFees.map((fee) => {
+                    const hostelBadge = getStatusBadge(fee.hostelFee.status);
+                    const messBadge = getStatusBadge(fee.messFee.status);
+                    
+                    return (
+                      <TableRow key={fee._id}>
+                        <TableCell className="font-medium">
+                          {fee.studentName}
                         </TableCell>
-                      )}
-                      <TableCell>
-                        <Badge variant={hostelBadge.variant} className={hostelBadge.className}>
-                          {getStatusLabel(fee.hostelFee.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={messBadge.variant} className={messBadge.className}>
-                          {getStatusLabel(fee.messFee.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {formatDate(fee.updatedAt || fee.createdAt)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {fee.studentEmail}
+                        </TableCell>
+                        {!isWarden && (
+                          <TableCell>
+                            {emailToHostel[fee.studentEmail] || 'N/A'}
+                          </TableCell>
+                        )}
+                        <TableCell>
+                          <Badge variant={hostelBadge.variant} className={hostelBadge.className}>
+                            {getStatusLabel(fee.hostelFee.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={messBadge.variant} className={messBadge.className}>
+                            {getStatusLabel(fee.messFee.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {formatDate(fee.updatedAt || fee.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-2">
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, fees.length)} of {fees.length} submissions
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <div className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="flex items-center justify-between px-2 pt-4 mt-auto">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {Math.min(endIndex, fees.length)} of {fees.length} submissions
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <div className="text-sm">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </>
       )}
     </div>

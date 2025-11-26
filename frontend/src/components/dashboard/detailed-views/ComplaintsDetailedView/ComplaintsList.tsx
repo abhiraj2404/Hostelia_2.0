@@ -36,7 +36,7 @@ export function ComplaintsList({
   const paginatedComplaints = complaints.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col flex-1">
       {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center py-8">
@@ -48,83 +48,83 @@ export function ComplaintsList({
         </div>
       ) : (
         <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  {!isWarden && <TableHead>Hostel</TableHead>}
-                  <TableHead>Room</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedComplaints.map((complaint) => (
-                  <TableRow
-                    key={complaint._id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigate(`/complaints/${complaint._id}`)}
-                  >
-                    <TableCell className="font-medium max-w-[300px] truncate">
-                      {complaint.problemTitle}
-                    </TableCell>
-                    <TableCell>{complaint.category}</TableCell>
-                    {!isWarden && <TableCell>{complaint.hostel || 'N/A'}</TableCell>}
-                    <TableCell>
-                      {complaint.roomNo || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          statusColors[complaint.status.toLowerCase() as keyof typeof statusColors] || ""
-                        }
-                      >
-                        {complaint.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(complaint.createdAt)}
-                    </TableCell>
+          <div className="flex-1">
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    {!isWarden && <TableHead>Hostel</TableHead>}
+                    <TableHead>Room</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedComplaints.map((complaint) => (
+                    <TableRow
+                      key={complaint._id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/complaints/${complaint._id}`)}
+                    >
+                      <TableCell className="font-medium max-w-[300px] truncate">
+                        {complaint.problemTitle}
+                      </TableCell>
+                      <TableCell>{complaint.category}</TableCell>
+                      {!isWarden && <TableCell>{complaint.hostel || 'N/A'}</TableCell>}
+                      <TableCell>
+                        {complaint.roomNo || 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            statusColors[complaint.status.toLowerCase() as keyof typeof statusColors] || ""
+                          }
+                        >
+                          {complaint.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(complaint.createdAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-2">
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, complaints.length)} of {complaints.length} complaints
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <div className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="flex items-center justify-between px-2 pt-4 mt-auto">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {Math.min(endIndex, complaints.length)} of {complaints.length} complaints
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <div className="text-sm">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </>
       )}
     </div>

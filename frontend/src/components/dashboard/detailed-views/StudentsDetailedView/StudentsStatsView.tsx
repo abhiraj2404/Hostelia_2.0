@@ -34,7 +34,7 @@ export function StudentsStatsView({
   const currentPage = pagination?.page || 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex flex-col min-h-[550px]">
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
         {!isWarden && (
@@ -95,13 +95,15 @@ export function StudentsStatsView({
       </div>
 
       {/* List */}
-      <StudentsList students={students} loading={loading} isWarden={isWarden} />
+      <div className="flex-1">
+        <StudentsList students={students} loading={loading} isWarden={isWarden} />
+      </div>
 
       {/* Pagination Controls */}
-      {pagination && pagination.total > pagination.limit && (
-        <div className="flex items-center justify-between px-2">
+      {pagination && (
+        <div className="flex items-center justify-between px-2 pt-4 mt-auto">
           <div className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} students
+            Showing {((currentPage - 1) * (pagination?.limit || 10)) + 1} to {Math.min(currentPage * (pagination?.limit || 10), pagination?.total || 0)} of {pagination?.total || 0} students
           </div>
           <div className="flex items-center gap-2">
             <Button
