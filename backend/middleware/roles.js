@@ -1,5 +1,6 @@
 // Role-based authorization and scoping helpers
 import { logger } from './logger.js';
+import User from "../models/user.model.js";
 
 export function authorizeRoles(...allowedRoles) {
     return (req, res, next) => {
@@ -38,11 +39,28 @@ export function isProblemInScope(problemDoc, req) {
 }
 
 // Compute MongoDB filters for FeeSubmissions based on the requester role
-export function scopedFeeFilter(req) {
+export async function scopedFeeFilter(req) {
     const role = req.user?.role;
     if (role === 'student') {
         return { studentId: req.user._id };
     }
+
+    if (role === 'warden') {
+        if (!req.user?.hostel) {
+            logger.warn('scopedFeeFilter: warden missing hostel assignment', {
+                userId: req.user?._id,
+            });
+            return { studentId: { $in: [] } };
+        }
+
+        const studentIds = await User.find({
+            role: 'student',
+            hostel: req.user.hostel,
+        }).distinct('_id');
+
+        return { studentId: { $in: studentIds } };
+    }
+
     // admin (or any higher role) sees all
     return {};
 }

@@ -11,18 +11,24 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
   // Fetch initial notifications and unread count
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchInitialNotifications = async () => {
       try {
+        setIsLoading(true);
         const [notificationsRes, countRes] = await Promise.all([
-          apiClient.get("/notifications"),
+          apiClient.get("/notifications?limit=20&skip=0"),
           apiClient.get("/notifications/unread-count")
         ]);
 
         if (notificationsRes.data?.success) {
           setNotifications(notificationsRes.data.notifications || []);
+          setHasMore(notificationsRes.data.hasMore || false);
+          setPage(1); // Next page will be 1 (since we loaded page 0)
         }
 
         if (countRes.data?.success) {
@@ -30,11 +36,34 @@ export function NotificationBell() {
         }
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchNotifications();
+    fetchInitialNotifications();
   }, []);
+
+  // Function to load more notifications
+  const loadMoreNotifications = async () => {
+    if (isLoading || !hasMore) return;
+
+    try {
+      setIsLoading(true);
+      const response = await apiClient.get(`/notifications?limit=20&skip=${page * 20}`);
+
+      if (response.data?.success) {
+        const newNotifications = response.data.notifications || [];
+        setNotifications((prev) => [...prev, ...newNotifications]);
+        setHasMore(response.data.hasMore || false);
+        setPage((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Failed to load more notifications:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Establish SSE connection
   useEffect(() => {
@@ -71,10 +100,15 @@ export function NotificationBell() {
           updatedAt: data.createdAt || new Date().toISOString()
         };
 
-        // Add notification to the beginning of the list
-        setNotifications((prev) => [notification, ...prev]);
+        // Add notification to the beginning of the list (avoid duplicates)
+        setNotifications((prev) => {
+          const exists = prev.some((n) => n._id === notification._id || n.id === notification.id);
+          if (exists) return prev;
+          return [notification, ...prev];
+        });
         // Increment unread count
         setUnreadCount((prev) => prev + 1);
+        // Note: We don't need to adjust pagination since new notifications go to the top
       } catch (error) {
         console.error("Failed to parse SSE message:", error);
       }
@@ -93,6 +127,13 @@ export function NotificationBell() {
   // Mark all as read when dropdown closes
   const handleOpenChange = async (open: boolean) => {
     setIsOpen(open);
+
+    // Reset pagination when opening dropdown to ensure fresh data
+    if (open) {
+      setPage(0);
+      setHasMore(true);
+      // Optionally refresh the first page of notifications here
+    }
 
     if (!open && unreadCount > 0) {
       try {
@@ -149,7 +190,13 @@ export function NotificationBell() {
             </div>
           </DropdownMenuLabel>
         </div>
-        <NotificationDropdown notifications={notifications} onItemClick={handleItemClick} />
+        <NotificationDropdown
+          notifications={notifications}
+          onItemClick={handleItemClick}
+          onLoadMore={loadMoreNotifications}
+          isLoading={isLoading}
+          hasMore={hasMore}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

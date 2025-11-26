@@ -3,11 +3,7 @@ import { getCloudinaryDownloadUrl } from "@/lib/cloudinary-utils";
 import { Download, Eye, FileText } from "lucide-react";
 import { useState } from "react";
 import { BlobUrlManager, openBlobUrlInNewTab } from "./utils/blobUtils";
-import {
-  createPdfHtmlPage,
-  createPdfTitle,
-  fetchPdfBlob,
-} from "./utils/pdfUtils";
+import { createPdfHtmlPage, createPdfTitle, fetchPdfBlob } from "./utils/pdfUtils";
 
 interface PDFViewerProps {
   documentUrl: string;
@@ -17,13 +13,7 @@ interface PDFViewerProps {
   onDownload?: () => void;
 }
 
-export function PDFViewer({
-  documentUrl,
-  feeType,
-  studentRollNo,
-  studentName,
-  onDownload,
-}: PDFViewerProps) {
+export function PDFViewer({ documentUrl, feeType, studentRollNo, studentName, onDownload }: PDFViewerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const blobManager = useState(() => new BlobUrlManager())[0];
 
@@ -35,6 +25,7 @@ export function PDFViewer({
 
     setIsLoading(true);
     try {
+      console.log("documentUrl", documentUrl);
       const pdfBlob = await fetchPdfBlob(documentUrl);
       const pdfBlobUrl = blobManager.createBlobUrl(pdfBlob);
 
@@ -48,9 +39,7 @@ export function PDFViewer({
     } catch (error) {
       console.error("Failed to open PDF in new tab:", error);
       // Fallback: open original URL directly
-      const viewUrl = documentUrl.includes("res.cloudinary.com")
-        ? documentUrl.split("?")[0].split("&")[0]
-        : documentUrl;
+      const viewUrl = documentUrl.includes("res.cloudinary.com") ? documentUrl.split("?")[0].split("&")[0] : documentUrl;
       window.open(viewUrl, "_blank");
     } finally {
       setIsLoading(false);
@@ -69,7 +58,7 @@ export function PDFViewer({
         method: "GET",
         mode: "cors",
         cache: "no-cache",
-        credentials: "omit",
+        credentials: "omit"
       });
 
       if (!response.ok) {
@@ -120,16 +109,14 @@ export function PDFViewer({
 
   return (
     <div
-      className="relative group h-48 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer"
+      className="relative group h-48 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer"
       onClick={handleViewInNewTab}
     >
       <div className="rounded-lg bg-white dark:bg-gray-900 p-4 mb-3 shadow-lg border border-blue-200 dark:border-blue-800">
         <FileText className="h-10 w-10 text-blue-600 dark:text-blue-400" />
       </div>
       <p className="text-sm font-semibold text-foreground mb-1">PDF Document</p>
-      <p className="text-xs text-muted-foreground mb-3 text-center">
-        Click to view or download
-      </p>
+      <p className="text-xs text-muted-foreground mb-3 text-center">Click to view or download</p>
       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="outline"
