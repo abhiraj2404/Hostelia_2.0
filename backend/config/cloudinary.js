@@ -13,7 +13,7 @@ const requiredEnv = [
   "CLOUDINARY_API_KEY",
   "CLOUDINARY_API_SECRET",
 ];
-const missing = requiredEnv.filter((k) => !process.env[k]);
+const missing = requiredEnv.filter((k) => !process.env[ k ]);
 if (missing.length > 0) {
   // Throwing here ensures misconfiguration is surfaced during boot
   throw new Error(
@@ -109,6 +109,11 @@ export async function uploadBufferToCloudinary(buffer, options = {}) {
   });
 }
 
+// Helper: extract secure URL from Cloudinary upload result
+export function getSecureUrl(uploadResult) {
+  return uploadResult?.secure_url || uploadResult?.url;
+}
+
 export const cloudinaryClient = cloudinary.v2;
 
 export default {
@@ -117,5 +122,6 @@ export default {
   announcementUpload,
   feeUpload,
   uploadBufferToCloudinary,
+  getSecureUrl,
   cloudinaryClient: cloudinary.v2,
 };

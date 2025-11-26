@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { uploadBufferToCloudinary } from "../config/cloudinary.js";
+import { uploadBufferToCloudinary, getSecureUrl } from "../config/cloudinary.js";
 import { logger } from "../middleware/logger.js";
 import { isProblemInScope, scopedProblemsFilter } from "../middleware/roles.js";
 import Problem from "../models/problem.model.js";
@@ -20,7 +20,7 @@ const createProblemSchema = z.object({
     "Pest Control",
     "Other",
   ]),
-  hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"]),
+  hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),
   roomNo: z.string().min(1),
 });
 
@@ -52,7 +52,7 @@ export async function createProblem(req, res) {
       resource_type: "image",
       // optional: public_id could be derived from timestamp
     });
-    problemImageUrl = uploadResult?.url;
+    problemImageUrl = getSecureUrl(uploadResult);
     if (!problemImageUrl) {
       return res
         .status(502)
@@ -84,7 +84,7 @@ export async function createProblem(req, res) {
       const wardenIds = wardens.map((warden) => warden._id.toString());
 
       // Combine admin and warden IDs
-      const notifyUserIds = [...adminIds, ...wardenIds];
+      const notifyUserIds = [ ...adminIds, ...wardenIds ];
 
       if (notifyUserIds.length > 0) {
         await notifyUsers(notifyUserIds, {
@@ -239,7 +239,7 @@ export async function addProblemComment(req, res) {
 }
 
 const statusSchema = z.object({
-  status: z.enum(["Pending", "Resolved", "Rejected", "ToBeConfirmed"]),
+  status: z.enum([ "Pending", "Resolved", "Rejected", "ToBeConfirmed" ]),
 });
 
 export async function updateProblemStatus(req, res) {
@@ -286,9 +286,9 @@ export async function updateProblemStatus(req, res) {
         ToBeConfirmed: "needs your confirmation",
       };
       const statusMessage =
-        statusMessages[parsed.data.status] || "status has been updated";
+        statusMessages[ parsed.data.status ] || "status has been updated";
 
-      await notifyUsers([studentId], {
+      await notifyUsers([ studentId ], {
         type: "problem_status_updated",
         title: "Problem Status Updated",
         message: `Your problem "${problem.problemTitle}" ${statusMessage}.`,
@@ -327,7 +327,7 @@ export async function updateProblemStatus(req, res) {
 }
 
 const verifySchema = z.object({
-  studentStatus: z.enum(["NotResolved", "Resolved", "Rejected"]),
+  studentStatus: z.enum([ "NotResolved", "Resolved", "Rejected" ]),
 });
 
 export async function verifyProblemResolution(req, res) {

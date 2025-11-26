@@ -52,12 +52,6 @@ export const getUserById = async (req, res) => {
             });
         }
 
-        logger.info("User info retrieved", {
-            requestedUserId: userId,
-            requesterRole,
-            requesterId,
-        });
-
         return res.status(200).json({
             success: true,
             message: "User information retrieved successfully",
