@@ -67,6 +67,7 @@ const mealIcons = {
 
 const mealTypes = ["All", "Breakfast", "Lunch", "Snacks", "Dinner"];
 const ratingFilters = ["All", "5", "4", "3", "2", "1"];
+const dayOptions = ["All", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export function FeedbackDashboard() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -76,6 +77,7 @@ export function FeedbackDashboard() {
   
   const [mealFilter, setMealFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState("All");
+  const [dayFilter, setDayFilter] = useState("All");
   const [hostelFilter, setHostelFilter] = useState("All");
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
@@ -113,6 +115,10 @@ export function FeedbackDashboard() {
       filtered = filtered.filter((f) => f.mealType === mealFilter);
     }
 
+    if (dayFilter !== "All") {
+      filtered = filtered.filter((f) => f.day === dayFilter);
+    }
+
     if (ratingFilter !== "All") {
       filtered = filtered.filter((f) => f.rating === parseInt(ratingFilter));
     }
@@ -138,12 +144,12 @@ export function FeedbackDashboard() {
     }
 
     setFilteredFeedbacks(filtered);
-  }, [mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo, feedbacks]);
+  }, [mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo, dayFilter, feedbacks]);
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo]);
+  }, [mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo, dayFilter]);
 
   // Calculate stats
   const calculateStats = () => {
@@ -206,13 +212,14 @@ export function FeedbackDashboard() {
   const clearFilters = () => {
     setMealFilter("All");
     setRatingFilter("All");
+    setDayFilter("All");
     setHostelFilter("All");
     setDateFrom(undefined);
     setDateTo(undefined);
   };
 
   const hasActiveFilters =
-    mealFilter !== "All" || ratingFilter !== "All" || hostelFilter !== "All" || dateFrom !== undefined || dateTo !== undefined;
+    mealFilter !== "All" || ratingFilter !== "All" || hostelFilter !== "All" || dayFilter !== "All" || dateFrom !== undefined || dateTo !== undefined;
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -324,7 +331,7 @@ export function FeedbackDashboard() {
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
             <div className="space-y-2">
               <label className="text-sm font-medium">From Date</label>
               <div className="relative">
@@ -396,6 +403,22 @@ export function FeedbackDashboard() {
                   {mealTypes.map((meal) => (
                     <SelectItem key={meal} value={meal}>
                       {meal}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Day</label>
+              <Select value={dayFilter} onValueChange={setDayFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dayOptions.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
                     </SelectItem>
                   ))}
                 </SelectContent>

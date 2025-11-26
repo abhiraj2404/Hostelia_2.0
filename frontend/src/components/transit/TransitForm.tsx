@@ -60,7 +60,8 @@ const entryExitSchema = z
     purpose: z
       .string()
       .min(3, "Purpose must be at least 3 characters")
-      .max(500, "Purpose cannot exceed 500 characters"),
+      .max(500, "Purpose cannot exceed 500 characters")
+      .refine((val) => /\p{L}/u.test(val), "Purpose must contain alphabetic characters"),
   })
   .refine(
     (data) => {

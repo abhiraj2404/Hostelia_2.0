@@ -124,7 +124,7 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
   const paginatedEntries = filteredEntries.slice(startIndex, endIndex);
 
   return (
-    <Card className="border-0 overflow-hidden bg-card shadow-xl">
+    <Card className="border-0 overflow-visible bg-card shadow-xl">
       <CardHeader className="bg-muted/50 text-foreground space-y-4 pb-6 px-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-2">
@@ -183,8 +183,9 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
               )}
             </Button>
             {showCalendar && (
-              <div className="absolute z-50 mt-2 bg-background border rounded-lg shadow-lg">
+              <div className="absolute left-0 z-50 mt-2 bg-background border rounded-lg shadow-lg w-72 sm:w-80">
                 <Calendar
+                  className="w-full"
                   selected={dateFilter}
                   onSelect={(date) => {
                     setDateFilter(date);
@@ -347,15 +348,15 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
                             </TableCell>
                             <TableCell>
                               <Badge
-                                variant={isEntry ? "default" : "outline"}
-                                className={
-                                  isEntry
-                                    ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-500 dark:hover:text-white font-semibold px-3 py-1"
-                                    : "border-2 border-orange-600 text-orange-700 dark:border-orange-500 dark:text-orange-400 dark:hover:bg-orange-500 dark:hover:text-white font-semibold px-3 py-1"
-                                }
-                              >
-                                {entry.transitStatus}
-                              </Badge>
+                          variant="outline"
+                          className={
+                            isEntry
+                              ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 font-semibold px-2.5 py-1 text-xs"
+                              : "border-2 border-orange-600 text-orange-700 dark:border-orange-500 dark:text-orange-400 font-semibold px-2.5 py-1 text-xs"
+                          }
+                        >
+                          {entry.transitStatus}
+                        </Badge>
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300">
                               <div className="text-sm leading-relaxed max-w-[220px] wrap-break-word">
@@ -394,11 +395,11 @@ export function TransitList({ entries, listStatus, listError, onRefresh }: Trans
                           </div>
                         </div>
                         <Badge
-                          variant={isEntry ? "default" : "outline"}
+                          variant="outline"
                           className={
                             isEntry
-                              ? "bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 font-semibold px-3 py-1.5 text-xs shadow-sm"
-                              : "border-2 border-orange-600 text-orange-700 hover:bg-orange-600 hover:text-white dark:border-orange-500 dark:text-orange-400 font-semibold px-3 py-1.5 text-xs"
+                              ? "border-2 border-green-600 text-green-700 dark:border-green-500 dark:text-green-400 font-semibold px-2.5 py-1 text-xs"
+                              : "border-2 border-orange-600 text-orange-700 dark:border-orange-500 dark:text-orange-400 font-semibold px-2.5 py-1 text-xs"
                           }
                         >
                           {entry.transitStatus}

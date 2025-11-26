@@ -12,7 +12,8 @@ const commentSchema = z.object({
     .string()
     .min(1, "Comment cannot be empty")
     .max(2000, "Comment is too long")
-    .refine((val) => val.trim().length > 0, "Comment cannot be blank"),
+    .refine((val) => val.trim().length > 0, "Comment cannot be blank")
+    .refine((val) => /\p{L}/u.test(val), "Comment must contain alphabetic characters"),
 });
 
 interface CommentFormProps {

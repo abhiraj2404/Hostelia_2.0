@@ -25,11 +25,16 @@ import type { AnnouncementFormData } from "@/types/announcement";
 
 // Form validation schema
 const announcementSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title is too long"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(200, "Title is too long")
+    .refine((val) => /\p{L}/u.test(val), "Title must contain alphabetic characters"),
   message: z
     .string()
     .min(1, "Message is required")
-    .max(2000, "Message is too long"),
+    .max(2000, "Message is too long")
+    .refine((val) => /\p{L}/u.test(val), "Message must contain alphabetic characters"),
   file: z
     .instanceof(FileList)
     .optional()
