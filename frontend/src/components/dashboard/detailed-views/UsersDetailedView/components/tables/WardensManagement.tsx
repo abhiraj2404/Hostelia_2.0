@@ -1,12 +1,4 @@
-import { useState, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,22 +9,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Trash2, UserPlus, ChevronLeft, ChevronRight, UserMinus } from "lucide-react";
-import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
-import type { Warden, UserManagementFilters } from "@/types/users";
-import { UserEditDialog } from "./UserEditDialog";
-import { UserDeleteDialog } from "./UserDeleteDialog";
-import { WardenAppointDialog } from "./WardenAppointDialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type {
+  UserManagementFilters,
+  Warden,
+  WardenCreateData,
+} from "@/types/users";
+import { sortByNameCaseInsensitive } from "@/utils/sorting";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { UserDeleteDialog } from "../dialogs/UserDeleteDialog";
+import { UserEditDialog } from "../dialogs/UserEditDialog";
+import { WardenCreateDialog } from "../dialogs/WardenCreateDialog";
 
 interface WardensManagementProps {
   wardens: Warden[];
-  students: Array<{ _id: string; name: string; email: string; hostel?: string; rollNo?: string }>;
   filters: UserManagementFilters;
   onFiltersChange: (filters: UserManagementFilters) => void;
   onUpdate: (userId: string, data: Partial<Warden>) => Promise<void>;
   onDelete: (userId: string) => Promise<void>;
-  onAppoint: (data: { userId: string }) => Promise<void>;
-  onRemove: (userId: string) => Promise<void>;
+  onCreate: (data: WardenCreateData) => Promise<void>;
   loading?: boolean;
   pagination?: {
     page: number;
@@ -42,34 +51,41 @@ interface WardensManagementProps {
   onPageChange?: (page: number) => void;
   updateLoading?: Record<string, boolean>;
   deleteLoading?: Record<string, boolean>;
-  appointLoading?: boolean;
-  removeLoading?: Record<string, boolean>;
+  createLoading?: boolean;
 }
 
 export function WardensManagement({
   wardens,
-  students,
   filters,
   onFiltersChange,
   onUpdate,
   onDelete,
-  onAppoint,
-  onRemove,
+  onCreate,
   loading = false,
   pagination,
   onPageChange,
   updateLoading = {},
   deleteLoading = {},
-  appointLoading = false,
-  removeLoading = {},
+  createLoading = false,
 }: WardensManagementProps) {
   const [editingUser, setEditingUser] = useState<Warden | null>(null);
   const [deletingUser, setDeletingUser] = useState<Warden | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isAppointDialogOpen, setIsAppointDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // Filter wardens based on filters
+  // Calculate warden counts per hostel
+  const wardenCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    wardens.forEach((warden) => {
+      if (warden.hostel) {
+        counts[warden.hostel] = (counts[warden.hostel] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [wardens]);
+
+  // Filter and sort wardens based on filters
   const filteredWardens = useMemo(() => {
     let filtered = [...wardens];
 
@@ -86,7 +102,8 @@ export function WardensManagement({
       filtered = filtered.filter((warden) => warden.hostel === filters.hostel);
     }
 
-    return filtered;
+    // Sort case-insensitively by name
+    return sortByNameCaseInsensitive(filtered);
   }, [wardens, filters]);
 
   // Paginate filtered results
@@ -113,20 +130,35 @@ export function WardensManagement({
   };
 
   const handleSave = async (userId: string, data: Partial<Warden>) => {
-    await onUpdate(userId, data);
-    setIsEditDialogOpen(false);
-    setEditingUser(null);
+    try {
+      await onUpdate(userId, data);
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+    } catch (error) {
+      // Error is already handled in onUpdate (toast shown), just don't close dialog
+      // The dialog will stay open so user can retry
+    }
   };
 
   const handleConfirmDelete = async (userId: string) => {
+    const warden = wardens.find((w) => w._id === userId);
+    if (warden?.hostel && wardenCounts[warden.hostel] === 1) {
+      // This should be prevented by UI, but double-check
+      return;
+    }
     await onDelete(userId);
     setIsDeleteDialogOpen(false);
     setDeletingUser(null);
   };
 
-  const handleAppoint = async (data: { userId: string }) => {
-    await onAppoint(data);
-    setIsAppointDialogOpen(false);
+  const handleCreate = async (data: WardenCreateData) => {
+    await onCreate(data);
+    setIsCreateDialogOpen(false);
+  };
+
+  const canDeleteWarden = (warden: Warden) => {
+    if (!warden.hostel) return true;
+    return wardenCounts[warden.hostel] > 1;
   };
 
   return (
@@ -139,7 +171,10 @@ export function WardensManagement({
             onValueChange={(value) =>
               onFiltersChange({
                 ...filters,
-                hostel: value === "all" ? undefined : (value as UserManagementFilters["hostel"]),
+                hostel:
+                  value === "all"
+                    ? undefined
+                    : (value as UserManagementFilters["hostel"]),
               })
             }
           >
@@ -159,7 +194,10 @@ export function WardensManagement({
             placeholder="Search by name or email..."
             value={filters.query || ""}
             onChange={(e) =>
-              onFiltersChange({ ...filters, query: e.target.value || undefined })
+              onFiltersChange({
+                ...filters,
+                query: e.target.value || undefined,
+              })
             }
             className="w-[300px]"
           />
@@ -170,9 +208,12 @@ export function WardensManagement({
             </Button>
           )}
         </div>
-        <Button onClick={() => setIsAppointDialogOpen(true)} disabled={appointLoading}>
+        <Button
+          onClick={() => setIsCreateDialogOpen(true)}
+          disabled={createLoading}
+        >
           <UserPlus className="h-4 w-4 mr-2" />
-          Appoint Warden
+          Create Warden
         </Button>
       </div>
 
@@ -206,7 +247,17 @@ export function WardensManagement({
                       {warden.email}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{warden.hostel}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{warden.hostel}</Badge>
+                        {warden.hostel && wardenCounts[warden.hostel] === 1 && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs text-yellow-700 border-yellow-500"
+                          >
+                            Sole Warden
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatDate(warden.createdAt)}
@@ -225,20 +276,17 @@ export function WardensManagement({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => onRemove(warden._id)}
-                          disabled={removeLoading[warden._id]}
-                          title="Remove warden (downgrade to student)"
-                          className="text-orange-600 hover:text-orange-700"
-                        >
-                          <UserMinus className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           onClick={() => handleDelete(warden)}
-                          disabled={deleteLoading[warden._id]}
-                          title="Delete warden"
-                          className="text-destructive hover:text-destructive"
+                          disabled={
+                            deleteLoading[warden._id] ||
+                            !canDeleteWarden(warden)
+                          }
+                          title={
+                            canDeleteWarden(warden)
+                              ? "Delete warden"
+                              : "Cannot delete. This is the only warden for this hostel."
+                          }
+                          className="text-destructive hover:text-destructive disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -256,9 +304,9 @@ export function WardensManagement({
       {pagination && filteredWardens.length > 0 && (
         <div className="flex items-center justify-between px-2 pt-4 mt-auto">
           <div className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * pagination.limit) + 1} to{" "}
-            {Math.min(currentPage * pagination.limit, filteredWardens.length)} of{" "}
-            {filteredWardens.length} wardens
+            Showing {(currentPage - 1) * pagination.limit + 1} to{" "}
+            {Math.min(currentPage * pagination.limit, filteredWardens.length)}{" "}
+            of {filteredWardens.length} wardens
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -287,16 +335,6 @@ export function WardensManagement({
       )}
 
       {/* Dialogs */}
-      <UserEditDialog
-        open={isEditDialogOpen}
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setEditingUser(null);
-        }}
-        user={editingUser}
-        onSave={handleSave}
-        isLoading={editingUser ? updateLoading[editingUser._id] : false}
-      />
 
       <UserDeleteDialog
         open={isDeleteDialogOpen}
@@ -307,16 +345,31 @@ export function WardensManagement({
         user={deletingUser}
         onConfirm={handleConfirmDelete}
         isLoading={deletingUser ? deleteLoading[deletingUser._id] : false}
+        warningMessage={
+          deletingUser?.hostel && wardenCounts[deletingUser.hostel] === 1
+            ? "Cannot delete warden. This is the only warden for this hostel. Hostel must have at least one warden."
+            : undefined
+        }
       />
 
-      <WardenAppointDialog
-        open={isAppointDialogOpen}
-        onClose={() => setIsAppointDialogOpen(false)}
-        students={students as any}
-        onAppoint={handleAppoint}
-        isLoading={appointLoading}
+      <WardenCreateDialog
+        open={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onCreate={handleCreate}
+        isLoading={createLoading}
+      />
+
+      <UserEditDialog
+        open={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setEditingUser(null);
+        }}
+        user={editingUser}
+        onSave={handleSave}
+        isLoading={editingUser ? updateLoading[editingUser._id] : false}
+        wardenCounts={wardenCounts}
       />
     </div>
   );
 }
-

@@ -1,54 +1,67 @@
-import { useEffect, useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import { ComplaintsStatsView } from "@/components/dashboard/detailed-views/ComplaintsDetailedView/ComplaintsStatsView";
+import { DetailedViewPanel } from "@/components/dashboard/detailed-views/DetailedViewPanel";
+import { FeesStatsView } from "@/components/dashboard/detailed-views/FeesDetailedView/FeesStatsView";
+import { MessStatsView } from "@/components/dashboard/detailed-views/MessDetailedView/MessStatsView";
+import { StudentsStatsView } from "@/components/dashboard/detailed-views/StudentsDetailedView/StudentsStatsView";
+import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView";
+import { AdminMetrics } from "@/components/dashboard/metrics/AdminMetrics";
+import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
+import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
+import { Button } from "@/components/ui/button";
 import {
   fetchAdminDashboardData,
   fetchDetailedComplaints,
-  fetchDetailedStudents,
   fetchDetailedFees,
   fetchDetailedMessFeedback,
-  selectDashboardState,
+  fetchDetailedStudents,
   selectDashboardMetrics,
-  selectDetailedView,
+  selectDashboardState,
   selectDetailedComplaints,
-  selectDetailedStudents,
   selectDetailedFees,
   selectDetailedMessFeedback,
+  selectDetailedStudents,
+  selectDetailedView,
   setActiveTab,
   setComplaintsFilters,
-  setStudentsFilters,
+  setDetailedViewExpanded,
   setFeesFilters,
   setMessFilters,
+  setStudentsFilters,
   setStudentsPage,
   toggleDetailedView,
-  setDetailedViewExpanded,
 } from "@/features/dashboard/dashboardSlice";
 import {
+  createWarden,
+  deleteUser,
   fetchStudents,
   fetchWardens,
-  updateUser,
-  deleteUser,
-  appointWarden,
-  removeWarden,
-  setStudentsFilters as setUsersStudentsFilters,
-  setWardensFilters,
-  setStudentsPage as setUsersStudentsPage,
-  setWardensPage,
   selectUsersState,
+  setStudentsFilters as setUsersStudentsFilters,
+  setStudentsPage as setUsersStudentsPage,
+  setWardensFilters,
+  setWardensPage,
+  updateUser,
 } from "@/features/users";
-import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
-import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
-import { AdminMetrics } from "@/components/dashboard/metrics/AdminMetrics";
-import { DetailedViewPanel } from "@/components/dashboard/detailed-views/DetailedViewPanel";
-import { ComplaintsStatsView } from "@/components/dashboard/detailed-views/ComplaintsDetailedView/ComplaintsStatsView";
-import { StudentsStatsView } from "@/components/dashboard/detailed-views/StudentsDetailedView/StudentsStatsView";
-import { FeesStatsView } from "@/components/dashboard/detailed-views/FeesDetailedView/FeesStatsView";
-import { MessStatsView } from "@/components/dashboard/detailed-views/MessDetailedView/MessStatsView";
-import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView/UsersStatsView";
-import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Bell, FileText, MessageSquare, DollarSign } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { cn } from "@/lib/utils";
+import { sortByNameCaseInsensitive } from "@/utils/sorting";
 import type { DetailedTab } from "@/types/dashboard";
+import type {
+  Student,
+  UserManagementFilters,
+  Warden,
+  WardenCreateData,
+} from "@/types/users";
+import {
+  Bell,
+  DollarSign,
+  FileText,
+  MessageSquare,
+  RefreshCw,
+  Users,
+} from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Admin quick actions
@@ -77,6 +90,7 @@ const adminQuickActions = [
 
 export function AdminDashboardLayout() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { loading, error } = useAppSelector(selectDashboardState);
   const metrics = useAppSelector(selectDashboardMetrics);
   const detailedView = useAppSelector(selectDetailedView);
@@ -91,7 +105,7 @@ export function AdminDashboardLayout() {
     dispatch(fetchAdminDashboardData());
     // Fetch first tab data (students) and set as default
     dispatch(fetchDetailedStudents({ page: 1 }));
-    dispatch(setActiveTab('students'));
+    dispatch(setActiveTab("students"));
     dispatch(setDetailedViewExpanded(true));
     // Fetch users data for user management tab
     dispatch(fetchStudents());
@@ -101,39 +115,47 @@ export function AdminDashboardLayout() {
   // Handle tab change
   const handleTabChange = (tab: DetailedTab) => {
     dispatch(setActiveTab(tab));
-    
+
     // Fetch data for the selected tab if not already expanded
     if (!detailedView.isExpanded) {
       dispatch(toggleDetailedView());
     }
-    
+
     // Fetch data based on tab
     switch (tab) {
-      case 'complaints':
-        dispatch(fetchDetailedComplaints({ 
-          page: complaintsState.pagination.page,
-          filters: complaintsState.filters
-        }));
+      case "complaints":
+        dispatch(
+          fetchDetailedComplaints({
+            page: complaintsState.pagination.page,
+            filters: complaintsState.filters,
+          })
+        );
         break;
-      case 'students':
-        dispatch(fetchDetailedStudents({ 
-          page: studentsState.pagination.page,
-          filters: studentsState.filters
-        }));
+      case "students":
+        dispatch(
+          fetchDetailedStudents({
+            page: studentsState.pagination.page,
+            filters: studentsState.filters,
+          })
+        );
         break;
-      case 'fees':
-        dispatch(fetchDetailedFees({ 
-          page: feesState.pagination.page,
-          filters: feesState.filters
-        }));
+      case "fees":
+        dispatch(
+          fetchDetailedFees({
+            page: feesState.pagination.page,
+            filters: feesState.filters,
+          })
+        );
         break;
-      case 'mess':
-        dispatch(fetchDetailedMessFeedback({ 
-          page: messState.pagination.page,
-          filters: messState.filters
-        }));
+      case "mess":
+        dispatch(
+          fetchDetailedMessFeedback({
+            page: messState.pagination.page,
+            filters: messState.filters,
+          })
+        );
         break;
-      case 'users':
+      case "users":
         dispatch(fetchStudents());
         dispatch(fetchWardens());
         break;
@@ -148,22 +170,42 @@ export function AdminDashboardLayout() {
   // Handle refresh
   const handleRefresh = () => {
     dispatch(fetchAdminDashboardData());
-    
+
     // Refresh current tab data
     switch (detailedView.activeTab) {
-      case 'complaints':
-        dispatch(fetchDetailedComplaints({ page: complaintsState.pagination.page, filters: complaintsState.filters }));
+      case "complaints":
+        dispatch(
+          fetchDetailedComplaints({
+            page: complaintsState.pagination.page,
+            filters: complaintsState.filters,
+          })
+        );
         break;
-      case 'students':
-        dispatch(fetchDetailedStudents({ page: studentsState.pagination.page, filters: studentsState.filters }));
+      case "students":
+        dispatch(
+          fetchDetailedStudents({
+            page: studentsState.pagination.page,
+            filters: studentsState.filters,
+          })
+        );
         break;
-      case 'fees':
-        dispatch(fetchDetailedFees({ page: feesState.pagination.page, filters: feesState.filters }));
+      case "fees":
+        dispatch(
+          fetchDetailedFees({
+            page: feesState.pagination.page,
+            filters: feesState.filters,
+          })
+        );
         break;
-      case 'mess':
-        dispatch(fetchDetailedMessFeedback({ page: messState.pagination.page, filters: messState.filters }));
+      case "mess":
+        dispatch(
+          fetchDetailedMessFeedback({
+            page: messState.pagination.page,
+            filters: messState.filters,
+          })
+        );
         break;
-      case 'users':
+      case "users":
         dispatch(fetchStudents());
         dispatch(fetchWardens());
         break;
@@ -171,23 +213,48 @@ export function AdminDashboardLayout() {
   };
 
   // User management handlers
-  const handleUpdateStudent = async (userId: string, data: any) => {
-    const action = await dispatch(updateUser({ userId, data }));
-    if (updateUser.fulfilled.match(action)) {
-      toast.success("Student updated successfully");
-      dispatch(fetchStudents());
-    } else {
-      toast.error(action.payload || "Failed to update student");
+  const handleUpdateStudent = async (
+    userId: string,
+    data: Partial<Student>
+  ) => {
+    try {
+      const action = await dispatch(updateUser({ userId, data }));
+      if (updateUser.fulfilled.match(action)) {
+        toast.success("Student updated successfully");
+        dispatch(fetchStudents());
+      } else {
+        const errorMessage = action.payload || "Failed to update student";
+        if (
+          errorMessage.includes("403") ||
+          errorMessage.includes("Forbidden")
+        ) {
+          toast.error(
+            "You don't have permission to update this student. Only admins can update students from all hostels."
+          );
+        } else {
+          toast.error(errorMessage);
+        }
+      }
+    } catch {
+      toast.error("An unexpected error occurred while updating the student.");
     }
   };
 
-  const handleUpdateWarden = async (userId: string, data: any) => {
+  const handleUpdateWarden = async (userId: string, data: Partial<Warden>) => {
+    try {
     const action = await dispatch(updateUser({ userId, data }));
     if (updateUser.fulfilled.match(action)) {
       toast.success("Warden updated successfully");
       dispatch(fetchWardens());
     } else {
-      toast.error(action.payload || "Failed to update warden");
+        const errorMessage = action.payload || "Failed to update warden";
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while updating the warden.";
+      toast.error(errorMessage);
+      throw error;
     }
   };
 
@@ -211,52 +278,46 @@ export function AdminDashboardLayout() {
     }
   };
 
-  const handleAppointWarden = async (data: { userId: string }) => {
-    const action = await dispatch(appointWarden(data));
-    if (appointWarden.fulfilled.match(action)) {
-      toast.success("Warden appointed successfully");
-      dispatch(fetchStudents());
+  const handleCreateWarden = async (data: WardenCreateData) => {
+    const action = await dispatch(createWarden(data));
+    if (createWarden.fulfilled.match(action)) {
+      toast.success("Warden created successfully");
       dispatch(fetchWardens());
     } else {
-      toast.error(action.payload || "Failed to appoint warden");
-    }
-  };
-
-  const handleRemoveWarden = async (userId: string) => {
-    const action = await dispatch(removeWarden(userId));
-    if (removeWarden.fulfilled.match(action)) {
-      toast.success("Warden removed successfully");
-      dispatch(fetchWardens());
-    } else {
-      toast.error(action.payload || "Failed to remove warden");
+      toast.error(action.payload || "Failed to create warden");
     }
   };
 
   // Client-side filtering and pagination for students
   const filteredStudents = useMemo(() => {
     let result = [...studentsState.items];
-    
+
     // 1. Filter by Hostel
-    if (studentsState.filters.hostel && studentsState.filters.hostel !== 'all') {
-      result = result.filter(s => s.hostel === studentsState.filters.hostel);
+    if (
+      studentsState.filters.hostel &&
+      studentsState.filters.hostel !== "all"
+    ) {
+      result = result.filter((s) => s.hostel === studentsState.filters.hostel);
     }
-    
+
     // 2. Filter by Search
     if (studentsState.filters.query) {
       const query = studentsState.filters.query.toLowerCase();
-      result = result.filter(s => 
-        s.name.toLowerCase().includes(query) || 
-        s.email.toLowerCase().includes(query) ||
-        (s.rollNo && s.rollNo.toLowerCase().includes(query))
+      result = result.filter(
+        (s) =>
+          s.name.toLowerCase().includes(query) ||
+          s.email.toLowerCase().includes(query) ||
+          (s.rollNo && s.rollNo.toLowerCase().includes(query))
       );
     }
-    
+
     // 3. Filter by Year
-    if (studentsState.filters.year && studentsState.filters.year !== 'all') {
-      result = result.filter(s => s.year === studentsState.filters.year);
+    if (studentsState.filters.year && studentsState.filters.year !== "all") {
+      result = result.filter((s) => s.year === studentsState.filters.year);
     }
-    
-    return result;
+
+    // Sort case-insensitively by name
+    return sortByNameCaseInsensitive(result);
   }, [studentsState.items, studentsState.filters]);
 
   const paginatedStudents = useMemo(() => {
@@ -272,20 +333,24 @@ export function AdminDashboardLayout() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage all hostel operations
-          </p>
+          <p className="text-muted-foreground">Manage all hostel operations</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          <RefreshCw
-            className={cn("mr-2 h-4 w-4", loading && "animate-spin")}
-          />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              onClick={() => navigate("/users")}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Manage Users
+            </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw
+              className={cn("mr-2 h-4 w-4", loading && "animate-spin")}
+            />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Error State */}
@@ -327,9 +392,8 @@ export function AdminDashboardLayout() {
               onTabChange={handleTabChange}
               onRefresh={handleRefresh}
               loading={loading}
-              showUsersTab={true}
             >
-              {detailedView.activeTab === 'complaints' && (
+              {detailedView.activeTab === "complaints" && (
                 <ComplaintsStatsView
                   complaints={complaintsState.items}
                   filters={complaintsState.filters}
@@ -342,7 +406,7 @@ export function AdminDashboardLayout() {
                 />
               )}
 
-              {detailedView.activeTab === 'students' && (
+              {detailedView.activeTab === "students" && (
                 <StudentsStatsView
                   students={paginatedStudents}
                   filters={studentsState.filters}
@@ -352,7 +416,7 @@ export function AdminDashboardLayout() {
                   loading={studentsState.loading}
                   pagination={{
                     ...studentsState.pagination,
-                    total: filteredStudents.length
+                    total: filteredStudents.length,
                   }}
                   onPageChange={(page) => {
                     dispatch(setStudentsPage(page));
@@ -361,7 +425,7 @@ export function AdminDashboardLayout() {
                 />
               )}
 
-              {detailedView.activeTab === 'fees' && (
+              {detailedView.activeTab === "fees" && (
                 <FeesStatsView
                   fees={feesState.items}
                   filters={feesState.filters}
@@ -374,7 +438,7 @@ export function AdminDashboardLayout() {
                 />
               )}
 
-              {detailedView.activeTab === 'mess' && (
+              {detailedView.activeTab === "mess" && (
                 <MessStatsView
                   feedback={messState.items}
                   filters={messState.filters}
@@ -387,39 +451,37 @@ export function AdminDashboardLayout() {
                 />
               )}
 
-              {detailedView.activeTab === 'users' && (
+              {detailedView.activeTab === "users" && (
                 <UsersStatsView
                   students={usersState.students}
                   wardens={usersState.wardens}
                   studentsFilters={usersState.studentsFilters}
                   wardensFilters={usersState.wardensFilters}
-                  onStudentsFiltersChange={(filters) => {
+                  onStudentsFiltersChange={(filters: UserManagementFilters) => {
                     dispatch(setUsersStudentsFilters(filters));
                   }}
-                  onWardensFiltersChange={(filters) => {
+                  onWardensFiltersChange={(filters: UserManagementFilters) => {
                     dispatch(setWardensFilters(filters));
                   }}
                   onUpdateStudent={handleUpdateStudent}
                   onUpdateWarden={handleUpdateWarden}
                   onDeleteStudent={handleDeleteStudent}
                   onDeleteWarden={handleDeleteWarden}
-                  onAppointWarden={handleAppointWarden}
-                  onRemoveWarden={handleRemoveWarden}
+                  onCreateWarden={handleCreateWarden}
                   studentsLoading={usersState.studentsLoading}
                   wardensLoading={usersState.wardensLoading}
                   studentsPagination={usersState.studentsPagination}
                   wardensPagination={usersState.wardensPagination}
-                  onStudentsPageChange={(page) => {
+                  onStudentsPageChange={(page: number) => {
                     dispatch(setUsersStudentsPage(page));
                   }}
-                  onWardensPageChange={(page) => {
+                  onWardensPageChange={(page: number) => {
                     dispatch(setWardensPage(page));
                   }}
                   isWarden={false}
                   updateLoading={usersState.updateLoading}
                   deleteLoading={usersState.deleteLoading}
-                  appointLoading={usersState.appointLoading}
-                  removeLoading={usersState.removeLoading}
+                  createWardenLoading={usersState.createWardenLoading}
                 />
               )}
             </DetailedViewPanel>

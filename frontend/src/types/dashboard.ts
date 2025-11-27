@@ -9,8 +9,15 @@ export interface DashboardMetrics {
     rejected: number;
   };
   fees: {
-    hostelFee: any;
-    messFee: any;
+    hostelFee: {
+      total: number;
+      pending: number;
+    };
+    messFee: {
+      total: number;
+      pending: number;
+    };
+    pending?: number; // Combined pending count for metric card
   };
   students?: number;
   messFeedback?: {
@@ -77,7 +84,7 @@ export interface MessFeedback {
 // Quick Action
 export interface QuickAction {
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   path: string;
   primary?: boolean;
   variant?: "default" | "outline" | "ghost";
@@ -88,7 +95,7 @@ export interface MetricCardData {
   label: string;
   value: number | string;
   description?: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   tone: string;
   onClick?: () => void;
   isActive?: boolean;
@@ -107,7 +114,7 @@ export interface MessMenu {
 }
 
 // Detailed View Types
-export type DetailedTab = 'complaints' | 'students' | 'fees' | 'mess' | 'users';
+export type DetailedTab = "complaints" | "students" | "fees" | "mess" | "users";
 
 export interface PaginationState {
   page: number;

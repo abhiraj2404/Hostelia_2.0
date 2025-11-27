@@ -1,12 +1,4 @@
-import { useState, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Student, UserManagementFilters } from "@/types/users";
-import { UserEditDialog } from "./UserEditDialog";
-import { UserDeleteDialog } from "./UserDeleteDialog";
+import { sortByNameCaseInsensitive } from "@/utils/sorting";
+import { ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { UserDeleteDialog } from "../dialogs/UserDeleteDialog";
+import { UserEditDialog } from "../dialogs/UserEditDialog";
 
 interface StudentsManagementProps {
   students: Student[];
@@ -74,14 +75,17 @@ export function StudentsManagement({
     }
 
     if (filters.hostel && filters.hostel !== "all") {
-      filtered = filtered.filter((student) => student.hostel === filters.hostel);
+      filtered = filtered.filter(
+        (student) => student.hostel === filters.hostel
+      );
     }
 
     if (filters.year && filters.year !== "all") {
       filtered = filtered.filter((student) => student.year === filters.year);
     }
 
-    return filtered;
+    // Sort case-insensitively by name
+    return sortByNameCaseInsensitive(filtered);
   }, [students, filters]);
 
   // Paginate filtered results
@@ -129,7 +133,10 @@ export function StudentsManagement({
             onValueChange={(value) =>
               onFiltersChange({
                 ...filters,
-                hostel: value === "all" ? undefined : (value as UserManagementFilters["hostel"]),
+                hostel:
+                  value === "all"
+                    ? undefined
+                    : (value as UserManagementFilters["hostel"]),
               })
             }
           >
@@ -160,7 +167,10 @@ export function StudentsManagement({
           onValueChange={(value) =>
             onFiltersChange({
               ...filters,
-              year: value === "all" ? undefined : (value as UserManagementFilters["year"]),
+              year:
+                value === "all"
+                  ? undefined
+                  : (value as UserManagementFilters["year"]),
             })
           }
         >
@@ -177,10 +187,7 @@ export function StudentsManagement({
         </Select>
 
         {(filters.hostel || filters.query || filters.year) && (
-          <Button
-            variant="ghost"
-            onClick={() => onFiltersChange({})}
-          >
+          <Button variant="ghost" onClick={() => onFiltersChange({})}>
             Clear
           </Button>
         )}
@@ -214,7 +221,9 @@ export function StudentsManagement({
               <TableBody>
                 {paginatedStudents.map((student) => (
                   <TableRow key={student._id}>
-                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {student.name}
+                    </TableCell>
                     <TableCell>{student.rollNo || "N/A"}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {student.email}
@@ -236,6 +245,7 @@ export function StudentsManagement({
                           size="sm"
                           onClick={() => handleEdit(student)}
                           disabled={updateLoading[student._id]}
+                          title="Edit student"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -245,6 +255,7 @@ export function StudentsManagement({
                             size="sm"
                             onClick={() => handleDelete(student)}
                             disabled={deleteLoading[student._id]}
+                            title="Delete student"
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -264,9 +275,9 @@ export function StudentsManagement({
       {pagination && filteredStudents.length > 0 && (
         <div className="flex items-center justify-between px-2 pt-4 mt-auto">
           <div className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * pagination.limit) + 1} to{" "}
-            {Math.min(currentPage * pagination.limit, filteredStudents.length)} of{" "}
-            {filteredStudents.length} students
+            Showing {(currentPage - 1) * pagination.limit + 1} to{" "}
+            {Math.min(currentPage * pagination.limit, filteredStudents.length)}{" "}
+            of {filteredStudents.length} students
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -319,4 +330,3 @@ export function StudentsManagement({
     </div>
   );
 }
-

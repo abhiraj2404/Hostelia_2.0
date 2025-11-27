@@ -41,8 +41,11 @@ export interface UserFormData {
   roomNo?: string;
 }
 
-export interface WardenAppointData {
-  userId: string;
+export interface WardenCreateData {
+  name: string;
+  email: string;
+  hostel: "BH-1" | "BH-2" | "BH-3" | "BH-4";
+  password: string;
 }
 
 export interface PaginationState {
@@ -50,4 +53,3 @@ export interface PaginationState {
   limit: number;
   total: number;
 }
-

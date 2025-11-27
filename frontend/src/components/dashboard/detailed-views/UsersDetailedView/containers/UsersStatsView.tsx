@@ -1,10 +1,16 @@
-import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Shield } from "lucide-react";
-import { StudentsManagement } from "./StudentsManagement";
-import { WardensManagement } from "./WardensManagement";
-import type { Student, Warden, UserManagementFilters } from "@/types/users";
 import { useAppSelector } from "@/hooks";
+import type {
+  Student,
+  UserManagementFilters,
+  Warden,
+  WardenCreateData,
+} from "@/types/users";
+import { sortByNameCaseInsensitive } from "@/utils/sorting";
+import { Shield, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import { StudentsManagement } from "../components/tables/StudentsManagement";
+import { WardensManagement } from "../components/tables/WardensManagement";
 
 type UsersTab = "students" | "wardens";
 
@@ -19,8 +25,7 @@ interface UsersStatsViewProps {
   onUpdateWarden: (userId: string, data: Partial<Warden>) => Promise<void>;
   onDeleteStudent: (userId: string) => Promise<void>;
   onDeleteWarden: (userId: string) => Promise<void>;
-  onAppointWarden: (data: { userId: string }) => Promise<void>;
-  onRemoveWarden: (userId: string) => Promise<void>;
+  onCreateWarden: (data: WardenCreateData) => Promise<void>;
   studentsLoading?: boolean;
   wardensLoading?: boolean;
   studentsPagination?: {
@@ -38,8 +43,7 @@ interface UsersStatsViewProps {
   isWarden?: boolean;
   updateLoading?: Record<string, boolean>;
   deleteLoading?: Record<string, boolean>;
-  appointLoading?: boolean;
-  removeLoading?: Record<string, boolean>;
+  createWardenLoading?: boolean;
 }
 
 export function UsersStatsView({
@@ -53,8 +57,7 @@ export function UsersStatsView({
   onUpdateWarden,
   onDeleteStudent,
   onDeleteWarden,
-  onAppointWarden,
-  onRemoveWarden,
+  onCreateWarden,
   studentsLoading = false,
   wardensLoading = false,
   studentsPagination,
@@ -64,23 +67,52 @@ export function UsersStatsView({
   isWarden = false,
   updateLoading = {},
   deleteLoading = {},
-  appointLoading = false,
-  removeLoading = {},
+  createWardenLoading = false,
 }: UsersStatsViewProps) {
-  const [activeTab, setActiveTab] = useState<UsersTab>(isWarden ? "students" : "students");
+  const [activeTab, setActiveTab] = useState<UsersTab>(
+    isWarden ? "students" : "students"
+  );
   const { user } = useAppSelector((state) => state.auth);
-  
-  // Filter students by hostel for wardens
+
+  // Filter and sort students by hostel for wardens
   const filteredStudents = useMemo(() => {
-    if (!isWarden || !user?.hostel) return students;
-    return students.filter((s) => s.hostel === user.hostel);
+    let filtered = students;
+    if (isWarden && user?.hostel) {
+      filtered = filtered.filter((s) => s.hostel === user.hostel);
+    }
+    // Sort case-insensitively
+    return sortByNameCaseInsensitive(filtered);
   }, [students, isWarden, user?.hostel]);
 
   const tabs = [
     { id: "students" as UsersTab, label: "Students", icon: Users },
-    ...(isWarden ? [] : [{ id: "wardens" as UsersTab, label: "Wardens", icon: Shield }]),
+    ...(isWarden
+      ? []
+      : [{ id: "wardens" as UsersTab, label: "Wardens", icon: Shield }]),
   ];
 
+  // For wardens, show students directly without tabs
+  if (isWarden) {
+    return (
+      <div className="space-y-4">
+        <StudentsManagement
+          students={filteredStudents}
+          filters={studentsFilters}
+          onFiltersChange={onStudentsFiltersChange}
+          onUpdate={onUpdateStudent}
+          onDelete={onDeleteStudent}
+          loading={studentsLoading}
+          pagination={studentsPagination}
+          onPageChange={onStudentsPageChange}
+          isWarden={isWarden}
+          updateLoading={updateLoading}
+          deleteLoading={deleteLoading}
+        />
+      </div>
+    );
+  }
+
+  // For admins, show tabs to switch between Students and Wardens
   return (
     <div className="space-y-4">
       {/* Tabs */}
@@ -118,32 +150,22 @@ export function UsersStatsView({
         />
       )}
 
-      {activeTab === "wardens" && !isWarden && (
+      {activeTab === "wardens" && (
         <WardensManagement
           wardens={wardens}
-          students={students.map((s) => ({
-            _id: s._id,
-            name: s.name,
-            email: s.email,
-            hostel: s.hostel,
-            rollNo: s.rollNo,
-          }))}
           filters={wardensFilters}
           onFiltersChange={onWardensFiltersChange}
           onUpdate={onUpdateWarden}
           onDelete={onDeleteWarden}
-          onAppoint={onAppointWarden}
-          onRemove={onRemoveWarden}
+          onCreate={onCreateWarden}
           loading={wardensLoading}
           pagination={wardensPagination}
           onPageChange={onWardensPageChange}
           updateLoading={updateLoading}
           deleteLoading={deleteLoading}
-          appointLoading={appointLoading}
-          removeLoading={removeLoading}
+          createLoading={createWardenLoading}
         />
       )}
     </div>
   );
 }
-

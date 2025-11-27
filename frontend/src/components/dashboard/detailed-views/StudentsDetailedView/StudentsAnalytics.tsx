@@ -1,75 +1,83 @@
-import { useMemo } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Student } from "@/types/dashboard";
+import { sortByPropertyCaseInsensitive } from "@/utils/sorting";
+import { useMemo } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface StudentsAnalyticsProps {
   students: Student[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
   // Year Distribution Data
   const yearData = useMemo(() => {
     const counts: Record<string, number> = {};
-    students.forEach(s => {
+    students.forEach((s) => {
       counts[s.year] = (counts[s.year] || 0) + 1;
     });
-    return Object.entries(counts)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return sortByPropertyCaseInsensitive(
+      Object.entries(counts).map(([name, value]) => ({ name, value })),
+      "name"
+    );
   }, [students]);
 
   // Floor-wise Occupancy Data
   const floorData = useMemo(() => {
     const counts: Record<string, number> = {};
-    students.forEach(s => {
+    students.forEach((s) => {
       if (s.roomNo) {
         const floor = s.roomNo.charAt(0); // First digit = floor
         const floorLabel = `Floor ${floor}`;
         counts[floorLabel] = (counts[floorLabel] || 0) + 1;
       }
     });
-    return Object.entries(counts)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return sortByPropertyCaseInsensitive(
+      Object.entries(counts).map(([name, value]) => ({ name, value })),
+      "name"
+    );
   }, [students]);
 
   // Registration Trend (Cumulative by month)
   const registrationData = useMemo(() => {
-    const sortedStudents = [...students].sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    const sortedStudents = [...students].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
-    
+
     const monthCounts: Record<string, number> = {};
     let cumulative = 0;
-    
-    sortedStudents.forEach(s => {
+
+    sortedStudents.forEach((s) => {
       const date = new Date(s.createdAt);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
       cumulative++;
       monthCounts[monthKey] = cumulative;
     });
 
-    return Object.entries(monthCounts).map(([month, count]) => ({
-      month,
-      students: count
-    })).slice(-12); // Last 12 months
+    return Object.entries(monthCounts)
+      .map(([month, count]) => ({
+        month,
+        students: count,
+      }))
+      .slice(-12); // Last 12 months
   }, [students]);
 
   return (
@@ -88,13 +96,18 @@ export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+                  }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                 >
                   {yearData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -139,10 +152,10 @@ export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="students" 
-                  stroke="#8884d8" 
+                <Line
+                  type="monotone"
+                  dataKey="students"
+                  stroke="#8884d8"
                   strokeWidth={2}
                   name="Total Students"
                 />

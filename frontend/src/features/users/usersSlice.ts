@@ -1,7 +1,14 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
 import { apiClient } from "@/lib/api-client";
-import type { User, Student, Warden, UserFormData, WardenAppointData, UserManagementFilters } from "@/types/users";
+import type {
+  Student,
+  User,
+  UserFormData,
+  UserManagementFilters,
+  Warden,
+  WardenCreateData,
+} from "@/types/users";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 interface UsersState {
   students: Student[];
@@ -10,8 +17,7 @@ interface UsersState {
   wardensLoading: boolean;
   updateLoading: Record<string, boolean>; // userId -> loading state
   deleteLoading: Record<string, boolean>; // userId -> loading state
-  appointLoading: boolean;
-  removeLoading: Record<string, boolean>; // userId -> loading state
+  createWardenLoading: boolean;
   studentsFilters: UserManagementFilters;
   wardensFilters: UserManagementFilters;
   studentsPagination: {
@@ -34,8 +40,7 @@ const initialState: UsersState = {
   wardensLoading: false,
   updateLoading: {},
   deleteLoading: {},
-  appointLoading: false,
-  removeLoading: {},
+  createWardenLoading: false,
   studentsFilters: {},
   wardensFilters: {},
   studentsPagination: {
@@ -62,7 +67,9 @@ export const fetchStudents = createAsyncThunk<
     if (response.data?.success) {
       return response.data.students || [];
     }
-    return rejectWithValue(response.data?.message || "Failed to fetch students");
+    return rejectWithValue(
+      response.data?.message || "Failed to fetch students"
+    );
   } catch (error: unknown) {
     const errorMessage =
       error && typeof error === "object" && "response" in error
@@ -139,47 +146,25 @@ export const deleteUser = createAsyncThunk<
   }
 });
 
-// Appoint student as warden
-export const appointWarden = createAsyncThunk<
+// Create warden directly (admin only)
+export const createWarden = createAsyncThunk<
   Warden,
-  WardenAppointData,
+  WardenCreateData,
   { rejectValue: string }
->("users/appointWarden", async (data, { rejectWithValue }) => {
+>("users/createWarden", async (data, { rejectWithValue }) => {
   try {
-    const response = await apiClient.post("/warden/appoint", data);
+    const response = await apiClient.post("/warden/create", data);
     if (response.data?.success) {
       return response.data.warden;
     }
-    return rejectWithValue(response.data?.message || "Failed to appoint warden");
+    return rejectWithValue(response.data?.message || "Failed to create warden");
   } catch (error: unknown) {
     const errorMessage =
       error && typeof error === "object" && "response" in error
         ? (error as { response?: { data?: { message?: string } } }).response
             ?.data?.message
         : undefined;
-    return rejectWithValue(errorMessage || "Failed to appoint warden");
-  }
-});
-
-// Remove warden (downgrade to student)
-export const removeWarden = createAsyncThunk<
-  User,
-  string,
-  { rejectValue: string }
->("users/removeWarden", async (userId, { rejectWithValue }) => {
-  try {
-    const response = await apiClient.post("/warden/remove", { userId });
-    if (response.data?.success) {
-      return response.data.user;
-    }
-    return rejectWithValue(response.data?.message || "Failed to remove warden");
-  } catch (error: unknown) {
-    const errorMessage =
-      error && typeof error === "object" && "response" in error
-        ? (error as { response?: { data?: { message?: string } } }).response
-            ?.data?.message
-        : undefined;
-    return rejectWithValue(errorMessage || "Failed to remove warden");
+    return rejectWithValue(errorMessage || "Failed to create warden");
   }
 });
 
@@ -187,11 +172,17 @@ const usersSlice = createSlice({
   name: "users",
   initialState,
   reducers: {
-    setStudentsFilters: (state, action: PayloadAction<UserManagementFilters>) => {
+    setStudentsFilters: (
+      state,
+      action: PayloadAction<UserManagementFilters>
+    ) => {
       state.studentsFilters = action.payload;
       state.studentsPagination.page = 1; // Reset to first page on filter change
     },
-    setWardensFilters: (state, action: PayloadAction<UserManagementFilters>) => {
+    setWardensFilters: (
+      state,
+      action: PayloadAction<UserManagementFilters>
+    ) => {
       state.wardensFilters = action.payload;
       state.wardensPagination.page = 1; // Reset to first page on filter change
     },
@@ -247,13 +238,13 @@ const usersSlice = createSlice({
       .addCase(updateUser.fulfilled, (state, action) => {
         const userId = action.meta.arg.userId;
         state.updateLoading[userId] = false;
-        
+
         // Update in students array if exists
         const studentIndex = state.students.findIndex((s) => s._id === userId);
         if (studentIndex >= 0) {
           state.students[studentIndex] = action.payload as Student;
         }
-        
+
         // Update in wardens array if exists
         const wardenIndex = state.wardens.findIndex((w) => w._id === userId);
         if (wardenIndex >= 0) {
@@ -275,11 +266,11 @@ const usersSlice = createSlice({
       .addCase(deleteUser.fulfilled, (state, action) => {
         const userId = action.payload;
         state.deleteLoading[userId] = false;
-        
+
         // Remove from students array
         state.students = state.students.filter((s) => s._id !== userId);
         state.studentsPagination.total = state.students.length;
-        
+
         // Remove from wardens array
         state.wardens = state.wardens.filter((w) => w._id !== userId);
         state.wardensPagination.total = state.wardens.length;
@@ -290,45 +281,21 @@ const usersSlice = createSlice({
         state.error = action.payload || "Failed to delete user";
       });
 
-    // Appoint warden
+    // Create warden
     builder
-      .addCase(appointWarden.pending, (state) => {
-        state.appointLoading = true;
+      .addCase(createWarden.pending, (state) => {
+        state.createWardenLoading = true;
         state.error = null;
       })
-      .addCase(appointWarden.fulfilled, (state, action) => {
-        state.appointLoading = false;
-        // Remove from students array
-        state.students = state.students.filter((s) => s._id !== action.payload._id);
-        state.studentsPagination.total = state.students.length;
+      .addCase(createWarden.fulfilled, (state, action) => {
+        state.createWardenLoading = false;
         // Add to wardens array
         state.wardens.push(action.payload);
         state.wardensPagination.total = state.wardens.length;
       })
-      .addCase(appointWarden.rejected, (state, action) => {
-        state.appointLoading = false;
-        state.error = action.payload || "Failed to appoint warden";
-      });
-
-    // Remove warden
-    builder
-      .addCase(removeWarden.pending, (state, action) => {
-        state.removeLoading[action.meta.arg] = true;
-        state.error = null;
-      })
-      .addCase(removeWarden.fulfilled, (state, action) => {
-        const userId = action.meta.arg;
-        state.removeLoading[userId] = false;
-        // Remove from wardens array
-        state.wardens = state.wardens.filter((w) => w._id !== userId);
-        state.wardensPagination.total = state.wardens.length;
-        // Note: The user is now a student, but we don't add them back to students
-        // because they need to be fetched separately if needed
-      })
-      .addCase(removeWarden.rejected, (state, action) => {
-        const userId = action.meta.arg;
-        state.removeLoading[userId] = false;
-        state.error = action.payload || "Failed to remove warden";
+      .addCase(createWarden.rejected, (state, action) => {
+        state.createWardenLoading = false;
+        state.error = action.payload || "Failed to create warden";
       });
   },
 });
@@ -343,10 +310,19 @@ export const {
 
 // Selectors
 export const selectUsersState = (state: { users: UsersState }) => state.users;
-export const selectStudents = (state: { users: UsersState }) => state.users.students;
-export const selectWardens = (state: { users: UsersState }) => state.users.wardens;
-export const selectStudentsLoading = (state: { users: UsersState }) => state.users.studentsLoading;
-export const selectWardensLoading = (state: { users: UsersState }) => state.users.wardensLoading;
+export const selectStudents = (state: { users: UsersState }) =>
+  state.users.students;
+export const selectWardens = (state: { users: UsersState }) =>
+  state.users.wardens;
+export const selectStudentsLoading = (state: { users: UsersState }) =>
+  state.users.studentsLoading;
+export const selectWardensLoading = (state: { users: UsersState }) =>
+  state.users.wardensLoading;
+export const selectUpdateLoading = (state: { users: UsersState }) =>
+  state.users.updateLoading;
+export const selectDeleteLoading = (state: { users: UsersState }) =>
+  state.users.deleteLoading;
+export const selectCreateWardenLoading = (state: { users: UsersState }) =>
+  state.users.createWardenLoading;
 
 export default usersSlice.reducer;
-

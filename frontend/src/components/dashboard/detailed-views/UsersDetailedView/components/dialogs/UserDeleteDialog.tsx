@@ -7,8 +7,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Loader2, AlertTriangle } from "lucide-react";
 import type { User } from "@/types/users";
-import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface UserDeleteDialogProps {
   open: boolean;
@@ -16,6 +16,7 @@ interface UserDeleteDialogProps {
   user: User | null;
   onConfirm: (userId: string) => Promise<void>;
   isLoading?: boolean;
+  warningMessage?: string;
 }
 
 export function UserDeleteDialog({
@@ -24,9 +25,14 @@ export function UserDeleteDialog({
   user,
   onConfirm,
   isLoading = false,
+  warningMessage,
 }: UserDeleteDialogProps) {
   const handleConfirm = async () => {
     if (!user) return;
+    if (warningMessage) {
+      // Prevent deletion if there's a warning message
+      return;
+    }
     await onConfirm(user._id);
   };
 
@@ -39,9 +45,8 @@ export function UserDeleteDialog({
             Delete User
           </SheetTitle>
           <SheetDescription>
-            This action cannot be undone. This will permanently delete the user
-            account and all associated data including complaints, feedback, and
-            notifications.
+            This action cannot be undone. This will permanently delete the user account
+            and all associated data including complaints, feedback, and notifications.
           </SheetDescription>
         </SheetHeader>
         <div className="py-4 space-y-4">
@@ -64,28 +69,30 @@ export function UserDeleteDialog({
               )}
             </div>
           )}
+          {warningMessage && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+              <p className="text-xs text-red-800 dark:text-red-200 font-semibold">
+                {warningMessage}
+              </p>
+            </div>
+          )}
           <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3">
             <p className="text-xs text-yellow-800 dark:text-yellow-200">
-              <strong>Warning:</strong> All related data including complaints,
-              feedback, transit requests, notifications, and fee submissions
-              will be permanently deleted.
+              <strong>Warning:</strong> All related data including complaints, feedback,
+              transit requests, notifications, and fee submissions will be permanently
+              deleted.
             </p>
           </div>
         </div>
         <SheetFooter className="gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button
             type="button"
             variant="destructive"
             onClick={handleConfirm}
-            disabled={isLoading}
+            disabled={isLoading || !!warningMessage}
           >
             {isLoading ? (
               <>
@@ -101,3 +108,4 @@ export function UserDeleteDialog({
     </Sheet>
   );
 }
+
