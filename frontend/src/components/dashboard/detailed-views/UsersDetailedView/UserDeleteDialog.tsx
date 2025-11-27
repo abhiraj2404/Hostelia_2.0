@@ -7,8 +7,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Loader2, AlertTriangle } from "lucide-react";
 import type { User } from "@/types/users";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface UserDeleteDialogProps {
   open: boolean;
@@ -39,8 +39,9 @@ export function UserDeleteDialog({
             Delete User
           </SheetTitle>
           <SheetDescription>
-            This action cannot be undone. This will permanently delete the user account
-            and all associated data including complaints, feedback, and notifications.
+            This action cannot be undone. This will permanently delete the user
+            account and all associated data including complaints, feedback, and
+            notifications.
           </SheetDescription>
         </SheetHeader>
         <div className="py-4 space-y-4">
@@ -65,14 +66,19 @@ export function UserDeleteDialog({
           )}
           <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3">
             <p className="text-xs text-yellow-800 dark:text-yellow-200">
-              <strong>Warning:</strong> All related data including complaints, feedback,
-              transit requests, notifications, and fee submissions will be permanently
-              deleted.
+              <strong>Warning:</strong> All related data including complaints,
+              feedback, transit requests, notifications, and fee submissions
+              will be permanently deleted.
             </p>
           </div>
         </div>
         <SheetFooter className="gap-2">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
           <Button
@@ -95,4 +101,3 @@ export function UserDeleteDialog({
     </Sheet>
   );
 }
-

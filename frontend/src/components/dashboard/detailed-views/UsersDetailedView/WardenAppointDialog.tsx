@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,8 +15,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Loader2 } from "lucide-react";
 import type { Student, WardenAppointData } from "@/types/users";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface WardenAppointDialogProps {
   open: boolean;
@@ -56,15 +56,12 @@ export function WardenAppointDialog({
   };
 
   // Group students by hostel for better organization
-  const studentsByHostel = students.reduce(
-    (acc, student) => {
-      const hostel = student.hostel || "Unknown";
-      if (!acc[hostel]) acc[hostel] = [];
-      acc[hostel].push(student);
-      return acc;
-    },
-    {} as Record<string, Student[]>
-  );
+  const studentsByHostel = students.reduce((acc, student) => {
+    const hostel = student.hostel || "Unknown";
+    if (!acc[hostel]) acc[hostel] = [];
+    acc[hostel].push(student);
+    return acc;
+  }, {} as Record<string, Student[]>);
 
   // Check warden count per hostel
   const getWardenCountForHostel = (hostel: string) => {
@@ -78,31 +75,37 @@ export function WardenAppointDialog({
         <SheetHeader>
           <SheetTitle>Appoint Warden</SheetTitle>
           <SheetDescription>
-            Select a student to appoint as warden. The student must have a hostel
-            assigned. Maximum 2 wardens per hostel.
+            Select a student to appoint as warden. The student must have a
+            hostel assigned. Maximum 2 wardens per hostel.
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="student">Select Student</Label>
-            <Select value={selectedUserId} onValueChange={setSelectedUserId} required>
+            <Select
+              value={selectedUserId}
+              onValueChange={setSelectedUserId}
+              required
+            >
               <SelectTrigger id="student">
                 <SelectValue placeholder="Choose a student..." />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(studentsByHostel).map(([hostel, hostelStudents]) => (
-                  <div key={hostel}>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      {hostel}
+                {Object.entries(studentsByHostel).map(
+                  ([hostel, hostelStudents]) => (
+                    <div key={hostel}>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                        {hostel}
+                      </div>
+                      {hostelStudents.map((student) => (
+                        <SelectItem key={student._id} value={student._id}>
+                          {student.name} ({student.email})
+                          {student.rollNo && ` - ${student.rollNo}`}
+                        </SelectItem>
+                      ))}
                     </div>
-                    {hostelStudents.map((student) => (
-                      <SelectItem key={student._id} value={student._id}>
-                        {student.name} ({student.email})
-                        {student.rollNo && ` - ${student.rollNo}`}
-                      </SelectItem>
-                    ))}
-                  </div>
-                ))}
+                  )
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -134,9 +137,9 @@ export function WardenAppointDialog({
               {selectedStudent.hostel && (
                 <div className="mt-2 rounded border border-yellow-500/20 bg-yellow-500/5 p-2">
                   <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                    <strong>Note:</strong> This student will be appointed as warden for{" "}
-                    {selectedStudent.hostel}. Their roll number, year, and room number will
-                    be cleared.
+                    <strong>Note:</strong> This student will be appointed as
+                    warden for {selectedStudent.hostel}. Their roll number,
+                    year, and room number will be cleared.
                   </p>
                 </div>
               )}
@@ -152,7 +155,12 @@ export function WardenAppointDialog({
           )}
 
           <SheetFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || !selectedUserId}>
@@ -171,4 +179,3 @@ export function WardenAppointDialog({
     </Sheet>
   );
 }
-

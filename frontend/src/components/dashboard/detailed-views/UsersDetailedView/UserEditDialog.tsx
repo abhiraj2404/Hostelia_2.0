@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,8 +16,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Loader2 } from "lucide-react";
 import type { User, UserFormData } from "@/types/users";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface UserEditDialogProps {
   open: boolean;
@@ -84,7 +84,9 @@ export function UserEditDialog({
             <Input
               id="name"
               value={formData.name || ""}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               required
             />
           </div>
@@ -95,7 +97,9 @@ export function UserEditDialog({
               id="email"
               type="email"
               value={formData.email || ""}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               required
             />
           </div>
@@ -107,7 +111,9 @@ export function UserEditDialog({
                 <Input
                   id="rollNo"
                   value={formData.rollNo || ""}
-                  onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, rollNo: e.target.value })
+                  }
                 />
               </div>
 
@@ -116,7 +122,10 @@ export function UserEditDialog({
                 <Select
                   value={formData.year || ""}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, year: value as UserFormData["year"] })
+                    setFormData({
+                      ...formData,
+                      year: value as UserFormData["year"],
+                    })
                   }
                 >
                   <SelectTrigger id="year">
@@ -139,7 +148,10 @@ export function UserEditDialog({
               <Select
                 value={formData.hostel || ""}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, hostel: value as UserFormData["hostel"] })
+                  setFormData({
+                    ...formData,
+                    hostel: value as UserFormData["hostel"],
+                  })
                 }
               >
                 <SelectTrigger id="hostel">
@@ -161,13 +173,20 @@ export function UserEditDialog({
               <Input
                 id="roomNo"
                 value={formData.roomNo || ""}
-                onChange={(e) => setFormData({ ...formData, roomNo: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, roomNo: e.target.value })
+                }
               />
             </div>
           )}
 
           <SheetFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
@@ -186,4 +205,3 @@ export function UserEditDialog({
     </Sheet>
   );
 }
-
