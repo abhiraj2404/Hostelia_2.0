@@ -291,6 +291,34 @@ export const updateUserDetails = async (req, res) => {
             });
         }
 
+        // Update FeeSubmission entry if name or email was updated
+        if (updatePayload.name || updatePayload.email) {
+            const feeSubmissionUpdate = {};
+            if (updatePayload.name) {
+                feeSubmissionUpdate.studentName = updatedUser.name;
+            }
+            if (updatePayload.email) {
+                feeSubmissionUpdate.studentEmail = updatedUser.email;
+            }
+
+            try {
+                await FeeSubmission.updateOne(
+                    { studentId: userId },
+                    { $set: feeSubmissionUpdate }
+                );
+                logger.info("FeeSubmission updated for user", {
+                    userId,
+                    updatedFields: Object.keys(feeSubmissionUpdate),
+                });
+            } catch (feeError) {
+                // Log error but don't fail the request if FeeSubmission doesn't exist
+                logger.warn("Failed to update FeeSubmission for user", {
+                    userId,
+                    error: feeError.message,
+                });
+            }
+        }
+
         logger.info("User details updated", {
             userId,
             updatedFields: Object.keys(updatePayload),
