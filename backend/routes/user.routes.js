@@ -23,7 +23,7 @@ router.get("/wardens/all", authorizeRoles("admin"), getAllWardens);
 router.get("/getName/:userId", getUserName);
 
 // Update a user's profile (admin only, no role/password updates)
-router.put("/update/:userId", authorizeRoles("admin"), updateUserDetails);
+router.put("/update/:userId", authorizeRoles("admin", "warden"), updateUserDetails);
 
 // Delete a user (admin only)
 router.delete("/:userId", authorizeRoles("admin"), deleteUser);

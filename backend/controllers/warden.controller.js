@@ -1,10 +1,18 @@
 import { z } from 'zod';
+import bcrypt from 'bcrypt';
 import User from '../models/user.model.js';
-import FeeSubmission from '../models/feeSubmission.model.js';
 import { logger } from '../middleware/logger.js';
+import { sendEmail, getEmailUser } from '../utils/email-client.js';
 
 const appointWardenSchema = z.object({
-    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID"),
+    name: z.string().min(1, "Name is required"),
+    email: z.email().refine((email) => email.endsWith("@iiits.in"), {
+        message: "Email must be a valid @iiits.in address.",
+    }),
+    hostel: z.enum([ 'BH-1', 'BH-2', 'BH-3', 'BH-4' ], {
+        errorMap: () => ({ message: "Hostel must be one of: BH-1, BH-2, BH-3, BH-4" })
+    }),
+    password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export async function appointWarden(req, res) {
@@ -17,88 +25,105 @@ export async function appointWarden(req, res) {
         });
     }
 
-    const { userId } = parsed.data;
+    const { name, email, hostel, password } = parsed.data;
     const { _id: adminId } = req.user;
 
     try {
-        // Check if user exists
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found',
-            });
-        }
-
-        // Check if user is already a warden
-        if (user.role === 'warden') {
+        // Check if email already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'User is already a warden',
-            });
-        }
-
-        // Check if user is a student
-        if (user.role !== 'student') {
-            return res.status(400).json({
-                success: false,
-                message: 'Only students can be appointed as wardens',
-            });
-        }
-
-        // Verify user has a hostel assigned
-        if (!user.hostel) {
-            return res.status(400).json({
-                success: false,
-                message: 'User must have a hostel assigned to be appointed as warden',
+                message: 'User with this email already exists',
             });
         }
 
         // Check if hostel already has 2 wardens
         const wardenCount = await User.countDocuments({
             role: 'warden',
-            hostel: user.hostel,
+            hostel: hostel,
         });
 
         if (wardenCount >= 2) {
             return res.status(400).json({
                 success: false,
-                message: `Hostel ${user.hostel} already has 2 wardens. Maximum 2 wardens allowed per hostel.`,
+                message: `Hostel ${hostel} already has 2 wardens. Maximum 2 wardens allowed per hostel.`,
             });
         }
 
-        // Update user: set role to warden, clear roomNo, rollNo, year
-        user.role = 'warden';
-        user.roomNo = undefined;
-        user.rollNo = undefined;
-        user.year = undefined;
-        await user.save();
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Delete FeeSubmission entry if exists
-        await FeeSubmission.findOneAndDelete({ studentId: userId });
+        // Create new warden user
+        const newWarden = await User.create({
+            name,
+            email,
+            hostel,
+            password: hashedPassword,
+            role: 'warden',
+        });
+
+        // Send email to warden with credentials
+        const mailOptions = {
+            from: `"Hostelia - IIIT Sri City" <${getEmailUser()}>`,
+            to: email,
+            subject: "Warden Appointment - Hostelia",
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">
+                    <h2 style="color: #4f46e5;">Warden Appointment - Hostelia</h2>
+                    <p>Hello ${name},</p>
+                    <p>You have been appointed as a warden for <strong>${hostel}</strong> in Hostelia.</p>
+                    <p>Your login credentials are:</p>
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                        <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+                    </div>
+                    <p style="color: #dc2626; font-weight: bold;">Please keep these credentials secure and change your password after your first login.</p>
+                    <p>You can now log in to the Hostelia system using these credentials.</p>
+                    <p>Best regards,<br>Hostelia Team</p>
+                </div>
+            `,
+        };
+
+        try {
+            await sendEmail(mailOptions);
+            logger.info('Warden appointment email sent', {
+                wardenId: newWarden._id.toString(),
+                wardenEmail: email,
+            });
+        } catch (emailError) {
+            logger.error('Failed to send warden appointment email', {
+                error: emailError.message,
+                wardenId: newWarden._id.toString(),
+                wardenEmail: email,
+            });
+            // Continue even if email fails - warden is still created
+        }
 
         logger.info('Warden appointed', {
-            wardenId: user._id.toString(),
-            wardenName: user.name,
-            hostel: user.hostel,
+            wardenId: newWarden._id.toString(),
+            wardenName: newWarden.name,
+            wardenEmail: newWarden.email,
+            hostel: newWarden.hostel,
             adminId: adminId.toString(),
         });
 
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: 'Warden appointed successfully',
             warden: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                hostel: user.hostel,
+                _id: newWarden._id,
+                name: newWarden.name,
+                email: newWarden.email,
+                role: newWarden.role,
+                hostel: newWarden.hostel,
             },
         });
     } catch (err) {
         logger.error('Failed to appoint warden', {
             error: err.message,
-            userId: userId,
+            email: email,
             adminId: adminId?.toString?.(),
         });
         return res.status(500).json({
@@ -109,100 +134,6 @@ export async function appointWarden(req, res) {
     }
 }
 
-const removeWardenSchema = z.object({
-    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID"),
-});
-
-export async function removeWarden(req, res) {
-    const parsed = removeWardenSchema.safeParse(req.body);
-    if (!parsed.success) {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation failed',
-            errors: z.treeifyError(parsed.error),
-        });
-    }
-
-    const { userId } = parsed.data;
-    const { _id: adminId } = req.user;
-
-    try {
-        // Check if user exists
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found',
-            });
-        }
-
-        // Check if user is a warden
-        if (user.role !== 'warden') {
-            return res.status(400).json({
-                success: false,
-                message: 'User is not a warden',
-            });
-        }
-
-        // Check if user has a hostel assigned
-        if (!user.hostel) {
-            return res.status(400).json({
-                success: false,
-                message: 'Warden does not have a hostel assigned',
-            });
-        }
-
-        // Count wardens for that hostel
-        const wardenCount = await User.countDocuments({
-            role: 'warden',
-            hostel: user.hostel,
-        });
-
-        // If count would be 0 after deletion, return error
-        if (wardenCount <= 1) {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot remove warden. Hostel must have at least one warden. Please appoint another warden first.',
-            });
-        }
-
-        // Update user: set role to student, keep existing hostel
-        user.role = 'student';
-        await user.save();
-
-        // Do NOT create FeeSubmission entry (as per requirements)
-
-        logger.info('Warden removed', {
-            formerWardenId: user._id.toString(),
-            formerWardenName: user.name,
-            hostel: user.hostel,
-            adminId: adminId.toString(),
-        });
-
-        return res.status(200).json({
-            success: true,
-            message: 'Warden removed successfully',
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                hostel: user.hostel,
-            },
-        });
-    } catch (err) {
-        logger.error('Failed to remove warden', {
-            error: err.message,
-            userId: userId,
-            adminId: adminId?.toString?.(),
-        });
-        return res.status(500).json({
-            success: false,
-            message: 'Failed to remove warden',
-            error: err.message,
-        });
-    }
-}
 
 export async function listWardens(req, res) {
     try {
