@@ -1,5 +1,29 @@
 // Dashboard TypeScript Types
 
+// Fee Status Structure (for student dashboards)
+export interface FeeStatus {
+  status: "documentNotSubmitted" | "pending" | "approved" | "rejected";
+  documentUrl?: string;
+  submittedAt?: string;
+  rejectionReason?: string;
+}
+
+// Fee Stats Structure (for warden/admin dashboards)
+export interface FeeStats {
+  total: number;
+  pending: number;
+}
+
+// Type guard to check if fee is FeeStatus
+export function isFeeStatus(fee: FeeStatus | FeeStats): fee is FeeStatus {
+  return "status" in fee;
+}
+
+// Type guard to check if fee is FeeStats
+export function isFeeStats(fee: FeeStatus | FeeStats): fee is FeeStats {
+  return "total" in fee && "pending" in fee;
+}
+
 // Dashboard Metrics
 export interface DashboardMetrics {
   complaints: {
@@ -9,14 +33,8 @@ export interface DashboardMetrics {
     rejected: number;
   };
   fees: {
-    hostelFee: {
-      total: number;
-      pending: number;
-    };
-    messFee: {
-      total: number;
-      pending: number;
-    };
+    hostelFee: FeeStatus | FeeStats;
+    messFee: FeeStatus | FeeStats;
     pending?: number; // Combined pending count for metric card
   };
   students?: number;

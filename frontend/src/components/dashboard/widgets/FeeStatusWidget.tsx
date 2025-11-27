@@ -1,18 +1,25 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
-import { AlertCircle, CheckCircle2, Receipt } from "lucide-react";
 import { feeStatusConfig } from "@/components/dashboard/utils/dashboardConstants";
-import type { DashboardMetrics } from "@/types/dashboard";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { FeeStatus } from "@/types/dashboard";
+import { AlertCircle, CheckCircle2, Receipt } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FeeStatusWidgetProps {
-  fees: DashboardMetrics["fees"];
+  fees: {
+    hostelFee: FeeStatus;
+    messFee: FeeStatus;
+  };
 }
 
 export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
-  const hostelConfig = feeStatusConfig[fees.hostelFee.status as keyof typeof feeStatusConfig] || feeStatusConfig.documentNotSubmitted;
-  const messConfig = feeStatusConfig[fees.messFee.status as keyof typeof feeStatusConfig] || feeStatusConfig.documentNotSubmitted;
+  const hostelConfig =
+    feeStatusConfig[fees.hostelFee.status as keyof typeof feeStatusConfig] ||
+    feeStatusConfig.documentNotSubmitted;
+  const messConfig =
+    feeStatusConfig[fees.messFee.status as keyof typeof feeStatusConfig] ||
+    feeStatusConfig.documentNotSubmitted;
 
   return (
     <Card className="border-border/60">
@@ -25,11 +32,11 @@ export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Hostel Fee</p>
-              <Badge 
-                variant={hostelConfig.variant} 
+              <Badge
+                variant={hostelConfig.variant}
                 className={`mt-1 ${
-                  fees.hostelFee.status === "rejected" 
-                    ? "bg-red-200 text-red-600 hover:bg-red-400 hover:text-red-800 border-transparent" 
+                  fees.hostelFee.status === "rejected"
+                    ? "bg-red-200 text-red-600 hover:bg-red-400 hover:text-red-800 border-transparent"
                     : fees.hostelFee.status === "approved"
                     ? "bg-green-100 text-green-700 hover:bg-green-200 border-transparent"
                     : fees.hostelFee.status === "pending"
@@ -53,7 +60,8 @@ export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
 
           {fees.hostelFee.rejectionReason && (
             <div className="rounded bg-destructive/10 p-3 text-sm text-destructive">
-              <strong>Rejection Reason:</strong> {fees.hostelFee.rejectionReason}
+              <strong>Rejection Reason:</strong>{" "}
+              {fees.hostelFee.rejectionReason}
             </div>
           )}
 
@@ -75,11 +83,11 @@ export function FeeStatusWidget({ fees }: FeeStatusWidgetProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Mess Fee</p>
-              <Badge 
-                variant={messConfig.variant} 
+              <Badge
+                variant={messConfig.variant}
                 className={`mt-1 ${
-                  fees.messFee.status === "rejected" 
-                    ? "bg-red-200 text-red-600 hover:bg-red-300 hover:text-red-800 border-transparent" 
+                  fees.messFee.status === "rejected"
+                    ? "bg-red-200 text-red-600 hover:bg-red-300 hover:text-red-800 border-transparent"
                     : fees.messFee.status === "approved"
                     ? "bg-green-100 text-green-700 hover:bg-green-200 border-transparent"
                     : fees.messFee.status === "pending"
