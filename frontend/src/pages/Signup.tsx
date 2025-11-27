@@ -44,7 +44,8 @@ const step1Schema = z
       ),
     rollNo: z
       .string()
-      .regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
+      .regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits")
+      .refine((val) => parseInt(val) >= 1, "Enter a valid Roll Number"),
     email: z
       .string()
       .email("Invalid email format")
@@ -55,7 +56,13 @@ const step1Schema = z
     hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"], {
       errorMap: () => ({ message: "Invalid hostel selection" }),
     }),
-    roomNo: z.string().min(1, "Room number is required"),
+    roomNo: z
+      .string()
+      .min(1, "Room number is required")
+      .refine((val) => {
+        const num = parseInt(val);
+        return !isNaN(num) && num >= 100 && num < 1000;
+      }, "Enter a valid room-number"),
     year: z.enum(["UG-1", "UG-2", "UG-3", "UG-4"], {
       errorMap: () => ({ message: "Invalid year selection" }),
     }),
@@ -71,7 +78,10 @@ type Step1FormData = z.infer<typeof step1Schema>;
 
 // Step 2 Validation Schema
 const step2Schema = z.object({
-  otp: z.string().regex(/^[0-9]{6}$/, "OTP must be exactly 6 digits"),
+  otp: z
+    .string()
+    .regex(/^[0-9]+$/, "Only digits [0-9] are allowed")
+    .length(6, "OTP must be exactly 6 digits"),
 });
 
 type Step2FormData = z.infer<typeof step2Schema>;
@@ -370,12 +380,25 @@ export default function Signup() {
                       <Label htmlFor="roomNo" className="text-sm font-medium">
                         Room Number
                       </Label>
-                      <Input
-                        id="roomNo"
-                        type="text"
-                        placeholder="e.g., 101"
-                        disabled={isFormLoading}
-                        {...step1Form.register("roomNo")}
+                      <Controller
+                        control={step1Form.control}
+                        name="roomNo"
+                        render={({ field }) => (
+                          <Input
+                            id="roomNo"
+                            type="text"
+                            placeholder="e.g., 101"
+                            disabled={isFormLoading}
+                            value={field.value}
+                            onChange={(e) => {
+                              // Only allow digits
+                              const value = e.target.value.replace(/[^0-9]/g, "");
+                              field.onChange(value);
+                            }}
+                            onBlur={field.onBlur}
+                            maxLength={3}
+                          />
+                        )}
                       />
                       {step1Form.formState.errors.roomNo && (
                         <p className="text-xs text-red-600">
@@ -569,6 +592,10 @@ export default function Signup() {
                       disabled={isFormLoading}
                       maxLength={6}
                       {...step2Form.register("otp")}
+                      onInput={(e) => {
+                        // Strip non-digit characters in real-time
+                        e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+                      }}
                       className="text-center text-2xl tracking-widest"
                     />
                     {step2Form.formState.errors.otp && (
