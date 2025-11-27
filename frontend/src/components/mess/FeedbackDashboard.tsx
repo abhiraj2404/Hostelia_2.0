@@ -1,6 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -8,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -17,28 +17,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar } from "@/components/ui/calendar";
+import { useAppSelector } from "@/hooks";
+import apiClient from "@/lib/api-client";
+import { cn } from "@/lib/utils";
+import { AxiosError } from "axios";
 import {
-  Star,
-  TrendingUp,
-  Users,
-  MessageSquare,
-  Coffee,
-  UtensilsCrossed,
-  Cookie,
-  Moon,
-  Filter,
-  X,
   AlertCircle,
-  Loader2,
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  Coffee,
+  Cookie,
+  Filter,
+  Loader2,
+  MessageSquare,
+  Moon,
   RefreshCw,
+  Star,
+  TrendingUp,
+  Users,
+  UtensilsCrossed,
+  X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import apiClient from "@/lib/api-client";
-import { useAppSelector } from "@/hooks";
+import { useCallback, useEffect, useMemo, useState } from "react";
 // pagination component removed — using TransitHistory-style footer instead
 
 interface Feedback {
@@ -68,14 +69,23 @@ const mealIcons = {
 
 const mealTypes = ["All", "Breakfast", "Lunch", "Snacks", "Dinner"];
 const ratingFilters = ["All", "5", "4", "3", "2", "1"];
-const dayOptions = ["All", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const dayOptions = [
+  "All",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 export function FeedbackDashboard() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [mealFilter, setMealFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState("All");
   const [dayFilter, setDayFilter] = useState("All");
@@ -89,7 +99,7 @@ export function FeedbackDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   // Fetch feedbacks (exposed for refresh)
-  const fetchFeedbacks = async () => {
+  const fetchFeedbacks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get("/mess/feedback");
@@ -98,17 +108,20 @@ export function FeedbackDashboard() {
       setFeedbacks(feedbackData);
       setFilteredFeedbacks(feedbackData);
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Feedback fetch error:", err);
-      setError(err.response?.data?.message || "Failed to load feedbacks");
+      const axiosError = err as AxiosError<{ message?: string }>;
+      setError(
+        axiosError.response?.data?.message || "Failed to load feedbacks"
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchFeedbacks();
-  }, []);
+  }, [fetchFeedbacks]);
 
   // Apply filters
   useEffect(() => {
@@ -141,7 +154,7 @@ export function FeedbackDashboard() {
         feedbackDate.setHours(0, 0, 0, 0);
         const fromDate = new Date(dateFrom);
         fromDate.setHours(0, 0, 0, 0);
-        
+
         if (dateTo) {
           const toDate = new Date(dateTo);
           toDate.setHours(23, 59, 59, 999);
@@ -152,7 +165,17 @@ export function FeedbackDashboard() {
     }
 
     setFilteredFeedbacks(filtered);
-  }, [mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo, dayFilter, feedbacks]);
+  }, [
+    mealFilter,
+    ratingFilter,
+    hostelFilter,
+    dateFrom,
+    dateTo,
+    dayFilter,
+    feedbacks,
+    user?.role,
+    user?.hostel,
+  ]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -234,7 +257,12 @@ export function FeedbackDashboard() {
   };
 
   const hasActiveFilters =
-    mealFilter !== "All" || ratingFilter !== "All" || hostelFilter !== "All" || dayFilter !== "All" || dateFrom !== undefined || dateTo !== undefined;
+    mealFilter !== "All" ||
+    ratingFilter !== "All" ||
+    hostelFilter !== "All" ||
+    dayFilter !== "All" ||
+    dateFrom !== undefined ||
+    dateTo !== undefined;
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -265,7 +293,9 @@ export function FeedbackDashboard() {
               <AlertCircle className="size-6 text-destructive" />
             </div>
             <div className="text-center space-y-2">
-              <p className="font-semibold text-foreground">Failed to Load Feedbacks</p>
+              <p className="font-semibold text-foreground">
+                Failed to Load Feedbacks
+              </p>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           </CardContent>
@@ -279,44 +309,58 @@ export function FeedbackDashboard() {
       {/* Stats Cards - unified style with TransitStats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {/* Build metrics same pattern as TransitStats */}
-        {([
-          {
-            label: "Average Rating",
-            value: stats.avgRating.toFixed(1),
-            helper: "Avg across meals",
-            icon: TrendingUp,
-            tone: "bg-blue-500/10 text-blue-600",
-          },
-          {
-            label: "Total Feedbacks",
-            value: stats.totalFeedbacks,
-            helper: "All submissions",
-            icon: Users,
-            tone: "bg-emerald-500/10 text-emerald-600",
-          },
-          {
-            label: "With Comments",
-            value: stats.withComments,
-            helper: "Contains message",
-            icon: MessageSquare,
-            tone: "bg-orange-500/10 text-orange-600",
-          },
-          {
-            label: "Meal Ratings",
-            value: Object.keys(stats.mealRatings).length > 0 ? Object.values(stats.mealRatings)[0].toFixed(1) : "-",
-            helper: "Example meal avg",
-            icon: UtensilsCrossed,
-            tone: "bg-purple-500/10 text-purple-600",
-          },
-        ] as const).map((m) => (
+        {(
+          [
+            {
+              label: "Average Rating",
+              value: stats.avgRating.toFixed(1),
+              helper: "Avg across meals",
+              icon: TrendingUp,
+              tone: "bg-blue-500/10 text-blue-600",
+            },
+            {
+              label: "Total Feedbacks",
+              value: stats.totalFeedbacks,
+              helper: "All submissions",
+              icon: Users,
+              tone: "bg-emerald-500/10 text-emerald-600",
+            },
+            {
+              label: "With Comments",
+              value: stats.withComments,
+              helper: "Contains message",
+              icon: MessageSquare,
+              tone: "bg-orange-500/10 text-orange-600",
+            },
+            {
+              label: "Meal Ratings",
+              value:
+                Object.keys(stats.mealRatings).length > 0
+                  ? Object.values(stats.mealRatings)[0].toFixed(1)
+                  : "-",
+              helper: "Example meal avg",
+              icon: UtensilsCrossed,
+              tone: "bg-purple-500/10 text-purple-600",
+            },
+          ] as const
+        ).map((m) => (
           <Card key={m.label} className="border-border/60">
             <CardContent className="flex items-center justify-between py-6">
               <div>
-                <p className="text-xs font-medium uppercase text-muted-foreground">{m.helper}</p>
-                <p className="mt-2 text-3xl font-semibold text-foreground">{m.value}</p>
+                <p className="text-xs font-medium uppercase text-muted-foreground">
+                  {m.helper}
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">
+                  {m.value}
+                </p>
                 <p className="mt-1 text-sm text-muted-foreground">{m.label}</p>
               </div>
-              <div className={cn("flex h-12 w-12 items-center justify-center rounded-full", m.tone)}>
+              <div
+                className={cn(
+                  "flex h-12 w-12 items-center justify-center rounded-full",
+                  m.tone
+                )}
+              >
                 <m.icon className="h-5 w-5" />
               </div>
             </CardContent>
@@ -357,23 +401,27 @@ export function FeedbackDashboard() {
                 >
                   <CalendarIcon className="mr-2 size-4" />
                   {dateFrom ? (
-                    new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(dateFrom)
+                    new Intl.DateTimeFormat("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }).format(dateFrom)
                   ) : (
                     <span>Pick a date</span>
                   )}
                 </Button>
-                    {showFromCalendar && (
-                      <div className="absolute left-0 z-50 mt-2 bg-background border rounded-lg shadow-lg w-72 sm:w-80">
-                        <Calendar
-                          className="w-full"
-                          selected={dateFrom}
-                          onSelect={(date) => {
-                            setDateFrom(date);
-                            setShowFromCalendar(false);
-                          }}
-                        />
-                      </div>
-                    )}
+                {showFromCalendar && (
+                  <div className="absolute left-0 z-50 mt-2 bg-background border rounded-lg shadow-lg w-72 sm:w-80">
+                    <Calendar
+                      className="w-full"
+                      selected={dateFrom}
+                      onSelect={(date) => {
+                        setDateFrom(date);
+                        setShowFromCalendar(false);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -387,7 +435,11 @@ export function FeedbackDashboard() {
                 >
                   <CalendarIcon className="mr-2 size-4" />
                   {dateTo ? (
-                    new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(dateTo)
+                    new Intl.DateTimeFormat("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }).format(dateTo)
                   ) : (
                     <span>Pick a date</span>
                   )}
@@ -401,7 +453,7 @@ export function FeedbackDashboard() {
                         setDateTo(date);
                         setShowToCalendar(false);
                       }}
-                      disabled={(date) => dateFrom ? date < dateFrom : false}
+                      disabled={(date) => (dateFrom ? date < dateFrom : false)}
                     />
                   </div>
                 )}
@@ -490,16 +542,18 @@ export function FeedbackDashboard() {
               className="shadow-sm"
             >
               <RefreshCw
-                className={cn(
-                  "mr-2 h-4 w-4",
-                  loading && "animate-spin"
-                )}
+                className={cn("mr-2 h-4 w-4", loading && "animate-spin")}
               />
               Refresh
             </Button>
           </div>
         </CardHeader>
-        <CardContent className={cn("p-0 flex-1", filteredFeedbacks.length > 0 && totalPages > 1 && "pb-0")}>
+        <CardContent
+          className={cn(
+            "p-0 flex-1",
+            filteredFeedbacks.length > 0 && totalPages > 1 && "pb-0"
+          )}
+        >
           {filteredFeedbacks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <MessageSquare className="size-12 text-muted-foreground/50 mb-3" />
@@ -531,7 +585,10 @@ export function FeedbackDashboard() {
                     const MealIcon =
                       mealIcons[feedback.mealType as keyof typeof mealIcons];
                     return (
-                      <TableRow key={feedback._id} className="hover:bg-muted/30">
+                      <TableRow
+                        key={feedback._id}
+                        className="hover:bg-muted/30"
+                      >
                         <TableCell className="text-sm">
                           {formatDate(feedback.date)}
                         </TableCell>
@@ -600,7 +657,9 @@ export function FeedbackDashboard() {
         {filteredFeedbacks.length > 0 && totalPages > 1 && (
           <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 py-3 border-t border-border/30 bg-card">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredFeedbacks.length)} of {filteredFeedbacks.length} records
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredFeedbacks.length)} of{" "}
+              {filteredFeedbacks.length} records
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -612,11 +671,15 @@ export function FeedbackDashboard() {
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous
               </Button>
-              <div className="text-sm">Page {currentPage} of {totalPages}</div>
+              <div className="text-sm">
+                Page {currentPage} of {totalPages}
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage >= totalPages}
               >
                 Next
@@ -626,8 +689,6 @@ export function FeedbackDashboard() {
           </div>
         )}
       </Card>
-
-      
     </div>
   );
 }

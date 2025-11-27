@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -7,11 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { FeeSubmission } from "@/types/dashboard";
-import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 interface FeesListProps {
   fees: FeeSubmission[];
@@ -21,22 +21,41 @@ interface FeesListProps {
 }
 
 const getStatusBadge = (status: string) => {
-  const variants: Record<string, { variant: any; className: string }> = {
-    approved: { variant: "default", className: "bg-green-100 text-green-700 border-gray-200" },
-    pending: { variant: "outline", className: "border-yellow-500 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-700" },
-    rejected: { variant: "destructive", className: "bg-red-100 text-red-700 hover:bg-red-200 border-gray-200" },
-    documentNotSubmitted: { variant: "secondary", className: "text-muted-foreground" },
+  const variants: Record<
+    string,
+    {
+      variant: "default" | "outline" | "destructive" | "secondary";
+      className: string;
+    }
+  > = {
+    approved: {
+      variant: "default",
+      className: "bg-green-100 text-green-700 border-gray-200",
+    },
+    pending: {
+      variant: "outline",
+      className:
+        "border-yellow-500 text-yellow-700 hover:bg-yellow-100 hover:text-yellow-700",
+    },
+    rejected: {
+      variant: "destructive",
+      className: "bg-red-100 text-red-700 hover:bg-red-200 border-gray-200",
+    },
+    documentNotSubmitted: {
+      variant: "secondary",
+      className: "text-muted-foreground",
+    },
   };
-  
+
   return variants[status] || variants.documentNotSubmitted;
 };
 
 const getStatusLabel = (status: string) => {
   const labels: Record<string, string> = {
-    approved: 'Approved',
-    pending: 'Pending',
-    rejected: 'Rejected',
-    documentNotSubmitted: 'Not Submitted',
+    approved: "Approved",
+    pending: "Pending",
+    rejected: "Rejected",
+    documentNotSubmitted: "Not Submitted",
   };
   return labels[status] || status;
 };
@@ -85,7 +104,7 @@ export function FeesList({
                   {paginatedFees.map((fee) => {
                     const hostelBadge = getStatusBadge(fee.hostelFee.status);
                     const messBadge = getStatusBadge(fee.messFee.status);
-                    
+
                     return (
                       <TableRow key={fee._id}>
                         <TableCell className="font-medium">
@@ -96,16 +115,22 @@ export function FeesList({
                         </TableCell>
                         {!isWarden && (
                           <TableCell>
-                            {emailToHostel[fee.studentEmail] || 'N/A'}
+                            {emailToHostel[fee.studentEmail] || "N/A"}
                           </TableCell>
                         )}
                         <TableCell>
-                          <Badge variant={hostelBadge.variant} className={hostelBadge.className}>
+                          <Badge
+                            variant={hostelBadge.variant}
+                            className={hostelBadge.className}
+                          >
                             {getStatusLabel(fee.hostelFee.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={messBadge.variant} className={messBadge.className}>
+                          <Badge
+                            variant={messBadge.variant}
+                            className={messBadge.className}
+                          >
                             {getStatusLabel(fee.messFee.status)}
                           </Badge>
                         </TableCell>
@@ -123,13 +148,14 @@ export function FeesList({
           {/* Pagination Controls */}
           <div className="flex items-center justify-between px-2 pt-4 mt-auto">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, fees.length)} of {fees.length} submissions
+              Showing {startIndex + 1} to {Math.min(endIndex, fees.length)} of{" "}
+              {fees.length} submissions
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -141,7 +167,9 @@ export function FeesList({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage >= totalPages}
               >
                 Next
@@ -154,4 +182,3 @@ export function FeesList({
     </div>
   );
 }
-

@@ -348,7 +348,7 @@ export default function Signup() {
                       <Controller
                         control={step1Form.control}
                         name="hostel"
-                        render={({ field }: { field: any }) => (
+                        render={({ field }) => (
                           <Select
                             disabled={isFormLoading}
                             value={field.value ?? undefined}
@@ -392,7 +392,10 @@ export default function Signup() {
                             value={field.value}
                             onChange={(e) => {
                               // Only allow digits
-                              const value = e.target.value.replace(/[^0-9]/g, "");
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              );
                               field.onChange(value);
                             }}
                             onBlur={field.onBlur}
@@ -416,7 +419,7 @@ export default function Signup() {
                     <Controller
                       control={step1Form.control}
                       name="year"
-                      render={({ field }: { field: any }) => (
+                      render={({ field }) => (
                         <Select
                           disabled={isFormLoading}
                           value={field.value ?? undefined}
@@ -594,7 +597,10 @@ export default function Signup() {
                       {...step2Form.register("otp")}
                       onInput={(e) => {
                         // Strip non-digit characters in real-time
-                        e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+                        e.currentTarget.value = e.currentTarget.value.replace(
+                          /[^0-9]/g,
+                          ""
+                        );
                       }}
                       className="text-center text-2xl tracking-widest"
                     />

@@ -1,6 +1,6 @@
-import { MetricCard } from "./MetricCard";
 import { metricIcons } from "@/components/dashboard/utils/dashboardConstants";
 import type { DashboardMetrics } from "@/types/dashboard";
+import { MetricCard } from "./MetricCard";
 
 interface StudentMetricsProps {
   metrics: DashboardMetrics;
@@ -21,11 +21,23 @@ export function StudentMetrics({ metrics }: StudentMetricsProps) {
       {/* Fee Status Metric */}
       <MetricCard
         label="Fees"
-        value={`${metrics.fees.hostelFee.status === "accepted" && metrics.fees.messFee.status === "accepted" ? "Complete" : "Pending"}`}
+        value={`${
+          "status" in metrics.fees.hostelFee &&
+          "status" in metrics.fees.messFee &&
+          (metrics.fees.hostelFee as { status?: string }).status ===
+            "accepted" &&
+          (metrics.fees.messFee as { status?: string }).status === "accepted"
+            ? "Complete"
+            : "Pending"
+        }`}
         description="Fee Submission"
         icon={metricIcons.fees}
         tone={
-          metrics.fees.hostelFee.status === "accepted" && metrics.fees.messFee.status === "accepted"
+          "status" in metrics.fees.hostelFee &&
+          "status" in metrics.fees.messFee &&
+          (metrics.fees.hostelFee as { status?: string }).status ===
+            "accepted" &&
+          (metrics.fees.messFee as { status?: string }).status === "accepted"
             ? "bg-green-50 dark:bg-green-950/20 text-green-600"
             : "bg-yellow-50 dark:bg-yellow-950/20 text-yellow-600"
         }

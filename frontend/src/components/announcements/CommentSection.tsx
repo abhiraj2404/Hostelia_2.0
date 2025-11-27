@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -5,13 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { CommentForm } from "./CommentForm";
-import type { Comment, CommentFormData } from "@/types/announcement";
-import { MessageSquare } from "lucide-react";
 import apiClient from "@/lib/api-client";
 import { formatTime } from "@/lib/utils";
+import type { Comment, CommentFormData } from "@/types/announcement";
+import { MessageSquare } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CommentForm } from "./CommentForm";
 
 interface CommentSectionProps {
   comments: Comment[];
@@ -30,6 +30,7 @@ export function CommentSection({
 }: CommentSectionProps) {
   const [userMap, setUserMap] = useState<Record<string, string>>({});
   const [showAllComments, setShowAllComments] = useState(false);
+  const fetchedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     // Find unique user ids that look like ObjectIds and are not yet fetched
@@ -39,11 +40,14 @@ export function CommentSection({
           .map((c) => (typeof c.user === "string" ? c.user : undefined))
           .filter(Boolean)
           .filter((id) => /^[0-9a-fA-F]{24}$/.test(id!))
-          .filter((id) => !(id! in userMap))
+          .filter((id) => !fetchedIdsRef.current.has(id!))
       )
     );
 
     if (idsToFetch.length === 0) return;
+
+    // Mark these IDs as being fetched
+    idsToFetch.forEach((id) => fetchedIdsRef.current.add(id!));
 
     let mounted = true;
     (async () => {
@@ -63,7 +67,7 @@ export function CommentSection({
               // Use the lightweight endpoint that returns only name and role
               const res = await apiClient.get(`/user/getName/${id}`);
               return { id, name: res.data?.user?.name };
-            } catch (err: any) {
+            } catch {
               // If request is forbidden (student trying to fetch other users), fall back to role label
               const role = roleById[id as string];
               if (role === "admin") return { id, name: "Admin" };
@@ -81,7 +85,7 @@ export function CommentSection({
           }
           return copy;
         });
-      } catch (e) {
+      } catch {
         // ignore failures; we'll fallback to role-based initials
       }
     })();
@@ -123,8 +127,10 @@ export function CommentSection({
                 } else {
                   let commenterName: string | undefined;
                   if (typeof comment.user === "string") {
-                    if (userMap[comment.user]) commenterName = userMap[comment.user];
-                    else if (!/^[0-9a-fA-F]{24}$/.test(comment.user)) commenterName = comment.user;
+                    if (userMap[comment.user])
+                      commenterName = userMap[comment.user];
+                    else if (!/^[0-9a-fA-F]{24}$/.test(comment.user))
+                      commenterName = comment.user;
                   }
                   displayName = commenterName ?? "Student";
                 }
@@ -141,7 +147,9 @@ export function CommentSection({
                         </span>
                       </div>
                       <span className="text-muted-foreground">
-                        {comment.createdAt ? formatTime(comment.createdAt) : "Unknown time"}
+                        {comment.createdAt
+                          ? formatTime(comment.createdAt)
+                          : "Unknown time"}
                       </span>
                     </div>
                     <p className="mt-2 text-sm text-foreground leading-relaxed">
@@ -164,8 +172,8 @@ export function CommentSection({
                     <>Show Less</>
                   ) : (
                     <>
-                      Show {comments.length - INITIAL_COMMENTS_SHOWN}{" "}
-                      More Comments
+                      Show {comments.length - INITIAL_COMMENTS_SHOWN} More
+                      Comments
                     </>
                   )}
                 </Button>

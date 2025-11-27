@@ -5,8 +5,9 @@ import { TransitStats } from "@/components/transit/TransitStats";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/hooks";
 import apiClient from "@/lib/api-client";
+import { AxiosError } from "axios";
 import { AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 interface TransitEntry {
@@ -45,7 +46,7 @@ function TransitPage() {
   const isWardenOrAdmin = user?.role === "warden" || user?.role === "admin";
 
   // Fetch transit entries
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       setListStatus("loading");
       setListError(null);
@@ -61,17 +62,20 @@ function TransitPage() {
 
       setEntries(allEntries);
       setListStatus("succeeded");
-    } catch (error: any) {
+    } catch (error) {
       setListStatus("failed");
-      setListError(error.response?.data?.message || "Failed to load records");
+      const axiosError = error as AxiosError<{ message?: string }>;
+      setListError(
+        axiosError.response?.data?.message || "Failed to load records"
+      );
     }
-  };
+  }, [user?.role, user?.hostel]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchEntries();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchEntries]);
 
   useEffect(() => {
     if (createStatus === "succeeded") {
@@ -86,7 +90,7 @@ function TransitPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [createStatus]);
+  }, [createStatus, fetchEntries]);
 
   const handleSubmit = async (data: {
     transitStatus: string;
@@ -106,10 +110,11 @@ function TransitPage() {
       });
 
       setCreateStatus("succeeded");
-    } catch (error: any) {
+    } catch (error) {
       setCreateStatus("failed");
+      const axiosError = error as AxiosError<{ message?: string }>;
       setCreateError(
-        error.response?.data?.message || "Failed to create record"
+        axiosError.response?.data?.message || "Failed to create record"
       );
     }
   };

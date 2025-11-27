@@ -134,7 +134,7 @@ export function WardensManagement({
       await onUpdate(userId, data);
       setIsEditDialogOpen(false);
       setEditingUser(null);
-    } catch (error) {
+    } catch {
       // Error is already handled in onUpdate (toast shown), just don't close dialog
       // The dialog will stay open so user can retry
     }
