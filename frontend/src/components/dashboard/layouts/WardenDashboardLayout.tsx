@@ -22,6 +22,14 @@ import {
   setStudentsPage,
   toggleDetailedView,
 } from "@/features/dashboard/dashboardSlice";
+import {
+  fetchStudents,
+  updateUser,
+  deleteUser,
+  setStudentsFilters as setUsersStudentsFilters,
+  setStudentsPage as setUsersStudentsPage,
+  selectUsersState,
+} from "@/features/users";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { WardenMetrics } from "@/components/dashboard/metrics/WardenMetrics";
@@ -30,11 +38,13 @@ import { ComplaintsStatsView } from "@/components/dashboard/detailed-views/Compl
 import { StudentsStatsView } from "@/components/dashboard/detailed-views/StudentsDetailedView/StudentsStatsView";
 import { FeesStatsView } from "@/components/dashboard/detailed-views/FeesDetailedView/FeesStatsView";
 import { MessStatsView } from "@/components/dashboard/detailed-views/MessDetailedView/MessStatsView";
+import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView/UsersStatsView";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Bell, FileText, MessageSquare, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DetailedTab } from "@/types/dashboard";
+import { toast } from "sonner";
 
 // Warden quick actions
 const wardenQuickActions = [
@@ -70,6 +80,7 @@ export function WardenDashboardLayout() {
   const studentsState = useAppSelector(selectDetailedStudents);
   const feesState = useAppSelector(selectDetailedFees);
   const messState = useAppSelector(selectDetailedMessFeedback);
+  const usersState = useAppSelector(selectUsersState);
 
   const hostel = user?.hostel || "";
 
@@ -81,6 +92,8 @@ export function WardenDashboardLayout() {
       dispatch(setActiveTab('students'));
       dispatch(setDetailedViewExpanded(true));
       dispatch(fetchDetailedStudents({ hostel, page: 1 }));
+      // Fetch students for user management (wardens only see their hostel's students)
+      dispatch(fetchStudents());
     }
   }, [dispatch, hostel]);
 
@@ -123,6 +136,9 @@ export function WardenDashboardLayout() {
           filters: messState.filters
         }));
         break;
+      case 'users':
+        dispatch(fetchStudents());
+        break;
     }
   };
 
@@ -149,6 +165,30 @@ export function WardenDashboardLayout() {
       case 'mess':
         dispatch(fetchDetailedMessFeedback({ hostel, page: messState.pagination.page, filters: messState.filters }));
         break;
+      case 'users':
+        dispatch(fetchStudents());
+        break;
+    }
+  };
+
+  // User management handlers (wardens can only update students from their hostel)
+  const handleUpdateStudent = async (userId: string, data: any) => {
+    const action = await dispatch(updateUser({ userId, data }));
+    if (updateUser.fulfilled.match(action)) {
+      toast.success("Student updated successfully");
+      dispatch(fetchStudents());
+    } else {
+      toast.error(action.payload || "Failed to update student");
+    }
+  };
+
+  const handleDeleteStudent = async (userId: string) => {
+    const action = await dispatch(deleteUser(userId));
+    if (deleteUser.fulfilled.match(action)) {
+      toast.success("Student deleted successfully");
+      dispatch(fetchStudents());
+    } else {
+      toast.error(action.payload || "Failed to delete student");
     }
   };
 
@@ -242,6 +282,7 @@ export function WardenDashboardLayout() {
               onTabChange={handleTabChange}
               onRefresh={handleRefresh}
               loading={loading}
+              showUsersTab={true}
             >
               {detailedView.activeTab === 'complaints' && (
                 <ComplaintsStatsView
@@ -299,6 +340,38 @@ export function WardenDashboardLayout() {
                   }}
                   loading={messState.loading}
                   isWarden={true}
+                />
+              )}
+
+              {detailedView.activeTab === 'users' && (
+                <UsersStatsView
+                  students={usersState.students}
+                  wardens={[]}
+                  studentsFilters={usersState.studentsFilters}
+                  wardensFilters={{}}
+                  onStudentsFiltersChange={(filters) => {
+                    dispatch(setUsersStudentsFilters(filters));
+                  }}
+                  onWardensFiltersChange={() => {}}
+                  onUpdateStudent={handleUpdateStudent}
+                  onUpdateWarden={async () => {}}
+                  onDeleteStudent={handleDeleteStudent}
+                  onDeleteWarden={async () => {}}
+                  onAppointWarden={async () => {}}
+                  onRemoveWarden={async () => {}}
+                  studentsLoading={usersState.studentsLoading}
+                  wardensLoading={false}
+                  studentsPagination={usersState.studentsPagination}
+                  wardensPagination={{ page: 1, limit: 10, total: 0 }}
+                  onStudentsPageChange={(page) => {
+                    dispatch(setUsersStudentsPage(page));
+                  }}
+                  onWardensPageChange={() => {}}
+                  isWarden={true}
+                  updateLoading={usersState.updateLoading}
+                  deleteLoading={usersState.deleteLoading}
+                  appointLoading={false}
+                  removeLoading={{}}
                 />
               )}
             </DetailedViewPanel>

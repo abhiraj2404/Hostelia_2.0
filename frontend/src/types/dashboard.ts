@@ -107,7 +107,7 @@ export interface MessMenu {
 }
 
 // Detailed View Types
-export type DetailedTab = 'complaints' | 'students' | 'fees' | 'mess';
+export type DetailedTab = 'complaints' | 'students' | 'fees' | 'mess' | 'users';
 
 export interface PaginationState {
   page: number;

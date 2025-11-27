@@ -22,6 +22,19 @@ import {
   toggleDetailedView,
   setDetailedViewExpanded,
 } from "@/features/dashboard/dashboardSlice";
+import {
+  fetchStudents,
+  fetchWardens,
+  updateUser,
+  deleteUser,
+  appointWarden,
+  removeWarden,
+  setStudentsFilters as setUsersStudentsFilters,
+  setWardensFilters,
+  setStudentsPage as setUsersStudentsPage,
+  setWardensPage,
+  selectUsersState,
+} from "@/features/users";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { AdminMetrics } from "@/components/dashboard/metrics/AdminMetrics";
@@ -30,11 +43,13 @@ import { ComplaintsStatsView } from "@/components/dashboard/detailed-views/Compl
 import { StudentsStatsView } from "@/components/dashboard/detailed-views/StudentsDetailedView/StudentsStatsView";
 import { FeesStatsView } from "@/components/dashboard/detailed-views/FeesDetailedView/FeesStatsView";
 import { MessStatsView } from "@/components/dashboard/detailed-views/MessDetailedView/MessStatsView";
+import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView/UsersStatsView";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Bell, FileText, MessageSquare, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DetailedTab } from "@/types/dashboard";
+import { toast } from "sonner";
 
 // Admin quick actions
 const adminQuickActions = [
@@ -69,6 +84,7 @@ export function AdminDashboardLayout() {
   const studentsState = useAppSelector(selectDetailedStudents);
   const feesState = useAppSelector(selectDetailedFees);
   const messState = useAppSelector(selectDetailedMessFeedback);
+  const usersState = useAppSelector(selectUsersState);
 
   // Fetch initial dashboard data (all hostels)
   useEffect(() => {
@@ -77,6 +93,9 @@ export function AdminDashboardLayout() {
     dispatch(fetchDetailedStudents({ page: 1 }));
     dispatch(setActiveTab('students'));
     dispatch(setDetailedViewExpanded(true));
+    // Fetch users data for user management tab
+    dispatch(fetchStudents());
+    dispatch(fetchWardens());
   }, [dispatch]);
 
   // Handle tab change
@@ -114,6 +133,10 @@ export function AdminDashboardLayout() {
           filters: messState.filters
         }));
         break;
+      case 'users':
+        dispatch(fetchStudents());
+        dispatch(fetchWardens());
+        break;
     }
   };
 
@@ -140,6 +163,72 @@ export function AdminDashboardLayout() {
       case 'mess':
         dispatch(fetchDetailedMessFeedback({ page: messState.pagination.page, filters: messState.filters }));
         break;
+      case 'users':
+        dispatch(fetchStudents());
+        dispatch(fetchWardens());
+        break;
+    }
+  };
+
+  // User management handlers
+  const handleUpdateStudent = async (userId: string, data: any) => {
+    const action = await dispatch(updateUser({ userId, data }));
+    if (updateUser.fulfilled.match(action)) {
+      toast.success("Student updated successfully");
+      dispatch(fetchStudents());
+    } else {
+      toast.error(action.payload || "Failed to update student");
+    }
+  };
+
+  const handleUpdateWarden = async (userId: string, data: any) => {
+    const action = await dispatch(updateUser({ userId, data }));
+    if (updateUser.fulfilled.match(action)) {
+      toast.success("Warden updated successfully");
+      dispatch(fetchWardens());
+    } else {
+      toast.error(action.payload || "Failed to update warden");
+    }
+  };
+
+  const handleDeleteStudent = async (userId: string) => {
+    const action = await dispatch(deleteUser(userId));
+    if (deleteUser.fulfilled.match(action)) {
+      toast.success("Student deleted successfully");
+      dispatch(fetchStudents());
+    } else {
+      toast.error(action.payload || "Failed to delete student");
+    }
+  };
+
+  const handleDeleteWarden = async (userId: string) => {
+    const action = await dispatch(deleteUser(userId));
+    if (deleteUser.fulfilled.match(action)) {
+      toast.success("Warden deleted successfully");
+      dispatch(fetchWardens());
+    } else {
+      toast.error(action.payload || "Failed to delete warden");
+    }
+  };
+
+  const handleAppointWarden = async (data: { userId: string }) => {
+    const action = await dispatch(appointWarden(data));
+    if (appointWarden.fulfilled.match(action)) {
+      toast.success("Warden appointed successfully");
+      dispatch(fetchStudents());
+      dispatch(fetchWardens());
+    } else {
+      toast.error(action.payload || "Failed to appoint warden");
+    }
+  };
+
+  const handleRemoveWarden = async (userId: string) => {
+    const action = await dispatch(removeWarden(userId));
+    if (removeWarden.fulfilled.match(action)) {
+      toast.success("Warden removed successfully");
+      dispatch(fetchWardens());
+    } else {
+      toast.error(action.payload || "Failed to remove warden");
     }
   };
 
@@ -238,6 +327,7 @@ export function AdminDashboardLayout() {
               onTabChange={handleTabChange}
               onRefresh={handleRefresh}
               loading={loading}
+              showUsersTab={true}
             >
               {detailedView.activeTab === 'complaints' && (
                 <ComplaintsStatsView
@@ -294,6 +384,42 @@ export function AdminDashboardLayout() {
                   }}
                   loading={messState.loading}
                   isWarden={false}
+                />
+              )}
+
+              {detailedView.activeTab === 'users' && (
+                <UsersStatsView
+                  students={usersState.students}
+                  wardens={usersState.wardens}
+                  studentsFilters={usersState.studentsFilters}
+                  wardensFilters={usersState.wardensFilters}
+                  onStudentsFiltersChange={(filters) => {
+                    dispatch(setUsersStudentsFilters(filters));
+                  }}
+                  onWardensFiltersChange={(filters) => {
+                    dispatch(setWardensFilters(filters));
+                  }}
+                  onUpdateStudent={handleUpdateStudent}
+                  onUpdateWarden={handleUpdateWarden}
+                  onDeleteStudent={handleDeleteStudent}
+                  onDeleteWarden={handleDeleteWarden}
+                  onAppointWarden={handleAppointWarden}
+                  onRemoveWarden={handleRemoveWarden}
+                  studentsLoading={usersState.studentsLoading}
+                  wardensLoading={usersState.wardensLoading}
+                  studentsPagination={usersState.studentsPagination}
+                  wardensPagination={usersState.wardensPagination}
+                  onStudentsPageChange={(page) => {
+                    dispatch(setUsersStudentsPage(page));
+                  }}
+                  onWardensPageChange={(page) => {
+                    dispatch(setWardensPage(page));
+                  }}
+                  isWarden={false}
+                  updateLoading={usersState.updateLoading}
+                  deleteLoading={usersState.deleteLoading}
+                  appointLoading={usersState.appointLoading}
+                  removeLoading={usersState.removeLoading}
                 />
               )}
             </DetailedViewPanel>

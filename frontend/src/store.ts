@@ -3,6 +3,7 @@ import authReducer from "./features/auth/authSlice";
 import complaintsReducer from "./features/complaints/complaintsSlice";
 import dashboardReducer from "./features/dashboard/dashboardSlice";
 import feesReducer from "./features/fees/feesSlice";
+import usersReducer from "./features/users/usersSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     complaints: complaintsReducer,
     dashboard: dashboardReducer,
     fees: feesReducer,
+    users: usersReducer,
   },
 });
 
