@@ -277,14 +277,19 @@ export async function updateProblemStatus(req, res) {
     problem.status = parsed.data.status;
 
     // When staff moves a complaint towards resolution (either directly Resolved
-    // or to ToBeConfirmed for student verification), capture the resolvedAt
-    // timestamp so the UI can always display a concrete \"Resolved at\" value.
+    // or to ToBeConfirmed for student verification), always update the resolvedAt
+    // timestamp to reflect the latest resolution time. This ensures that if a
+    // complaint is reopened and resolved again, the timestamp reflects the
+    // most recent resolution.
     if (
-      (parsed.data.status === "Resolved" ||
-        parsed.data.status === "ToBeConfirmed") &&
-      !problem.resolvedAt
+      parsed.data.status === "Resolved" ||
+      parsed.data.status === "ToBeConfirmed"
     ) {
       problem.resolvedAt = new Date();
+    } else if (parsed.data.status === "Pending") {
+      // If complaint is moved back to Pending (e.g., after being reopened),
+      // clear the resolvedAt timestamp so it doesn't show stale data
+      problem.resolvedAt = null;
     }
     await problem.save();
     logger.info("Problem status updated", {
@@ -368,6 +373,8 @@ export async function verifyProblemResolution(req, res) {
 
     const studentStatus = parsed.data.studentStatus;
     problem.studentStatus = studentStatus;
+    // Always update studentVerifiedAt timestamp whenever student verifies
+    // (either confirms or reopens), ensuring accurate tracking
     problem.studentVerifiedAt = new Date();
 
     // Update main status based on student verification
@@ -377,6 +384,9 @@ export async function verifyProblemResolution(req, res) {
     } else if (studentStatus === "Rejected") {
       // Student rejects resolution, reopen complaint
       problem.status = "Pending";
+      // Clear resolvedAt when student reopens, so it can be set again
+      // when warden/admin resolves it next time
+      problem.resolvedAt = null;
     }
     await problem.save();
     logger.info("Problem resolution verified by student", {

@@ -1,13 +1,20 @@
-import { useEffect, useState, useMemo } from "react";
+import { AnnouncementForm } from "@/components/announcements/AnnouncementForm";
+import { AnnouncementList } from "@/components/announcements/AnnouncementList";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAppSelector } from "@/hooks";
 import apiClient from "@/lib/api-client";
-import { Link } from "react-router-dom";
-import { AnnouncementList } from "@/components/announcements/AnnouncementList";
-import { AnnouncementForm } from "@/components/announcements/AnnouncementForm";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, AlertCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Announcement, AnnouncementFormData } from "@/types/announcement";
+import { AxiosError } from "axios";
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  User,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -16,10 +23,16 @@ function AnnouncementsPage() {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [items, setItems] = useState<Announcement[]>([]);
-  const [status, setStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
-  const [createStatus, setCreateStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "succeeded" | "failed"
+  >("idle");
+  const [createStatus, setCreateStatus] = useState<
+    "idle" | "loading" | "succeeded" | "failed"
+  >("idle");
   const [createError, setCreateError] = useState<string | null>(null);
-  const [deleteStatus, setDeleteStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
+  const [deleteStatus, setDeleteStatus] = useState<
+    "idle" | "loading" | "succeeded" | "failed"
+  >("idle");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,8 +99,6 @@ function AnnouncementsPage() {
     return items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [items, currentPage]);
 
-  
-
   const handleSubmit = async (data: AnnouncementFormData) => {
     try {
       setCreateStatus("loading");
@@ -108,10 +119,11 @@ function AnnouncementsPage() {
       });
 
       setCreateStatus("succeeded");
-    } catch (error: any) {
+    } catch (error) {
       setCreateStatus("failed");
+      const axiosError = error as AxiosError<{ message?: string }>;
       setCreateError(
-        error.response?.data?.message || "Failed to create announcement"
+        axiosError.response?.data?.message || "Failed to create announcement"
       );
     }
   };
@@ -123,7 +135,7 @@ function AnnouncementsPage() {
         setDeleteStatus("loading");
         await apiClient.delete(`/announcement/${id}`);
         setDeleteStatus("succeeded");
-      } catch (error) {
+      } catch {
         setDeleteStatus("failed");
         setDeletingId(null);
       }
@@ -172,7 +184,8 @@ function AnnouncementsPage() {
                 Announcements
               </h1>
               <p className="text-muted-foreground text-sm max-w-2xl">
-                Stay informed with important updates, notices, and news from the administration
+                Stay informed with important updates, notices, and news from the
+                administration
               </p>
             </div>
             {canCreateAnnouncement && !showCreateForm && (
@@ -205,7 +218,9 @@ function AnnouncementsPage() {
             {status === "succeeded" && items.length > 0 && totalPages > 1 && (
               <div className="flex items-center justify-between mt-auto">
                 <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, items.length)} of {items.length} announcements
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
+                  {Math.min(currentPage * ITEMS_PER_PAGE, items.length)} of{" "}
+                  {items.length} announcements
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -217,11 +232,15 @@ function AnnouncementsPage() {
                     <ChevronLeft className="h-4 w-4 mr-2" />
                     Previous
                   </Button>
-                  <div className="text-sm">Page {currentPage} of {totalPages}</div>
+                  <div className="text-sm">
+                    Page {currentPage} of {totalPages}
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
                     disabled={currentPage >= totalPages}
                   >
                     Next

@@ -1,24 +1,25 @@
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchStudentDashboardData,
-  selectDashboardState,
-  selectDashboardMetrics,
-  selectRecentComplaints,
-  selectRecentAnnouncements,
-  selectMessMenu,
-} from "@/features/dashboard/dashboardSlice";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
-import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
+import { studentQuickActions } from "@/components/dashboard/utils/dashboardConstants";
+import { AnnouncementsWidget } from "@/components/dashboard/widgets/AnnouncementsWidget";
 import { ComplaintsStatsWidget } from "@/components/dashboard/widgets/ComplaintsStatsWidget";
 import { ComplaintsWidget } from "@/components/dashboard/widgets/ComplaintsWidget";
-import { AnnouncementsWidget } from "@/components/dashboard/widgets/AnnouncementsWidget";
 import { FeeStatusWidget } from "@/components/dashboard/widgets/FeeStatusWidget";
 import { MessMenuWidget } from "@/components/dashboard/widgets/MessMenuWidget";
-import { studentQuickActions } from "@/components/dashboard/utils/dashboardConstants";
+import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import {
+  fetchStudentDashboardData,
+  selectDashboardMetrics,
+  selectDashboardState,
+  selectMessMenu,
+  selectRecentAnnouncements,
+  selectRecentComplaints,
+} from "@/features/dashboard/dashboardSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks";
 import { cn } from "@/lib/utils";
+import { isFeeStatus } from "@/types/dashboard";
+import { RefreshCw } from "lucide-react";
+import { useEffect } from "react";
 
 export function StudentDashboardLayout() {
   const dispatch = useAppDispatch();
@@ -36,22 +37,15 @@ export function StudentDashboardLayout() {
     dispatch(fetchStudentDashboardData());
   };
 
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome to your dashboard
-          </p>
+          <p className="text-muted-foreground">Welcome to your dashboard</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
+        <Button variant="outline" onClick={handleRefresh} disabled={loading}>
           <RefreshCw
             className={cn("mr-2 h-4 w-4", loading && "animate-spin")}
           />
@@ -87,10 +81,20 @@ export function StudentDashboardLayout() {
           {/* Top Row: Fee Status + Announcements (2:3 ratio) */}
           <div className="grid gap-6 lg:grid-cols-5">
             <div className="lg:col-span-2">
-              <FeeStatusWidget fees={metrics.fees} />
+              {isFeeStatus(metrics.fees.hostelFee) &&
+              isFeeStatus(metrics.fees.messFee) ? (
+                <FeeStatusWidget
+                  fees={{
+                    hostelFee: metrics.fees.hostelFee,
+                    messFee: metrics.fees.messFee,
+                  }}
+                />
+              ) : null}
             </div>
             <div className="lg:col-span-3">
-              <AnnouncementsWidget announcements={recentAnnouncements.slice(0, 2)} />
+              <AnnouncementsWidget
+                announcements={recentAnnouncements.slice(0, 2)}
+              />
             </div>
           </div>
 

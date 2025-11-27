@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
-import { useAppSelector } from "@/hooks";
-import apiClient from "@/lib/api-client";
 import { TransitForm } from "@/components/transit/TransitForm";
 import { TransitHistory } from "@/components/transit/TransitHistory";
 import { TransitList } from "@/components/transit/TransitList";
 import { TransitStats } from "@/components/transit/TransitStats";
-import { AlertCircle} from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAppSelector } from "@/hooks";
+import apiClient from "@/lib/api-client";
+import { AxiosError } from "axios";
+import { AlertCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface TransitEntry {
   _id: string;
@@ -31,9 +32,13 @@ function TransitPage() {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   const [entries, setEntries] = useState<TransitEntry[]>([]);
-  const [listStatus, setListStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
+  const [listStatus, setListStatus] = useState<
+    "idle" | "loading" | "succeeded" | "failed"
+  >("idle");
   const [listError, setListError] = useState<string | null>(null);
-  const [createStatus, setCreateStatus] = useState<"idle" | "loading" | "succeeded" | "failed">("idle");
+  const [createStatus, setCreateStatus] = useState<
+    "idle" | "loading" | "succeeded" | "failed"
+  >("idle");
   const [createError, setCreateError] = useState<string | null>(null);
 
   // Determine if user is student or warden/admin
@@ -41,35 +46,37 @@ function TransitPage() {
   const isWardenOrAdmin = user?.role === "warden" || user?.role === "admin";
 
   // Fetch transit entries
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       setListStatus("loading");
       setListError(null);
       const response = await apiClient.get("/transit");
       let allEntries = response.data.transitEntries || [];
-      
+
       // Filter entries by warden's hostel if user is warden
       if (user?.role === "warden" && user?.hostel) {
         allEntries = allEntries.filter(
           (entry: TransitEntry) => entry.studentId.hostel === user.hostel
         );
       }
-      
+
       setEntries(allEntries);
       setListStatus("succeeded");
-    } catch (error: any) {
+    } catch (error) {
       setListStatus("failed");
-      setListError(error.response?.data?.message || "Failed to load records");
+      const axiosError = error as AxiosError<{ message?: string }>;
+      setListError(
+        axiosError.response?.data?.message || "Failed to load records"
+      );
     }
-  };
+  }, [user?.role, user?.hostel]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchEntries();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchEntries]);
 
- 
   useEffect(() => {
     if (createStatus === "succeeded") {
       // Refresh entries after successful creation
@@ -83,7 +90,7 @@ function TransitPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [createStatus]);
+  }, [createStatus, fetchEntries]);
 
   const handleSubmit = async (data: {
     transitStatus: string;
@@ -103,9 +110,12 @@ function TransitPage() {
       });
 
       setCreateStatus("succeeded");
-    } catch (error: any) {
+    } catch (error) {
       setCreateStatus("failed");
-      setCreateError(error.response?.data?.message || "Failed to create record");
+      const axiosError = error as AxiosError<{ message?: string }>;
+      setCreateError(
+        axiosError.response?.data?.message || "Failed to create record"
+      );
     }
   };
 

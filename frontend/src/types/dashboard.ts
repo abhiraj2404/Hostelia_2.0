@@ -1,5 +1,29 @@
 // Dashboard TypeScript Types
 
+// Fee Status Structure (for student dashboards)
+export interface FeeStatus {
+  status: "documentNotSubmitted" | "pending" | "approved" | "rejected";
+  documentUrl?: string;
+  submittedAt?: string;
+  rejectionReason?: string;
+}
+
+// Fee Stats Structure (for warden/admin dashboards)
+export interface FeeStats {
+  total: number;
+  pending: number;
+}
+
+// Type guard to check if fee is FeeStatus
+export function isFeeStatus(fee: FeeStatus | FeeStats): fee is FeeStatus {
+  return "status" in fee;
+}
+
+// Type guard to check if fee is FeeStats
+export function isFeeStats(fee: FeeStatus | FeeStats): fee is FeeStats {
+  return "total" in fee && "pending" in fee;
+}
+
 // Dashboard Metrics
 export interface DashboardMetrics {
   complaints: {
@@ -9,8 +33,9 @@ export interface DashboardMetrics {
     rejected: number;
   };
   fees: {
-    hostelFee: any;
-    messFee: any;
+    hostelFee: FeeStatus | FeeStats;
+    messFee: FeeStatus | FeeStats;
+    pending?: number; // Combined pending count for metric card
   };
   students?: number;
   messFeedback?: {
@@ -77,7 +102,7 @@ export interface MessFeedback {
 // Quick Action
 export interface QuickAction {
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   path: string;
   primary?: boolean;
   variant?: "default" | "outline" | "ghost";
@@ -88,7 +113,7 @@ export interface MetricCardData {
   label: string;
   value: number | string;
   description?: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   tone: string;
   onClick?: () => void;
   isActive?: boolean;
@@ -107,7 +132,7 @@ export interface MessMenu {
 }
 
 // Detailed View Types
-export type DetailedTab = 'complaints' | 'students' | 'fees' | 'mess';
+export type DetailedTab = "complaints" | "students" | "fees" | "mess" | "users";
 
 export interface PaginationState {
   page: number;

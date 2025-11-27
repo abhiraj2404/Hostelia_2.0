@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, DollarSign, MessageSquare } from "lucide-react";
 import type { DashboardMetrics, DetailedTab } from "@/types/dashboard";
+import { isFeeStats } from "@/types/dashboard";
+import { DollarSign, FileText, MessageSquare, Users } from "lucide-react";
 
 interface AdminMetricsProps {
   metrics: DashboardMetrics;
@@ -35,8 +36,16 @@ export function AdminMetrics({
     {
       tab: "fees" as DetailedTab,
       label: "Fee Submissions",
-      value: metrics.fees?.hostelFee?.total + metrics.fees?.messFee?.total || 0,
-      description: `${(metrics.fees?.hostelFee?.pending || 0) + (metrics.fees?.messFee?.pending || 0)} pending`,
+      value:
+        (isFeeStats(metrics.fees?.hostelFee) &&
+        isFeeStats(metrics.fees?.messFee)
+          ? metrics.fees.hostelFee.total + metrics.fees.messFee.total
+          : 0) || 0,
+      description: `${
+        isFeeStats(metrics.fees?.hostelFee) && isFeeStats(metrics.fees?.messFee)
+          ? metrics.fees.hostelFee.pending + metrics.fees.messFee.pending
+          : 0
+      } pending`,
       icon: DollarSign,
       color: "text-green-500",
       bgColor: "bg-green-50",

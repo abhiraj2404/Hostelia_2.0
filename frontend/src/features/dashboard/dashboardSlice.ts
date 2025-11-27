@@ -1,21 +1,22 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
+import type { Complaint } from "@/features/complaints/complaintsSlice";
 import { apiClient } from "@/lib/api-client";
 import type { RootState } from "@/store";
-import type { Complaint } from "@/features/complaints/complaintsSlice";
 import type {
+  ComplaintsFilters,
   DashboardMetrics,
-  MessMenu,
-  Student,
+  DetailedTab,
+  FeesFilters,
   FeeSubmission,
   MessFeedback,
-  DetailedTab,
-  PaginationState,
-  ComplaintsFilters,
-  StudentsFilters,
-  FeesFilters,
   MessFilters,
+  MessMenu,
+  PaginationState,
+  Student,
+  StudentsFilters,
 } from "@/types/dashboard";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { AxiosError } from "axios";
 
 // Announcement type
 export interface Announcement {
@@ -38,13 +39,13 @@ interface DashboardState {
   recentComplaints: Complaint[];
   recentAnnouncements: Announcement[];
   messMenu: MessMenu | null;
-  
+
   // Warden/Admin detailed views
   detailedView: {
     activeTab: DetailedTab;
     isExpanded: boolean;
   };
-  
+
   // Detailed data
   detailedComplaints: {
     items: Complaint[];
@@ -52,28 +53,28 @@ interface DashboardState {
     pagination: PaginationState;
     loading: boolean;
   };
-  
+
   detailedStudents: {
     items: Student[];
     filters: StudentsFilters;
     pagination: PaginationState;
     loading: boolean;
   };
-  
+
   detailedFees: {
     items: FeeSubmission[];
     filters: FeesFilters;
     pagination: PaginationState;
     loading: boolean;
   };
-  
+
   detailedMessFeedback: {
     items: MessFeedback[];
     filters: MessFilters;
     pagination: PaginationState;
     loading: boolean;
   };
-  
+
   loading: boolean;
   error: string | null;
 }
@@ -83,40 +84,40 @@ const initialState: DashboardState = {
   recentComplaints: [],
   recentAnnouncements: [],
   messMenu: null,
-  
+
   detailedView: {
-    activeTab: 'students',
+    activeTab: "students",
     isExpanded: false,
   },
-  
+
   detailedComplaints: {
     items: [],
     filters: {},
     pagination: { page: 1, limit: 20, total: 0 },
     loading: false,
   },
-  
+
   detailedStudents: {
     items: [],
     filters: {},
     pagination: { page: 1, limit: 10, total: 0 },
     loading: false,
   },
-  
+
   detailedFees: {
     items: [],
     filters: {},
     pagination: { page: 1, limit: 20, total: 0 },
     loading: false,
   },
-  
+
   detailedMessFeedback: {
     items: [],
     filters: {},
     pagination: { page: 1, limit: 20, total: 0 },
     loading: false,
   },
-  
+
   loading: false,
   error: null,
 };
@@ -127,14 +128,15 @@ export const fetchStudentDashboardData = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log("[Dashboard] Fetching student dashboard data...");
-      
+
       // Fetch core data in parallel
-      const [complaintsRes, feeRes, announcementsRes, menuRes] = await Promise.all([
-        apiClient.get("/problem"),
-        apiClient.get("/fee"),
-        apiClient.get("/announcement"),
-        apiClient.get("/mess/menu"),
-      ]);
+      const [complaintsRes, feeRes, announcementsRes, menuRes] =
+        await Promise.all([
+          apiClient.get("/problem"),
+          apiClient.get("/fee"),
+          apiClient.get("/announcement"),
+          apiClient.get("/mess/menu"),
+        ]);
 
       console.log("[Dashboard] API Responses:", {
         complaints: complaintsRes.data,
@@ -152,9 +154,13 @@ export const fetchStudentDashboardData = createAsyncThunk(
         announcements: announcementsRes.data.data || [],
         messMenu: menuRes.data.menu,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error("[Dashboard] Error fetching data:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to fetch dashboard data";
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        axiosError.message ||
+        "Failed to fetch dashboard data";
       return rejectWithValue(errorMessage);
     }
   }
@@ -164,61 +170,85 @@ export const fetchWardenDashboardData = createAsyncThunk(
   "dashboard/fetchWardenDashboardData",
   async (hostel: string, { rejectWithValue }) => {
     try {
-      console.log(`[Dashboard] Fetching warden dashboard data for ${hostel}...`);
-      
+      console.log(
+        `[Dashboard] Fetching warden dashboard data for ${hostel}...`
+      );
+
       // Note: Backend automatically filters by warden's hostel, no need to pass hostel param
-      const [studentsRes, complaintsRes, feesRes, feedbackRes] = await Promise.all([
-        apiClient.get(`/user/students/all`),
-        apiClient.get(`/problem`),
-        apiClient.get(`/fee`),
-        apiClient.get(`/mess/feedback`).catch(() => ({ data: { feedbacks: [] } })),
-      ]);
+      const [studentsRes, complaintsRes, feesRes, feedbackRes] =
+        await Promise.all([
+          apiClient.get(`/user/students/all`),
+          apiClient.get(`/problem`),
+          apiClient.get(`/fee`),
+          apiClient
+            .get(`/mess/feedback`)
+            .catch(() => ({ data: { feedbacks: [] } })),
+        ]);
 
       const students = studentsRes.data.students || [];
       const complaints = complaintsRes.data.problems || [];
       const feedbacks = feedbackRes.data.feedbacks || [];
-      
+
       console.log("[Warden Dashboard] Data loaded:", {
         studentsCount: students.length,
         complaintsCount: complaints.length,
-        feedbackCount: feedbacks.length
+        feedbackCount: feedbacks.length,
       });
 
       const fees = feesRes.data.data || [];
-      
+
       // Calculate fee stats - need to filter by warden's hostel students
       // Get student emails from this hostel
-      const hostelStudentEmails = new Set(students.map((s: Student) => s.email));
-      const hostelFees = fees.filter((f: FeeSubmission) => hostelStudentEmails.has(f.studentEmail));
-      
+      const hostelStudentEmails = new Set(
+        students.map((s: Student) => s.email)
+      );
+      const hostelFees = fees.filter((f: FeeSubmission) =>
+        hostelStudentEmails.has(f.studentEmail)
+      );
+
       // Calculate fee stats from hostel students only
-      const feeStats = hostelFees.reduce((acc: any, fee: FeeSubmission) => {
-        // Hostel Fee
-        if (fee.hostelFee?.status) {
-          acc.hostelFee.total++;
-          if (fee.hostelFee.status.toLowerCase() === 'pending') acc.hostelFee.pending++;
+      const feeStats = hostelFees.reduce(
+        (
+          acc: {
+            hostelFee: { total: number; pending: number };
+            messFee: { total: number; pending: number };
+          },
+          fee: FeeSubmission
+        ) => {
+          // Hostel Fee
+          if (fee.hostelFee?.status) {
+            acc.hostelFee.total++;
+            if (fee.hostelFee.status.toLowerCase() === "pending")
+              acc.hostelFee.pending++;
+          }
+          // Mess Fee
+          if (fee.messFee?.status) {
+            acc.messFee.total++;
+            if (fee.messFee.status.toLowerCase() === "pending")
+              acc.messFee.pending++;
+          }
+          return acc;
+        },
+        {
+          hostelFee: { total: 0, pending: 0 },
+          messFee: { total: 0, pending: 0 },
         }
-        // Mess Fee
-        if (fee.messFee?.status) {
-          acc.messFee.total++;
-          if (fee.messFee.status.toLowerCase() === 'pending') acc.messFee.pending++;
-        }
-        return acc;
-      }, {
-        hostelFee: { total: 0, pending: 0 },
-        messFee: { total: 0, pending: 0 }
-      });
-      
+      );
+
       // Add combined pending count for the metric card
-      const totalPending = feeStats.hostelFee.pending + feeStats.messFee.pending;
-      
+      const totalPending =
+        feeStats.hostelFee.pending + feeStats.messFee.pending;
+
       return {
         students: students.length,
         complaints: {
           total: complaints.length,
-          pending: complaints.filter((c: Complaint) => c.status === "Pending").length,
-          resolved: complaints.filter((c: Complaint) => c.status === "Resolved").length,
-          rejected: complaints.filter((c: Complaint) => c.status === "Rejected").length,
+          pending: complaints.filter((c: Complaint) => c.status === "Pending")
+            .length,
+          resolved: complaints.filter((c: Complaint) => c.status === "Resolved")
+            .length,
+          rejected: complaints.filter((c: Complaint) => c.status === "Rejected")
+            .length,
         },
         fees: {
           ...feeStats,
@@ -226,14 +256,21 @@ export const fetchWardenDashboardData = createAsyncThunk(
         },
         messFeedback: {
           total: feedbacks.length,
-          avgRating: feedbacks.length > 0
-            ? feedbacks.reduce((sum: number, f: MessFeedback) => sum + f.rating, 0) / feedbacks.length
-            : 0,
+          avgRating:
+            feedbacks.length > 0
+              ? feedbacks.reduce(
+                  (sum: number, f: MessFeedback) => sum + f.rating,
+                  0
+                ) / feedbacks.length
+              : 0,
         },
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error("[Dashboard] Error fetching warden data:", error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch dashboard data");
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch dashboard data"
+      );
     }
   }
 );
@@ -244,65 +281,86 @@ export const fetchAdminDashboardData = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log("[Dashboard] Fetching admin dashboard data...");
-      
+
       // Fetch all data without hostel filtering
-      const [studentsRes, complaintsRes, feesRes, feedbackRes] = await Promise.all([
-        apiClient.get(`/user/students/all`),
-        apiClient.get(`/problem`),
-        apiClient.get(`/fee`),
-        apiClient.get(`/mess/feedback`).catch(() => ({ data: { feedbacks: [] } })),
-      ]);
+      const [studentsRes, complaintsRes, feesRes, feedbackRes] =
+        await Promise.all([
+          apiClient.get(`/user/students/all`),
+          apiClient.get(`/problem`),
+          apiClient.get(`/fee`),
+          apiClient
+            .get(`/mess/feedback`)
+            .catch(() => ({ data: { feedbacks: [] } })),
+        ]);
 
       const students = studentsRes.data.students || [];
       const complaints = complaintsRes.data.problems || [];
       const feedbacks = feedbackRes.data.feedbacks || [];
-      
-      
+
       console.log("[Admin Dashboard] Data loaded:", {
         studentsCount: studentsRes.data.count || students.length,
         complaintsCount: complaints.length,
-        feedbackCount: feedbackRes.data.count || feedbacks.length
+        feedbackCount: feedbackRes.data.count || feedbacks.length,
       });
 
       const fees = feesRes.data.data || [];
-      
+
       // Calculate fee stats
-      const feeStats = fees.reduce((acc: any, fee: FeeSubmission) => {
-        // Hostel Fee
-        if (fee.hostelFee?.status) {
-          acc.hostelFee.total++;
-          if (fee.hostelFee.status === 'pending') acc.hostelFee.pending++;
+      const feeStats = fees.reduce(
+        (
+          acc: {
+            hostelFee: { total: number; pending: number };
+            messFee: { total: number; pending: number };
+          },
+          fee: FeeSubmission
+        ) => {
+          // Hostel Fee
+          if (fee.hostelFee?.status) {
+            acc.hostelFee.total++;
+            if (fee.hostelFee.status === "pending") acc.hostelFee.pending++;
+          }
+          // Mess Fee
+          if (fee.messFee?.status) {
+            acc.messFee.total++;
+            if (fee.messFee.status === "pending") acc.messFee.pending++;
+          }
+          return acc;
+        },
+        {
+          hostelFee: { total: 0, pending: 0 },
+          messFee: { total: 0, pending: 0 },
         }
-        // Mess Fee
-        if (fee.messFee?.status) {
-          acc.messFee.total++;
-          if (fee.messFee.status === 'pending') acc.messFee.pending++;
-        }
-        return acc;
-      }, {
-        hostelFee: { total: 0, pending: 0 },
-        messFee: { total: 0, pending: 0 }
-      });
-      
+      );
+
       return {
         students: studentsRes.data.count || students.length,
         complaints: {
           total: complaints.length,
-          pending: complaints.filter((c: Complaint) => c.status === "Pending").length,
-          resolved: complaints.filter((c: Complaint) => c.status === "Resolved").length,
-          rejected: complaints.filter((c: Complaint) => c.status === "Rejected").length,
+          pending: complaints.filter((c: Complaint) => c.status === "Pending")
+            .length,
+          resolved: complaints.filter((c: Complaint) => c.status === "Resolved")
+            .length,
+          rejected: complaints.filter((c: Complaint) => c.status === "Rejected")
+            .length,
         },
         fees: feeStats,
         messFeedback: {
           total: feedbacks.length,
-          avgRating: feedbacks.length > 0
-            ? feedbacks.reduce((sum: number, f: MessFeedback) => sum + f.rating, 0) / feedbacks.length
-            : 0,
+          avgRating:
+            feedbacks.length > 0
+              ? feedbacks.reduce(
+                  (sum: number, f: MessFeedback) => sum + f.rating,
+                  0
+                ) / feedbacks.length
+              : 0,
         },
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error("[Dashboard] Error fetching admin data:", error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch dashboard data");
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch dashboard data"
+      );
     }
   }
 );
@@ -310,13 +368,17 @@ export const fetchAdminDashboardData = createAsyncThunk(
 // Note: For wardens, backend automatically filters by their assigned hostel
 export const fetchDetailedComplaints = createAsyncThunk(
   "dashboard/fetchDetailedComplaints",
-  async (params: { hostel?: string; page?: number; filters?: ComplaintsFilters }, { rejectWithValue }) => {
+  async (
+    params: { hostel?: string; page?: number; filters?: ComplaintsFilters },
+    { rejectWithValue }
+  ) => {
     try {
       const { page = 1, filters = {} } = params;
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: '20',
-        ...(filters.hostel && filters.hostel !== 'all' && { hostel: filters.hostel }),
+        limit: "20",
+        ...(filters.hostel &&
+          filters.hostel !== "all" && { hostel: filters.hostel }),
         ...(filters.status && { status: filters.status }),
         ...(filters.category && { category: filters.category }),
       });
@@ -326,50 +388,70 @@ export const fetchDetailedComplaints = createAsyncThunk(
         items: res.data.problems || [],
         total: res.data.total || res.data.problems?.length || 0,
       };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch complaints");
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch complaints"
+      );
     }
   }
 );
 
 export const fetchDetailedStudents = createAsyncThunk(
   "dashboard/fetchDetailedStudents",
-  async (params: { hostel?: string; page?: number; filters?: StudentsFilters }, { rejectWithValue }) => {
+  async (
+    params: { hostel?: string; page?: number; filters?: StudentsFilters },
+    { rejectWithValue }
+  ) => {
     try {
       const { page = 1, filters = {} } = params;
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: '10',
-        ...(filters.hostel && filters.hostel !== 'all' && { hostel: filters.hostel }),
-        ...(filters.year && filters.year !== 'all' && { year: filters.year }),
+        limit: "10",
+        ...(filters.hostel &&
+          filters.hostel !== "all" && { hostel: filters.hostel }),
+        ...(filters.year && filters.year !== "all" && { year: filters.year }),
         ...(filters.query && { search: filters.query }),
       });
 
       const queryString = queryParams.toString();
-      const res = await apiClient.get(`/user/students/all${queryString ? '?' + queryString : ''}`);
+      const res = await apiClient.get(
+        `/user/students/all${queryString ? "?" + queryString : ""}`
+      );
       const students = res.data.students || [];
-      
-      console.log('[Students] Fetched:', { count: students.length, page, filters });
-      
+
+      console.log("[Students] Fetched:", {
+        count: students.length,
+        page,
+        filters,
+      });
+
       return {
         items: students,
         total: res.data.count || students.length,
       };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch students");
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch students"
+      );
     }
   }
 );
 
 export const fetchDetailedFees = createAsyncThunk(
   "dashboard/fetchDetailedFees",
-  async (params: { hostel?: string; page?: number; filters?: FeesFilters }, { rejectWithValue }) => {
+  async (
+    params: { hostel?: string; page?: number; filters?: FeesFilters },
+    { rejectWithValue }
+  ) => {
     try {
       const { page = 1, filters = {} } = params;
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: '20',
-        ...(filters.hostel && filters.hostel !== 'all' && { hostel: filters.hostel }),
+        limit: "20",
+        ...(filters.hostel &&
+          filters.hostel !== "all" && { hostel: filters.hostel }),
         ...(filters.feeType && { feeType: filters.feeType }),
         ...(filters.status && { status: filters.status }),
       });
@@ -379,21 +461,28 @@ export const fetchDetailedFees = createAsyncThunk(
         items: res.data.data || [],
         total: res.data.total || res.data.data?.length || 0,
       };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch fees");
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch fees"
+      );
     }
   }
 );
 
 export const fetchDetailedMessFeedback = createAsyncThunk(
   "dashboard/fetchDetailedMessFeedback",
-  async (params: { hostel?: string; page?: number; filters?: MessFilters }, { rejectWithValue }) => {
+  async (
+    params: { hostel?: string; page?: number; filters?: MessFilters },
+    { rejectWithValue }
+  ) => {
     try {
       const { page = 1, filters = {} } = params;
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        limit: '20',
-        ...(filters.hostel && filters.hostel !== 'all' && { hostel: filters.hostel }),
+        limit: "20",
+        ...(filters.hostel &&
+          filters.hostel !== "all" && { hostel: filters.hostel }),
         ...(filters.mealType && { mealType: filters.mealType }),
         ...(filters.dateRange && { dateRange: filters.dateRange }),
       });
@@ -403,8 +492,11 @@ export const fetchDetailedMessFeedback = createAsyncThunk(
         items: res.data.feedbacks || [],
         total: res.data.total || res.data.feedbacks?.length || 0,
       };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch feedback");
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch feedback"
+      );
     }
   }
 );
@@ -464,16 +556,22 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchStudentDashboardData.fulfilled, (state, action) => {
         state.loading = false;
-        
-        const { complaints, feeStatus, announcements, messMenu } = action.payload;
+
+        const { complaints, feeStatus, announcements, messMenu } =
+          action.payload;
 
         // Calculate metrics
         state.metrics = {
           complaints: {
             total: complaints.length,
-            pending: complaints.filter((c: Complaint) => c.status === "Pending").length,
-            resolved: complaints.filter((c: Complaint) => c.status === "Resolved").length,
-            rejected: complaints.filter((c: Complaint) => c.status === "Rejected").length,
+            pending: complaints.filter((c: Complaint) => c.status === "Pending")
+              .length,
+            resolved: complaints.filter(
+              (c: Complaint) => c.status === "Resolved"
+            ).length,
+            rejected: complaints.filter(
+              (c: Complaint) => c.status === "Rejected"
+            ).length,
           },
           fees: {
             hostelFee: feeStatus.hostelFee,
@@ -490,7 +588,7 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Warden Dashboard
       .addCase(fetchWardenDashboardData.pending, (state) => {
         state.loading = true;
@@ -506,7 +604,7 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Admin Dashboard
       .addCase(fetchAdminDashboardData.pending, (state) => {
         state.loading = true;
@@ -522,7 +620,7 @@ const dashboardSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Detailed Complaints
       .addCase(fetchDetailedComplaints.pending, (state) => {
         state.detailedComplaints.loading = true;
@@ -535,7 +633,7 @@ const dashboardSlice = createSlice({
       .addCase(fetchDetailedComplaints.rejected, (state) => {
         state.detailedComplaints.loading = false;
       })
-      
+
       // Detailed Students
       .addCase(fetchDetailedStudents.pending, (state) => {
         state.detailedStudents.loading = true;
@@ -548,7 +646,7 @@ const dashboardSlice = createSlice({
       .addCase(fetchDetailedStudents.rejected, (state) => {
         state.detailedStudents.loading = false;
       })
-      
+
       // Detailed Fees
       .addCase(fetchDetailedFees.pending, (state) => {
         state.detailedFees.loading = true;
@@ -561,7 +659,7 @@ const dashboardSlice = createSlice({
       .addCase(fetchDetailedFees.rejected, (state) => {
         state.detailedFees.loading = false;
       })
-      
+
       // Detailed Mess Feedback
       .addCase(fetchDetailedMessFeedback.pending, (state) => {
         state.detailedMessFeedback.loading = true;
@@ -594,14 +692,22 @@ export const {
 
 // Selectors
 export const selectDashboardState = (state: RootState) => state.dashboard;
-export const selectDashboardMetrics = (state: RootState) => state.dashboard.metrics;
-export const selectRecentComplaints = (state: RootState) => state.dashboard.recentComplaints;
-export const selectRecentAnnouncements = (state: RootState) => state.dashboard.recentAnnouncements;
+export const selectDashboardMetrics = (state: RootState) =>
+  state.dashboard.metrics;
+export const selectRecentComplaints = (state: RootState) =>
+  state.dashboard.recentComplaints;
+export const selectRecentAnnouncements = (state: RootState) =>
+  state.dashboard.recentAnnouncements;
 export const selectMessMenu = (state: RootState) => state.dashboard.messMenu;
-export const selectDetailedView = (state: RootState) => state.dashboard.detailedView;
-export const selectDetailedComplaints = (state: RootState) => state.dashboard.detailedComplaints;
-export const selectDetailedStudents = (state: RootState) => state.dashboard.detailedStudents;
-export const selectDetailedFees = (state: RootState) => state.dashboard.detailedFees;
-export const selectDetailedMessFeedback = (state: RootState) => state.dashboard.detailedMessFeedback;
+export const selectDetailedView = (state: RootState) =>
+  state.dashboard.detailedView;
+export const selectDetailedComplaints = (state: RootState) =>
+  state.dashboard.detailedComplaints;
+export const selectDetailedStudents = (state: RootState) =>
+  state.dashboard.detailedStudents;
+export const selectDetailedFees = (state: RootState) =>
+  state.dashboard.detailedFees;
+export const selectDetailedMessFeedback = (state: RootState) =>
+  state.dashboard.detailedMessFeedback;
 
 export default dashboardSlice.reducer;

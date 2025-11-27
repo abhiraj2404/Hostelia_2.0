@@ -1,8 +1,14 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -10,23 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import apiClient from "@/lib/api-client";
+import { AxiosError } from "axios";
 import {
-  Coffee,
-  UtensilsCrossed,
-  Cookie,
-  Moon,
-  Plus,
-  X,
-  Save,
-  Loader2,
   AlertCircle,
-  CheckCircle2,
   Calendar,
+  CheckCircle2,
   ChefHat,
   ClipboardList,
+  Coffee,
+  Cookie,
+  Loader2,
+  Moon,
+  Plus,
+  Save,
+  UtensilsCrossed,
+  X,
 } from "lucide-react";
-import apiClient from "@/lib/api-client";
+import { useEffect, useState } from "react";
 
 const dayNames = [
   "Sunday",
@@ -137,7 +144,7 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
       // Backend z.record(z.enum(days), dayMenuSchema) requires ALL days to be present
       // Build updates object with all 7 days from currentMenu, then update the selected day/meal
       const allDaysUpdates: Record<string, Record<string, string[]>> = {};
-      
+
       // Populate all days from current menu or with empty defaults
       dayNames.forEach((day) => {
         if (currentMenu && currentMenu[day]) {
@@ -174,12 +181,12 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
       console.log("MenuEditor - Payload keys:", Object.keys(payload.updates));
 
       const response = await apiClient.put("/mess/menu", payload);
-      
+
       console.log("MenuEditor - Response:", response.data);
-      
+
       setSuccess(true);
       setError(null);
-      
+
       // Call parent callback to refresh menu
       if (onMenuUpdate) {
         onMenuUpdate();
@@ -187,10 +194,11 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
 
       // Reset success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error("MenuEditor - Error:", err);
-      console.error("MenuEditor - Error response:", err.response?.data);
-      setError(err.response?.data?.message || "Failed to update menu");
+      const axiosError = err as AxiosError<{ message?: string }>;
+      console.error("MenuEditor - Error response:", axiosError.response?.data);
+      setError(axiosError.response?.data?.message || "Failed to update menu");
       setSuccess(false);
     } finally {
       setLoading(false);
@@ -220,11 +228,17 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Day Selection Dropdown */}
             <div className="space-y-2">
-              <Label htmlFor="day-select" className="text-sm font-medium flex items-center gap-2">
+              <Label
+                htmlFor="day-select"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <Calendar className="size-4 text-primary" />
                 Select Day
               </Label>
-              <Select value={selectedDay} onValueChange={(value) => handleDayChange(value as DayName)}>
+              <Select
+                value={selectedDay}
+                onValueChange={(value) => handleDayChange(value as DayName)}
+              >
                 <SelectTrigger id="day-select" className="h-11">
                   <SelectValue placeholder="Choose a day" />
                 </SelectTrigger>
@@ -243,11 +257,17 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
 
             {/* Meal Selection Dropdown */}
             <div className="space-y-2">
-              <Label htmlFor="meal-select" className="text-sm font-medium flex items-center gap-2">
+              <Label
+                htmlFor="meal-select"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <CurrentMealIcon className="size-4 text-primary" />
                 Select Meal
               </Label>
-              <Select value={selectedMeal} onValueChange={(value) => handleMealChange(value as MealType)}>
+              <Select
+                value={selectedMeal}
+                onValueChange={(value) => handleMealChange(value as MealType)}
+              >
                 <SelectTrigger id="meal-select" className="h-11">
                   <SelectValue placeholder="Choose a meal" />
                 </SelectTrigger>
@@ -370,7 +390,9 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
             {success && (
               <div className="mt-4 flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 px-4 py-3 rounded-lg border border-green-200 dark:border-green-900">
                 <CheckCircle2 className="size-4 shrink-0" />
-                <span>Menu updated successfully for {selectedDay} - {selectedMeal}!</span>
+                <span>
+                  Menu updated successfully for {selectedDay} - {selectedMeal}!
+                </span>
               </div>
             )}
 
@@ -386,32 +408,37 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
         {/* Sidebar - Current Menu Preview */}
         <div className="space-y-6">
           {/* Current Menu Card */}
-          {currentMenu && currentMenu[selectedDay] && currentMenu[selectedDay][selectedMeal] && currentMenu[selectedDay][selectedMeal].length > 0 && (
-            <Card className="shadow-lg bg-linear-to-br from-muted/50 to-muted/30 border-primary/20">
-              <CardHeader className="pb-3 border-b">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <UtensilsCrossed className="size-4 text-primary" />
-                  Current Menu
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Showing saved items
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-2">
-                  {currentMenu[selectedDay][selectedMeal].map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 px-3 py-2 rounded-md bg-background/60 border"
-                    >
-                      <div className="size-1.5 rounded-full bg-primary shrink-0" />
-                      <span className="text-sm">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {currentMenu &&
+            currentMenu[selectedDay] &&
+            currentMenu[selectedDay][selectedMeal] &&
+            currentMenu[selectedDay][selectedMeal].length > 0 && (
+              <Card className="shadow-lg bg-linear-to-br from-muted/50 to-muted/30 border-primary/20">
+                <CardHeader className="pb-3 border-b">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <UtensilsCrossed className="size-4 text-primary" />
+                    Current Menu
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Showing saved items
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="space-y-2">
+                    {currentMenu[selectedDay][selectedMeal].map(
+                      (item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md bg-background/60 border"
+                        >
+                          <div className="size-1.5 rounded-full bg-primary shrink-0" />
+                          <span className="text-sm">{item}</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
         </div>
       </div>
     </div>

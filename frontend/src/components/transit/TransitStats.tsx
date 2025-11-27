@@ -1,12 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, TrendingUp, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 type TransitMetric = {
   label: string;
   value: number;
   helper: string;
-  icon: any;
+  icon: LucideIcon;
   tone: string;
 };
 
@@ -44,14 +50,18 @@ export function TransitStats({ entries }: TransitStatsProps) {
     if (!prev) {
       map.set(sid, e);
     } else {
-      const prevTime = new Date(prev.createdAt || `${prev.date}T${prev.time}`).getTime();
+      const prevTime = new Date(
+        prev.createdAt || `${prev.date}T${prev.time}`
+      ).getTime();
       const curTime = new Date(e.createdAt || `${e.date}T${e.time}`).getTime();
       if (curTime > prevTime) map.set(sid, e);
     }
     return map;
   }, new Map<string, TransitEntry>());
 
-  const studentsCurrentlyOut = Array.from(lastRecordByStudent.values()).filter((r) => r.transitStatus === "EXIT").length;
+  const studentsCurrentlyOut = Array.from(lastRecordByStudent.values()).filter(
+    (r) => r.transitStatus === "EXIT"
+  ).length;
 
   // Get today's records
 
@@ -92,11 +102,20 @@ export function TransitStats({ entries }: TransitStatsProps) {
         <Card key={m.label} className="border-border/60">
           <CardContent className="flex items-center justify-between py-6">
             <div>
-              <p className="text-xs font-medium uppercase text-muted-foreground">{m.helper}</p>
-              <p className="mt-2 text-3xl font-semibold text-foreground">{m.value}</p>
+              <p className="text-xs font-medium uppercase text-muted-foreground">
+                {m.helper}
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-foreground">
+                {m.value}
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">{m.label}</p>
             </div>
-            <div className={cn("flex h-12 w-12 items-center justify-center rounded-full", m.tone)}>
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-full",
+                m.tone
+              )}
+            >
               <m.icon className="h-5 w-5" />
             </div>
           </CardContent>

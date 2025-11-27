@@ -12,6 +12,7 @@ import Login from "@/pages/Login";
 import MessPage from "@/pages/MessPage";
 import Signup from "@/pages/Signup";
 import TransitPage from "@/pages/TransitPage";
+import UserManagementPage from "@/pages/UserManagementPage";
 import { Route, Routes } from "react-router-dom";
 import OnlyGuests from "./guards/OnlyGuests";
 import RequireAuth from "./guards/RequireAuth";
@@ -80,6 +81,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <FeesPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <RequireAuth>
+            <UserManagementPage />
           </RequireAuth>
         }
       />

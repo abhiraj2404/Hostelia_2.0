@@ -11,6 +11,7 @@ import {
   Menu,
   MessageCircle,
   SquarePen,
+  UserCog,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
@@ -20,12 +21,27 @@ type SidebarLayoutProps = {
   children: ReactNode;
 };
 
-const navigation = [
+type NavigationItem = {
+  label: string;
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requireAuth: boolean;
+  requireRoles?: ("admin" | "warden" | "student")[];
+};
+
+const navigation: NavigationItem[] = [
   {
     label: "Dashboard",
     to: "/dashboard",
     icon: LayoutDashboard,
     requireAuth: true,
+  },
+  {
+    label: "User Management",
+    to: "/users",
+    icon: UserCog,
+    requireAuth: true,
+    requireRoles: ["admin", "warden"],
   },
   {
     label: "Complaints",
@@ -51,13 +67,21 @@ const navigation = [
 ];
 
 export function SidebarLayout({ children }: SidebarLayoutProps) {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-background">
       <nav className="flex-1 space-y-1.5 px-5 pt-6">
         {navigation
-          .filter((item) => !item.requireAuth || isAuthenticated)
+          .filter((item) => {
+            if (!isAuthenticated && item.requireAuth) return false;
+            if (item.requireRoles && user?.role) {
+              return item.requireRoles.includes(
+                user.role as "admin" | "warden" | "student"
+              );
+            }
+            return true;
+          })
           .map((item) => (
             <NavLink
               key={item.to}

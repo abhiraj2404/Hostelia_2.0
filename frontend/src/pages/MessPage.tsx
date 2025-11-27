@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import { useAppSelector } from "@/hooks";
-import apiClient from "@/lib/api-client";
-import { Link } from "react-router-dom";
+import { FeedbackDashboard } from "@/components/mess/FeedbackDashboard";
+import { FeedbackForm } from "@/components/mess/FeedbackForm";
+import { MenuEditor } from "@/components/mess/MenuEditor";
 import { TodayMenu } from "@/components/mess/TodayMenu";
 import { WeeklyMenu } from "@/components/mess/WeeklyMenu";
-import { FeedbackForm } from "@/components/mess/FeedbackForm";
-import { FeedbackDashboard } from "@/components/mess/FeedbackDashboard";
-import { MenuEditor } from "@/components/mess/MenuEditor";
-import { AlertCircle, Plus, BarChart3, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppSelector } from "@/hooks";
+import apiClient from "@/lib/api-client";
+import { AxiosError } from "axios";
+import { AlertCircle, BarChart3, Edit, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface MenuData {
   [day: string]: {
@@ -37,14 +38,16 @@ function MessPage() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  
+
   // Admin/Warden dashboard state
   const [showDashboard, setShowDashboard] = useState(false);
-  const [dashboardView, setDashboardView] = useState<"feedback" | "menu">("feedback");
+  const [dashboardView, setDashboardView] = useState<"feedback" | "menu">(
+    "feedback"
+  );
 
   // Only students can submit feedback
   const canSubmitFeedback = user?.role === "student";
-  
+
   // Admins and wardens can view dashboard
   const canViewDashboard = user?.role === "admin" || user?.role === "warden";
 
@@ -55,7 +58,7 @@ function MessPage() {
       const response = await apiClient.get("/mess/menu");
       setMenu(response.data.menu || {});
       setMenuStatus("succeeded");
-    } catch (error) {
+    } catch {
       setMenuStatus("failed");
     }
   };
@@ -68,7 +71,6 @@ function MessPage() {
 
   useEffect(() => {
     if (feedbackStatus === "succeeded") {
-
       // Clear status after 3 seconds
       const timer = setTimeout(() => {
         setFeedbackStatus("idle");
@@ -92,10 +94,11 @@ function MessPage() {
       });
 
       setFeedbackStatus("succeeded");
-    } catch (error: any) {
+    } catch (error) {
       setFeedbackStatus("failed");
+      const axiosError = error as AxiosError<{ message?: string }>;
       setFeedbackError(
-        error.response?.data?.message || "Failed to submit feedback"
+        axiosError.response?.data?.message || "Failed to submit feedback"
       );
     }
   };
@@ -139,12 +142,11 @@ function MessPage() {
                 Mess Menu & Feedback
               </h1>
               <p className="text-muted-foreground text-sm">
-                {canSubmitFeedback 
-                  ? "Explore today's meals, browse the weekly menu, and share your dining experience" 
+                {canSubmitFeedback
+                  ? "Explore today's meals, browse the weekly menu, and share your dining experience"
                   : canViewDashboard
                   ? "Manage mess menu and view student feedback"
-                  : "Explore today's meals and browse the weekly menu schedule"
-                }
+                  : "Explore today's meals and browse the weekly menu schedule"}
               </p>
             </div>
             {canSubmitFeedback && !showFeedbackForm && (
