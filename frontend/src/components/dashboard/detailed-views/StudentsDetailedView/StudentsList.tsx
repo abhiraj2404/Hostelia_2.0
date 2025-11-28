@@ -11,6 +11,7 @@ import {
 import type { Student } from "@/types/dashboard";
 import { sortByNameCaseInsensitive } from "@/utils/sorting";
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface StudentsListProps {
   students: Student[];
@@ -28,6 +29,8 @@ export function StudentsList({
     return sortByNameCaseInsensitive(students);
   }, [students]);
 
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-4">
       {loading ? (
@@ -38,7 +41,7 @@ export function StudentsList({
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">No students found</p>
         </div>
-      ) : (
+   ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -54,7 +57,11 @@ export function StudentsList({
             </TableHeader>
             <TableBody>
               {sortedStudents.map((student) => (
-                <TableRow key={student._id}>
+                <TableRow
+                  key={student._id}
+                  className="cursor-pointer transition-colors hover:bg-muted/50"
+                  onClick={() => navigate(`/student/${student._id}`)}
+                >
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.rollNo || "N/A"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">

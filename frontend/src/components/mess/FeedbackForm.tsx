@@ -283,15 +283,33 @@ export function FeedbackForm({
             <Controller
               control={control}
               name="comment"
-              render={({ field }) => (
-                <Textarea
-                  id="comment"
-                  placeholder="Share your thoughts about the meal..."
-                  {...field}
-                  rows={2}
-                  className="resize-none text-xs min-h-10"
-                />
-              )}
+              render={({ field }) => {
+                const charCount = field.value?.length || 0;
+                const maxChars = 500;
+                const percentage = (charCount / maxChars) * 100;
+                const counterColor = percentage >= 90 ? 'text-destructive' 
+                  : percentage >= 75 ? 'text-yellow-600 dark:text-yellow-500'
+                  : 'text-muted-foreground';
+                
+                return (
+                  <div className="relative">
+                    <Textarea
+                      id="comment"
+                      placeholder="Share your thoughts about the meal..."
+                      {...field}
+                      rows={2}
+                      className="resize-none text-xs min-h-10 pr-16"
+                      maxLength={maxChars}
+                    />
+                    <div className={cn(
+                      "absolute bottom-1.5 right-2 text-xs font-medium",
+                      counterColor
+                    )}>
+                      {charCount}/{maxChars}
+                    </div>
+                  </div>
+                );
+              }}
             />
             {errors.comment && (
               <p className="text-xs text-destructive">{errors.comment.message}</p>

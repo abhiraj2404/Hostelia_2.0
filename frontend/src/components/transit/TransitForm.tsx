@@ -60,7 +60,7 @@ const entryExitSchema = z
     purpose: z
       .string()
       .min(3, "Purpose must be at least 3 characters")
-      .max(500, "Purpose cannot exceed 500 characters")
+      .max(200, "Purpose cannot exceed 200 characters")
       .refine((val) => /\p{L}/u.test(val), "Purpose must contain alphabetic characters"),
   })
   .refine(
@@ -428,18 +428,31 @@ export function TransitForm({ onSubmit, createStatus, createError, entries = [] 
             <Controller
               name="purpose"
               control={control}
-              render={({ field }) => (
-                <div className="relative">
-                  <Textarea
-                    {...field}
-                    placeholder="Describe the reason for your entry/exit..."
-                    className="min-h-10 max-h-20 border focus:border-primary/50 transition-colors resize-none text-xs"
-                  />
-                  <div className="absolute bottom-1 right-2 text-xs text-muted-foreground">
-                    {field.value?.length || 0}/500
+              render={({ field }) => {
+                const charCount = field.value?.length || 0;
+                const maxChars = 200;
+                const percentage = (charCount / maxChars) * 100;
+                const counterColor = percentage >= 90 ? 'text-destructive' 
+                  : percentage >= 75 ? 'text-yellow-600 dark:text-yellow-500'
+                  : 'text-muted-foreground';
+                
+                return (
+                  <div className="relative">
+                    <Textarea
+                      {...field}
+                      placeholder="Describe the reason for your entry/exit briefly..."
+                      className="min-h-10 max-h-20 border focus:border-primary/50 transition-colors resize-none text-xs pr-16"
+                      maxLength={maxChars}
+                    />
+                    <div className={cn(
+                      "absolute bottom-1.5 right-2 text-xs font-medium",
+                      counterColor
+                    )}>
+                      {charCount}/{maxChars}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              }}
             />
             {errors.purpose && (
               <p className="text-xs text-red-600 flex items-center gap-1">
@@ -447,6 +460,9 @@ export function TransitForm({ onSubmit, createStatus, createError, entries = [] 
                 {errors.purpose.message}
               </p>
             )}
+            <p className="text-xs text-muted-foreground">
+              Keep it brief - describe your purpose in 200 characters or less
+            </p>
           </div>
 
           {/* Error Display */}

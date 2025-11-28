@@ -11,10 +11,11 @@ import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import MessPage from "@/pages/MessPage";
 import Signup from "@/pages/Signup";
+import StudentDetailPage from "@/pages/StudentDetailPage";
 import TransitPage from "@/pages/TransitPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import { Route, Routes } from "react-router-dom";
-import OnlyGuests from "./guards/OnlyGuests";
+import  OnlyGuests from "./guards/OnlyGuests";
 import RequireAuth from "./guards/RequireAuth";
 import StudentOnly from "./guards/StudentOnly";
 
@@ -69,6 +70,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ComplaintDetailPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/student/:userId"
+        element={
+          <RequireAuth>
+            <StudentDetailPage />
           </RequireAuth>
         }
       />

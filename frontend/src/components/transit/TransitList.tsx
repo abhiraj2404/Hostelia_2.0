@@ -409,7 +409,7 @@ export function TransitList({
                               </Badge>
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300">
-                              <div className="text-sm leading-relaxed max-w-[220px] wrap-break-word">
+                              <div className="text-sm leading-relaxed max-w-md break-words whitespace-normal">
                                 {entry.purpose}
                               </div>
                             </TableCell>
@@ -500,7 +500,7 @@ export function TransitList({
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1.5">
                           Purpose
                         </p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed wrap-break-word">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed break-words whitespace-normal">
                           {entry.purpose}
                         </p>
                       </div>
