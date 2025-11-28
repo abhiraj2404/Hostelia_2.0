@@ -1,4 +1,5 @@
-import { useAppSelector } from "@/hooks";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,22 +7,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useAppSelector } from "@/hooks";
 import {
-  CheckCircle2,
-  Users,
-  Shield,
-  Zap,
-  Mail,
+  ArrowRight,
   Building2,
+  CheckCircle2,
   Code2,
   Database,
+  Heart,
+  Mail,
   Palette,
-  ArrowRight,
+  Shield,
   Sparkles,
   Target,
-  Heart,
+  Users,
+  Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -29,19 +29,22 @@ const coreFeatures = [
   {
     icon: <Shield className="h-6 w-6" />,
     title: "Secure Authentication",
-    description: "OTP-based login with college email integration for verified access.",
+    description:
+      "OTP-based login with college email integration for verified access.",
     color: "bg-blue-500/10 text-blue-500",
   },
   {
     icon: <Users className="h-6 w-6" />,
     title: "Role-Based Access",
-    description: "Tailored dashboards for students, wardens, and administrators.",
+    description:
+      "Tailored dashboards for students, wardens, and administrators.",
     color: "bg-green-500/10 text-green-500",
   },
   {
     icon: <Zap className="h-6 w-6" />,
     title: "Real-Time Updates",
-    description: "Instant notifications and live status tracking for all operations.",
+    description:
+      "Instant notifications and live status tracking for all operations.",
     color: "bg-yellow-500/10 text-yellow-500",
   },
   {
@@ -53,13 +56,15 @@ const coreFeatures = [
   {
     icon: <Building2 className="h-6 w-6" />,
     title: "Facility Management",
-    description: "Track maintenance, complaints, and facility updates seamlessly.",
+    description:
+      "Track maintenance, complaints, and facility updates seamlessly.",
     color: "bg-orange-500/10 text-orange-500",
   },
   {
     icon: <CheckCircle2 className="h-6 w-6" />,
     title: "Problem Tracking",
-    description: "Submit, upvote, and track resolution of hostel issues efficiently.",
+    description:
+      "Submit, upvote, and track resolution of hostel issues efficiently.",
     color: "bg-pink-500/10 text-pink-500",
   },
 ];
@@ -83,7 +88,8 @@ const userRoles = [
   {
     title: "Students",
     icon: CheckCircle2,
-    description: "Submit complaints, track issues, upload fee receipts, and access hostel policies.",
+    description:
+      "Submit complaints, track issues, upload fee receipts, and access hostel policies.",
     features: [
       "Report maintenance issues with photos",
       "Upvote existing problems",
@@ -97,7 +103,8 @@ const userRoles = [
   {
     title: "Hostel Wardens",
     icon: Shield,
-    description: "Manage complaints, send announcements, and oversee day-to-day operations.",
+    description:
+      "Manage complaints, send announcements, and oversee day-to-day operations.",
     features: [
       "Review and assign complaints",
       "Send hostel-wide announcements",
@@ -111,7 +118,8 @@ const userRoles = [
   {
     title: "Hostel Office (Admin)",
     icon: Users,
-    description: "Oversee all operations, manage wardens, and track fee verifications.",
+    description:
+      "Oversee all operations, manage wardens, and track fee verifications.",
     features: [
       "Verify and approve fee payment receipts",
       "Appoint and manage wardens",
@@ -128,17 +136,20 @@ const missionValues = [
   {
     icon: Target,
     title: "Our Mission",
-    description: "To simplify hostel management through technology, improving communication, security, and administration for everyone.",
+    description:
+      "To simplify hostel management through technology, improving communication, security, and administration for everyone.",
   },
   {
     icon: Heart,
     title: "Our Vision",
-    description: "A connected campus where students, wardens, and admins work seamlessly together for a better living experience.",
+    description:
+      "A connected campus where students, wardens, and admins work seamlessly together for a better living experience.",
   },
   {
     icon: Sparkles,
     title: "Our Values",
-    description: "Transparency, accountability, and continuous improvement through data-driven insights and user feedback.",
+    description:
+      "Transparency, accountability, and continuous improvement through data-driven insights and user feedback.",
   },
 ];
 
@@ -158,10 +169,11 @@ function About() {
             About Us
           </Badge>
           <h1 className="mb-6 text-5xl font-bold tracking-tight md:text-6xl lg:text-7xl">
-            HOSTELIA 
+            HOSTELIA
           </h1>
           <p className="mx-auto max-w-3xl text-xl text-muted-foreground md:text-2xl">
-            Revolutionizing hostel management with a modern, unified platform for students, wardens, and administrators.
+            Revolutionizing hostel management with a modern, unified platform
+            for students, wardens, and administrators.
           </p>
         </div>
       </section>
@@ -171,7 +183,10 @@ function About() {
         <div className="container mx-auto px-6 py-20 lg:px-12">
           <div className="mb-16 grid gap-8 md:grid-cols-3">
             {missionValues.map((item) => (
-              <Card key={item.title} className="border-border/70 bg-card/80 shadow-sm">
+              <Card
+                key={item.title}
+                className="border-border/70 bg-card/80 shadow-sm"
+              >
                 <CardHeader className="space-y-4">
                   <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <item.icon className="h-7 w-7" />
@@ -192,9 +207,11 @@ function About() {
               Transforming Campus Living
             </h2>
             <p className="text-lg leading-relaxed text-muted-foreground">
-              Hostelia  is a comprehensive hostel management platform designed specifically for educational institutions. 
-              Built with modern web technologies, it provides a seamless experience for managing everything from 
-              maintenance requests to fee payments, all in one unified system.
+              Hostelia is a comprehensive hostel management platform designed
+              specifically for educational institutions. Built with modern web
+              technologies, it provides a seamless experience for managing
+              everything from maintenance requests to fee payments, all in one
+              unified system.
             </p>
           </div>
         </div>
@@ -214,14 +231,20 @@ function About() {
               Everything You Need in One Place
             </h2>
             <p className="mx-auto max-w-2xl text-base text-muted-foreground md:text-lg">
-              Comprehensive features designed to streamline hostel operations and enhance the student living experience.
+              Comprehensive features designed to streamline hostel operations
+              and enhance the student living experience.
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {coreFeatures.map((feature) => (
-              <Card key={feature.title} className="h-full border-border/70 bg-card/80 shadow-sm transition-shadow hover:shadow-lg">
+              <Card
+                key={feature.title}
+                className="h-full border-border/70 bg-card/80 shadow-sm transition-shadow hover:shadow-lg"
+              >
                 <CardHeader className="space-y-4">
-                  <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${feature.color}`}>
+                  <div
+                    className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${feature.color}`}
+                  >
                     {feature.icon}
                   </div>
                   <CardTitle className="text-xl">{feature.title}</CardTitle>
@@ -251,13 +274,19 @@ function About() {
               Tailored Experiences for Every Role
             </h2>
             <p className="mx-auto max-w-2xl text-base text-muted-foreground md:text-lg">
-              Customized dashboards and features designed for each user type's specific needs.
+              Customized dashboards and features designed for each user type's
+              specific needs.
             </p>
           </div>
           <div className="grid gap-8 lg:grid-cols-3">
             {userRoles.map((role) => (
-              <Card key={role.title} className="relative h-full overflow-hidden border-border/70 bg-card/80 shadow-lg">
-                <div className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${role.gradient}`} />
+              <Card
+                key={role.title}
+                className="relative h-full overflow-hidden border-border/70 bg-card/80 shadow-lg"
+              >
+                <div
+                  className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${role.gradient}`}
+                />
                 <CardHeader className="space-y-4">
                   <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <role.icon className="h-7 w-7" />
@@ -297,7 +326,8 @@ function About() {
               Built with Modern Technologies
             </h2>
             <p className="mx-auto max-w-2xl text-base text-muted-foreground md:text-lg">
-              Leveraging cutting-edge tools and frameworks for performance, scalability, and maintainability.
+              Leveraging cutting-edge tools and frameworks for performance,
+              scalability, and maintainability.
             </p>
           </div>
           <div className="mx-auto max-w-5xl grid gap-8 md:grid-cols-2">
@@ -307,7 +337,9 @@ function About() {
                   <Code2 className="h-6 w-6 text-blue-500" />
                   Frontend
                 </CardTitle>
-                <CardDescription>Modern UI built with React and TypeScript</CardDescription>
+                <CardDescription>
+                  Modern UI built with React and TypeScript
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -331,7 +363,9 @@ function About() {
                   <Database className="h-6 w-6 text-green-500" />
                   Backend
                 </CardTitle>
-                <CardDescription>Robust server with Node.js and MongoDB</CardDescription>
+                <CardDescription>
+                  Robust server with Node.js and MongoDB
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -364,23 +398,19 @@ function About() {
               Ready to Transform Your Hostel Management?
             </h2>
             <p className="text-lg text-primary-foreground/90">
-              Join hundreds of students, wardens, and administrators already using Hostelia to streamline their hostel operations.
+              Join hundreds of students, wardens, and administrators already
+              using Hostelia to streamline their hostel operations.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Button asChild size="lg" variant="secondary" className="sm:w-auto">
-                <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-                  {isAuthenticated ? "Go to Dashboard" : "Create Account"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
               <Button
                 asChild
                 size="lg"
-                variant="outline"
-                className="border-primary-foreground/60 bg-white/10 text-primary-foreground hover:bg-white/20 sm:w-auto"
+                variant="secondary"
+                className="sm:w-auto"
               >
-                <Link to={isAuthenticated ? "/dashboard" : "/login"}>
-                  {isAuthenticated ? "Dashboard" : "Sign In"}
+                <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
+                  {isAuthenticated ? "Go to Dashboard" : "Create Account"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>

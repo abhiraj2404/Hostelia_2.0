@@ -8,8 +8,6 @@ import {
 } from "@/components/ui/card";
 import type { ComponentType, SVGProps } from "react";
 import {
-  Brain,
-  LifeBuoy,
   ShieldCheck,
   Sparkles,
   Users2,
@@ -21,42 +19,32 @@ type Icon = ComponentType<SVGProps<SVGSVGElement>>;
 const features = [
   {
     title: "Student Experience",
-    description: "Consumer-grade support desk tuned for campus life.",
+    description: "Comprehensive tools for hostel life management.",
     icon: Users2,
     bullets: [
-      "One-tap submissions with photo & video evidence",
-      "Live timelines with escalation nudges",
-      "Feedback loops that close the loop after resolution",
+      "Submit complaints with photo evidence and track status",
+      "Upload fee receipts for hostel and mess fees",
+      "View mess menu and provide feedback",
     ],
   },
   {
     title: "Warden Control Room",
-    description: "Every shift starts with a focused execution plan.",
+    description: "Manage your hostel operations efficiently.",
     icon: Workflow,
     bullets: [
-      "Smart routing powered by hostel, block, and priority",
-      "Kanban, calendar, and SLA timers in one workspace",
-      "Template responses and bulk actions for recurring tasks",
+      "Complaint management and status updates by hostel",
+      "Mess menu management and feedback review",
+      "Transit entry approval and student oversight",
     ],
   },
   {
     title: "Admin Command",
-    description: "Governance, finance, and compliance—simplified.",
+    description: "Complete oversight across all hostels.",
     icon: ShieldCheck,
     bullets: [
-      "Role-based guardrails and digital audit trails",
-      "Invoice, penalty, and inventory workflows in sync",
-      "Analytics API for council and parent reporting",
-    ],
-  },
-  {
-    title: "Insights & Automation",
-    description: "Predictive operations with zero guesswork.",
-    icon: Brain,
-    bullets: [
-      "AI-assisted categorisation and summarised updates",
-      "Trend alerts for recurring issues and peak hours",
-      "Playbooks that auto-trigger follow-up tasks",
+      "Role-based access and digital audit trails",
+      "Fee verification and user management",
+      "Cross-hostel analytics and reporting",
     ],
   },
 ];
@@ -96,56 +84,26 @@ function Features() {
     <section className="relative border-b border-border bg-muted/20">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-linear-to-b from-primary/10 to-transparent" />
       <div className="mx-auto max-w-6xl px-6 py-20 lg:px-12">
-        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <div className="space-y-6">
-            <Badge
-              variant="outline"
-              className="w-max border-dashed px-3 py-1 text-xs uppercase tracking-[0.4em] text-muted-foreground"
-            >
-              Platform pillars
-            </Badge>
-            <div className="space-y-4">
-              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">
-                Purpose-built journeys for every hostel role
-              </h2>
-              <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
-                Hostelia aligns every stakeholder around the same operational
-                truth. Students get clarity, wardens get focus, and admins get
-                governance—without the ping-pong of calls or spreadsheets.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border/70 bg-card/60 p-6 shadow-sm">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <LifeBuoy className="h-5 w-5 text-primary" />
-                <span>Launch in under 10 days with concierge onboarding.</span>
-              </div>
-              <div className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
-                <div className="rounded-xl border border-dashed border-border/60 bg-background/70 p-4">
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Integrations
-                  </p>
-                  <p className="mt-2 text-sm">
-                    Connect student directories, ID cards, and incident helplines
-                    with ready-made connectors.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-dashed border-border/60 bg-background/70 p-4">
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Controls
-                  </p>
-                  <p className="mt-2 text-sm">
-                    Fine-grained permissions, approval workflows, and immutable
-                    audit histories out of the box.
-                  </p>
-                </div>
-              </div>
-          </div>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {features.map((feature) => (
-              <FeatureCard key={feature.title} {...feature} />
-            ))}
-          </div>
+        <div className="mb-12 max-w-3xl space-y-4">
+          <Badge
+            variant="outline"
+            className="w-max border-dashed px-3 py-1 text-xs uppercase tracking-[0.4em] text-muted-foreground"
+          >
+            Platform pillars
+          </Badge>
+          <h2 className="text-3xl font-semibold text-foreground md:text-4xl">
+            Purpose-built journeys for every hostel role
+          </h2>
+          <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
+            Hostelia aligns every stakeholder around the same operational
+            truth. Students get clarity, wardens get focus, and admins get
+            governance—without the ping-pong of calls or spreadsheets.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
         </div>
       </div>
     </section>
