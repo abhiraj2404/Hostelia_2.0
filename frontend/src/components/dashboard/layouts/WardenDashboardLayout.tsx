@@ -40,9 +40,9 @@ import {
 } from "@/features/users";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { cn } from "@/lib/utils";
-import { sortByNameCaseInsensitive } from "@/utils/sorting";
 import type { DetailedTab } from "@/types/dashboard";
 import type { Student, UserManagementFilters } from "@/types/users";
+import { sortByNameCaseInsensitive } from "@/utils/sorting";
 import {
   Bell,
   DollarSign,
@@ -293,14 +293,14 @@ export function WardenDashboardLayout() {
           <p className="text-muted-foreground">Manage your hostel operations</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button
-              variant="default"
-              onClick={() => navigate("/users")}
-              className="gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Manage Users
-            </Button>
+          <Button
+            variant="default"
+            onClick={() => navigate("/users")}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Manage Users
+          </Button>
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw
               className={cn("mr-2 h-4 w-4", loading && "animate-spin")}

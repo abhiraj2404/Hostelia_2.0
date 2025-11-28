@@ -165,12 +165,12 @@ function ComplaintDetailPage() {
   return (
     <>
       <div className="min-h-screen bg-background p-6 md:p-8">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-7xl overflow-hidden">
           <ComplaintDetailHeader complaint={selected} backPath={backPath} />
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_400px]">
             {/* Main Content */}
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6 overflow-hidden">
               <ComplaintSummaryCard
                 complaint={selected}
                 onOpenImage={() => setViewerOpen(true)}
