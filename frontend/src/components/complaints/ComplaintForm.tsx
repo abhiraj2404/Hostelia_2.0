@@ -1,5 +1,3 @@
-import type { ChangeEvent, FormEvent } from "react";
-import { Controller, type UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { ChangeEvent, FormEvent } from "react";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { complaintCategoryOptions } from "./complaintConstants";
 import type { ComplaintFormInput } from "./types";
 
@@ -178,7 +178,9 @@ export function ComplaintForm({
               )}
             />
             {errors.roomNo && (
-              <p className="text-sm text-destructive">{errors.roomNo.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.roomNo.message}
+              </p>
             )}
             <p className="text-xs text-muted-foreground">
               Room number comes from your registered profile.
@@ -223,4 +225,3 @@ export function ComplaintForm({
     </Card>
   );
 }
-

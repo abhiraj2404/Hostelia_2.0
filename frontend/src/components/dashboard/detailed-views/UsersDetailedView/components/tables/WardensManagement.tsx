@@ -302,7 +302,7 @@ export function WardensManagement({
 
       {/* Pagination */}
       {pagination && filteredWardens.length > 0 && (
-        <div className="flex items-center justify-between px-2 pt-4 mt-auto">
+        <div className="flex items-center justify-between border-t px-4 py-4">
           <div className="text-sm text-muted-foreground">
             Showing {(currentPage - 1) * pagination.limit + 1} to{" "}
             {Math.min(currentPage * pagination.limit, filteredWardens.length)}{" "}

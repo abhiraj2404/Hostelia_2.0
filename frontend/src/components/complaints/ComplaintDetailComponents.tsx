@@ -30,22 +30,32 @@ export function ComplaintDetailHeader({
   backPath,
 }: ComplaintDetailHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div>
+    <div className="flex w-full flex-col gap-4 overflow-hidden md:flex-row md:items-center md:justify-between">
+      <div className="min-w-0 flex-1 overflow-hidden">
         <Link
           to={backPath}
           className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Back to complaints
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold text-foreground">
-          {complaint.problemTitle}
-        </h1>
+        <div className="mt-3 w-full max-w-full overflow-hidden">
+          <h1
+            className="wrap-break-word text-3xl font-semibold text-foreground"
+            style={{
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+              hyphens: "auto",
+              maxWidth: "100%",
+            }}
+          >
+            {complaint.problemTitle}
+          </h1>
+        </div>
         <p className="text-sm text-muted-foreground">
           Room {complaint.roomNo} · {complaint.hostel} · {complaint.category}
         </p>
       </div>
-      <div className="flex flex-col items-end gap-2">
+      <div className="flex shrink-0 flex-col items-end gap-2">
         <ComplaintStatusBadge status={complaint.status} />
         <ComplaintStudentStatusBadge
           studentStatus={complaint.studentStatus}
@@ -82,24 +92,28 @@ export function ComplaintSummaryCard({
   }, [complaint.studentId]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Complaint summary</CardTitle>
-        <CardDescription>
+    <Card className="overflow-hidden">
+      <CardHeader className="overflow-hidden">
+        <CardTitle className="wrap-break-word">Complaint summary</CardTitle>
+        <CardDescription className="wrap-break-word">
           Detailed view of the problem and supporting information.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 text-sm text-muted-foreground">
+      <CardContent className="space-y-4 overflow-hidden text-sm text-muted-foreground">
         {showSubmittedBy && studentData && (
-          <div className="rounded-lg bg-muted/30 p-3 text-xs">
+          <div className="overflow-hidden rounded-lg bg-muted/30 p-3 text-xs">
             <span className="font-medium text-foreground">Submitted by:</span>{" "}
-            <span className="text-foreground">
+            <span className="wrap-break-word text-foreground">
               {studentData.name}
               {studentData.rollNo && ` (Roll No: ${studentData.rollNo})`}
             </span>
           </div>
         )}
-        <p className="leading-relaxed">{complaint.problemDescription}</p>
+        <div className="max-w-full overflow-hidden">
+          <p className="wrap-break-word leading-relaxed whitespace-pre-wrap">
+            {complaint.problemDescription}
+          </p>
+        </div>
         {complaint.problemImage && (
           <div>
             <Label className="mb-2 block text-xs uppercase tracking-widest text-muted-foreground">
@@ -307,14 +321,14 @@ export function ComplaintConversationCard({
   }, [complaint.comments]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Conversation</CardTitle>
-        <CardDescription>
+    <Card className="overflow-hidden">
+      <CardHeader className="overflow-hidden">
+        <CardTitle className="wrap-break-word">Conversation</CardTitle>
+        <CardDescription className="wrap-break-word">
           All updates between you and the hostel staff.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 overflow-hidden">
         {complaint.comments.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No messages yet. Use the form below to add context or provide
@@ -347,21 +361,23 @@ export function ComplaintConversationCard({
                 return (
                   <div
                     key={`${comment.createdAt}-${index}`}
-                    className="rounded-lg border border-border/60 bg-background p-4"
+                    className="overflow-hidden rounded-lg border border-border/60 bg-background p-4"
                   >
                     <div className="flex flex-col gap-1 text-xs md:flex-row md:items-center md:justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-semibold text-foreground">
+                      <div className="min-w-0 flex items-center gap-2 overflow-hidden">
+                        <span className="max-w-full truncate text-base font-semibold text-foreground">
                           {displayName}
                         </span>
                       </div>
-                      <span className="text-muted-foreground">
+                      <span className="shrink-0 text-muted-foreground">
                         {formatComplaintDate(comment.createdAt)}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-foreground leading-relaxed">
-                      {comment.message}
-                    </p>
+                    <div className="mt-2 max-w-full overflow-hidden">
+                      <p className="wrap-break-word text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                        {comment.message}
+                      </p>
+                    </div>
                   </div>
                 );
               })}
