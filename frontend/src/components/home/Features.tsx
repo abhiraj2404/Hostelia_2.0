@@ -6,13 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ShieldCheck, Sparkles, Users2, Workflow } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
-import {
-  ShieldCheck,
-  Sparkles,
-  Users2,
-  Workflow,
-} from "lucide-react";
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -39,12 +34,12 @@ const features = [
   },
   {
     title: "Admin Command",
-    description: "Complete oversight across all hostels.",
+    description: "Complete oversight over all hostels and students.",
     icon: ShieldCheck,
     bullets: [
-      "Role-based access and digital audit trails",
-      "Fee verification and user management",
-      "Cross-hostel analytics and reporting",
+      "Role-based access control and comprehensive digital audit trails",
+      "Fee verification processes and centralized user management",
+      "Cross-hostel analytics dashboard and detailed reporting",
     ],
   },
 ];
@@ -70,9 +65,9 @@ const FeatureCard = ({
     </CardHeader>
     <CardContent className="space-y-3 text-sm text-muted-foreground">
       {bullets.map((bullet) => (
-        <div key={bullet} className="flex gap-2">
+        <div key={bullet} className="flex gap-2 min-h-10">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p>{bullet}</p>
+          <p className="leading-relaxed">{bullet}</p>
         </div>
       ))}
     </CardContent>
@@ -95,8 +90,8 @@ function Features() {
             Purpose-built journeys for every hostel role
           </h2>
           <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
-            Hostelia aligns every stakeholder around the same operational
-            truth. Students get clarity, wardens get focus, and admins get
+            Hostelia aligns every stakeholder around the same operational truth.
+            Students get clarity, wardens get focus, and admins get
             governance—without the ping-pong of calls or spreadsheets.
           </p>
         </div>

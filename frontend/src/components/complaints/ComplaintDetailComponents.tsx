@@ -48,8 +48,8 @@ export function ComplaintDetailHeader({
               maxWidth: "100%",
             }}
           >
-            {complaint.problemTitle}
-          </h1>
+          {complaint.problemTitle}
+        </h1>
         </div>
         <p className="text-sm text-muted-foreground">
           Room {complaint.roomNo} · {complaint.hostel} · {complaint.category}
@@ -124,11 +124,11 @@ export function ComplaintSummaryCard({
               onClick={onOpenImage}
               className="group relative block w-full overflow-hidden rounded-lg border border-border"
             >
-              <img
-                src={complaint.problemImage}
-                alt={complaint.problemTitle ?? "Complaint evidence"}
+                <img
+                  src={complaint.problemImage}
+                  alt={complaint.problemTitle ?? "Complaint evidence"}
                 className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+                />
               <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                 Click to enlarge
               </span>
@@ -375,8 +375,8 @@ export function ComplaintConversationCard({
                     </div>
                     <div className="mt-2 max-w-full overflow-hidden">
                       <p className="wrap-break-word text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                        {comment.message}
-                      </p>
+                      {comment.message}
+                    </p>
                     </div>
                   </div>
                 );
@@ -454,11 +454,11 @@ export function ComplaintImageViewer({
         onClick={onClose}
       />
       <div className="relative z-10 max-h-full max-w-5xl space-y-4">
-        <img
-          src={image}
-          alt={title ?? "Complaint evidence enlarged view"}
+          <img
+            src={image}
+            alt={title ?? "Complaint evidence enlarged view"}
           className="max-h-[70vh] w-full rounded-lg object-contain"
-        />
+          />
         <div className="flex justify-end">
           <Button variant="secondary" onClick={onClose}>
             Close
