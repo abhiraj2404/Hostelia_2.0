@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { fetchComplaints } from "@/features/complaints/complaintsSlice";
+import apiClient from "@/lib/api-client";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,23 +16,7 @@ import {
   Workflow,
 } from "lucide-react";
 
-const metrics = [
-  {
-    label: "Complaint tracking",
-    value: "Real-time",
-    detail: "Live status updates across all hostels",
-  },
-  {
-    label: "Fee management",
-    value: "Complete",
-    detail: "Hostel and mess fee submission tracking",
-  },
-  {
-    label: "Service coverage",
-    value: "4 hostels",
-    detail: "BH-1, BH-2, BH-3, and BH-4 support",
-  },
-];
+// Metrics will be calculated dynamically
 
 const lifecycle = [
   {
@@ -52,11 +37,96 @@ function Hero() {
   const dispatch = useAppDispatch();
   const { items: complaints } = useAppSelector((state) => state.complaints);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const [metrics, setMetrics] = useState([
+    {
+      label: "Resolution rate",
+      value: "0%",
+      detail: "Calculating...",
+    },
+    {
+      label: "Total students",
+      value: "0",
+      detail: "Loading...",
+    },
+    {
+      label: "Mess rating",
+      value: "0.0/5",
+      detail: "Loading...",
+    },
+  ]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch complaints for live tracking
     dispatch(fetchComplaints(undefined));
   }, [dispatch]);
+
+  useEffect(() => {
+    // Fetch real-time metrics
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+        const [studentsRes, messRes] = await Promise.all([
+          apiClient.get("/user/students/all").catch(() => ({ data: { students: [], count: 0 } })),
+          apiClient.get("/mess/feedback").catch(() => ({ data: { feedbacks: [] } })),
+        ]);
+
+        // Calculate resolution rate from complaints
+        const totalComplaints = complaints.length;
+        const resolvedComplaints = complaints.filter(
+          (c) => c.status === "Resolved" || c.status === "ToBeConfirmed"
+        ).length;
+        const resolutionRate =
+          totalComplaints > 0
+            ? Math.round((resolvedComplaints / totalComplaints) * 100)
+            : 0;
+
+        // Get student count
+        const studentCount =
+          studentsRes.data?.count || studentsRes.data?.students?.length || 0;
+
+        // Calculate average mess rating
+        const feedbacks = messRes.data?.feedbacks || [];
+        const avgRating =
+          feedbacks.length > 0
+            ? feedbacks.reduce(
+                (sum: number, f: { rating: number }) => sum + f.rating,
+                0
+              ) / feedbacks.length
+            : 0;
+
+        setMetrics([
+          {
+            label: "Resolution rate",
+            value: `${resolutionRate}%`,
+            detail:
+              totalComplaints > 0
+                ? `${resolvedComplaints} of ${totalComplaints} complaints resolved`
+                : "No complaints tracked yet",
+          },
+          {
+            label: "Total students",
+            value: studentCount.toString(),
+            detail: `Registered across all hostels`,
+          },
+          {
+            label: "Mess rating",
+            value: avgRating > 0 ? `${avgRating.toFixed(1)}/5` : "N/A",
+            detail:
+              feedbacks.length > 0
+                ? `Based on ${feedbacks.length} feedback${feedbacks.length !== 1 ? "s" : ""}`
+                : "No feedback submitted yet",
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, [complaints]);
 
   // Calculate real complaint statistics
   const pendingCount = complaints.filter((c) => c.status === "Pending").length;
