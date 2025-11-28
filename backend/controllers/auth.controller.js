@@ -56,11 +56,11 @@ const signupSchema = z.object({
     .string()
     .regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
   email: emailSchema,
-  hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"], {
+  hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ], {
     errorMap: () => ({ message: "Invalid hostel selection" }),
   }),
   roomNo: z.string().min(1, "Room number is required"),
-  year: z.enum(["UG-1", "UG-2", "UG-3", "UG-4"], {
+  year: z.enum([ "UG-1", "UG-2", "UG-3", "UG-4" ], {
     errorMap: () => ({ message: "Invalid year selection" }),
   }),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -69,6 +69,7 @@ const signupSchema = z.object({
 const generateOTPSchema = z.object({
   email: emailSchema,
   name: z.string(),
+  rollNo: z.string().regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
 });
 
 const verifyOTPSchema = z.object({
@@ -78,9 +79,9 @@ const verifyOTPSchema = z.object({
     .object({
       name: z.string().min(1),
       rollNo: z.string().regex(/^[0-9]{3}$/),
-      hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"]),
+      hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),
       roomNo: z.string().min(1),
-      year: z.enum(["UG-1", "UG-2", "UG-3", "UG-4"]),
+      year: z.enum([ "UG-1", "UG-2", "UG-3", "UG-4" ]),
       password: z.string().min(6),
     })
     .optional(),
@@ -101,14 +102,23 @@ export const generateOTP = async (req, res) => {
       });
     }
 
-    const { email, name } = validationResult.data;
+    const { email, name, rollNo } = validationResult.data;
 
     // Check if email is already registered
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingUserByEmail = await User.findOne({ email });
+    if (existingUserByEmail) {
       return res.status(400).json({
         success: false,
         message: "User already exists with this email",
+      });
+    }
+
+    // Check if roll number is already registered
+    const existingUserByRollNo = await User.findOne({ rollNo });
+    if (existingUserByRollNo) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this roll number",
       });
     }
 
@@ -173,9 +183,8 @@ export const verifyOTP = async (req, res) => {
 
     const { email, otp, userData } = validationResult.data;
 
-    // Find the OTP record
-    const otpRecord = await OTP.findOne({ email });
-
+    // Find the latest OTP record for this email
+    const otpRecord = await OTP.findOne({ email }).sort({ createdAt: -1 });
     if (!otpRecord) {
       return res.status(400).json({
         success: false,
@@ -198,12 +207,21 @@ export const verifyOTP = async (req, res) => {
     if (userData) {
       const { name, rollNo, hostel, roomNo, year, password } = userData;
 
-      // Check for existing user
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
+      // Check for existing user by email
+      const existingUserByEmail = await User.findOne({ email });
+      if (existingUserByEmail) {
         return res.status(400).json({
           success: false,
           message: "User already exists with this email",
+        });
+      }
+
+      // Check for existing user by roll number
+      const existingUserByRollNo = await User.findOne({ rollNo });
+      if (existingUserByRollNo) {
+        return res.status(400).json({
+          success: false,
+          message: "User already exists with this roll number",
         });
       }
 
@@ -305,12 +323,21 @@ export const signup = async (req, res) => {
       });
     }
 
-    // Check for existing user
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Check for existing user by email
+    const existingUserByEmail = await User.findOne({ email });
+    if (existingUserByEmail) {
       return res.status(400).json({
         success: false,
         message: "User already exists with this email",
+      });
+    }
+
+    // Check for existing user by roll number
+    const existingUserByRollNo = await User.findOne({ rollNo });
+    if (existingUserByRollNo) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this roll number",
       });
     }
 
