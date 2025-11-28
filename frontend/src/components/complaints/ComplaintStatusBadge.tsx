@@ -26,11 +26,11 @@ export function ComplaintStatusBadge({ status }: ComplaintStatusBadgeProps) {
   const getHoverClass = () => {
     switch (status) {
       case "Resolved":
-        return "hover:bg-green-100 dark:hover:bg-green-900/30";
+        return "text-green-600 border-grey-800 hover:bg-green-100 dark:hover:bg-green-900/30";
       case "Rejected":
-        return "hover:bg-red-100 dark:hover:bg-red-900/30";
+        return "text-red-600 border-red-600 hover:bg-red-100 dark:hover:bg-red-900/30";
       case "Pending":
-        return "hover:bg-amber-100 dark:hover:bg-amber-900/30";
+        return "text-amber-600 border-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30";
       case "ToBeConfirmed":
         return "hover:bg-purple-100 dark:hover:bg-purple-900/30";
       default:

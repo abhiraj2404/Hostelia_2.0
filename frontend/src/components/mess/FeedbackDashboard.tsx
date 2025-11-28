@@ -633,9 +633,9 @@ export function FeedbackDashboard() {
                             {feedback.user.hostel}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-xs">
+                        <TableCell className="max-w-md">
                           {feedback.comment ? (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
+                            <p className="text-sm text-muted-foreground break-words whitespace-normal">
                               {feedback.comment}
                             </p>
                           ) : (
