@@ -30,7 +30,7 @@ export function ComplaintDetailHeader({
   backPath,
 }: ComplaintDetailHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 overflow-hidden md:flex-row md:items-center md:justify-between">
+    <div className="flex w-full flex-col gap-4 overflow-hidden md:flex-row md:items-center md:justify-between">
       <div className="min-w-0 flex-1 overflow-hidden">
         <Link
           to={backPath}
@@ -38,14 +38,24 @@ export function ComplaintDetailHeader({
         >
           ← Back to complaints
         </Link>
-        <h1 className="mt-3 max-w-full wrap-break-word text-3xl font-semibold text-foreground">
-          {complaint.problemTitle}
-        </h1>
+        <div className="mt-3 w-full max-w-full overflow-hidden">
+          <h1
+            className="wrap-break-word text-3xl font-semibold text-foreground"
+            style={{
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
+              hyphens: "auto",
+              maxWidth: "100%",
+            }}
+          >
+            {complaint.problemTitle}
+          </h1>
+        </div>
         <p className="text-sm text-muted-foreground">
           Room {complaint.roomNo} · {complaint.hostel} · {complaint.category}
         </p>
       </div>
-      <div className="flex flex-col items-end gap-2 shrink-0">
+      <div className="flex shrink-0 flex-col items-end gap-2">
         <ComplaintStatusBadge status={complaint.status} />
         <ComplaintStudentStatusBadge
           studentStatus={complaint.studentStatus}
