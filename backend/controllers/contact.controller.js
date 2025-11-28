@@ -14,7 +14,7 @@ const contactSchema = z.object({
         .min(3, "Subject must be at least 3 characters")
         .max(200)
         .optional(),
-    message: z.string().trim().min(10, "Message must be at least 10 characters").max(2000),
+    message: z.string().trim().min(1, "Message must be at least 1 characters").max(200),
 });
 
 export async function submitContactMessage(req, res) {
