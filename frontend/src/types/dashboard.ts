@@ -132,7 +132,7 @@ export interface MessMenu {
 }
 
 // Detailed View Types
-export type DetailedTab = "complaints" | "students" | "fees" | "mess" | "users";
+export type DetailedTab = "complaints" | "students" | "fees" | "mess" | "users" | "wardens";
 
 export interface PaginationState {
   page: number;
@@ -164,3 +164,20 @@ export interface MessFilters {
   mealType?: string;
   dateRange?: string;
 }
+
+export interface WardenFilters {
+  hostel?: string;
+  query?: string;
+}
+
+// Warden type (for dashboard detailed view)
+export interface Warden {
+  _id: string;
+  name: string;
+  email: string;
+  hostel: string;
+  role: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+

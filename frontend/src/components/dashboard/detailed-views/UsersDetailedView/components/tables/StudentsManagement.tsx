@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/table";
 import type { Student, UserManagementFilters } from "@/types/users";
 import { sortByNameCaseInsensitive } from "@/utils/sorting";
-import { ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Eye, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserDeleteDialog } from "../dialogs/UserDeleteDialog";
 import { UserEditDialog } from "../dialogs/UserEditDialog";
 
@@ -55,6 +56,7 @@ export function StudentsManagement({
   updateLoading = {},
   deleteLoading = {},
 }: StudentsManagementProps) {
+  const navigate = useNavigate();
   const [editingUser, setEditingUser] = useState<Student | null>(null);
   const [deletingUser, setDeletingUser] = useState<Student | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -240,6 +242,14 @@ export function StudentsManagement({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/student/${student._id}`)}
+                          title="View student details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
