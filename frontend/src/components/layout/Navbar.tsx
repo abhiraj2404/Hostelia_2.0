@@ -18,6 +18,7 @@ import {
   MessageCircle,
   SquarePen,
   UserCircle2,
+  Info
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -64,6 +65,21 @@ export function Navbar() {
       </div>
       <div className="flex flex-1 items-center justify-end gap-2 px-4 md:px-6">
         {/* Show Contact link only when not logged in */}
+        {!isAuthenticated && (
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground"
+              }`
+            }
+          >
+            <Info className="h-4 w-4" />
+            <span className="hidden sm:inline">About</span>
+          </NavLink>
+        )}
         {!isAuthenticated && (
           <NavLink
             to="/contact"
