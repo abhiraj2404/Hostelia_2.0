@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText, Users, DollarSign, Utensils, UserCog } from "lucide-react";
+import { RefreshCw, FileText, Users, DollarSign, Utensils, UserCog, Shield } from "lucide-react";
 import type { DetailedTab } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ interface DetailedViewPanelProps {
   loading?: boolean;
   children: React.ReactNode;
   showUsersTab?: boolean;
+  showWardensTab?: boolean;
 }
 
 export function DetailedViewPanel({
@@ -20,9 +21,11 @@ export function DetailedViewPanel({
   loading = false,
   children,
   showUsersTab = false,
+  showWardensTab = false,
 }: DetailedViewPanelProps) {
   const tabs = [
     { id: 'students' as DetailedTab, label: 'Students', icon: Users },
+    ...(showWardensTab ? [{ id: 'wardens' as DetailedTab, label: 'Wardens', icon: Shield }] : []),
     { id: 'complaints' as DetailedTab, label: 'Complaints', icon: FileText },
     { id: 'fees' as DetailedTab, label: 'Fees', icon: DollarSign },
     { id: 'mess' as DetailedTab, label: 'Mess Feedback', icon: Utensils },

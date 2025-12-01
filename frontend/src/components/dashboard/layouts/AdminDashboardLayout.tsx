@@ -3,6 +3,7 @@ import { DetailedViewPanel } from "@/components/dashboard/detailed-views/Detaile
 import { FeesStatsView } from "@/components/dashboard/detailed-views/FeesDetailedView/FeesStatsView";
 import { MessStatsView } from "@/components/dashboard/detailed-views/MessDetailedView/MessStatsView";
 import { StudentsStatsView } from "@/components/dashboard/detailed-views/StudentsDetailedView/StudentsStatsView";
+import { WardensStatsView } from "@/components/dashboard/detailed-views/WardensDetailedView";
 import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView";
 import { AdminMetrics } from "@/components/dashboard/metrics/AdminMetrics";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
@@ -14,6 +15,7 @@ import {
   fetchDetailedFees,
   fetchDetailedMessFeedback,
   fetchDetailedStudents,
+  fetchDetailedWardens,
   selectDashboardMetrics,
   selectDashboardState,
   selectDetailedComplaints,
@@ -21,6 +23,7 @@ import {
   selectDetailedMessFeedback,
   selectDetailedStudents,
   selectDetailedView,
+  selectDetailedWardens,
   setActiveTab,
   setComplaintsFilters,
   setDetailedViewExpanded,
@@ -28,6 +31,8 @@ import {
   setMessFilters,
   setStudentsFilters,
   setStudentsPage,
+  setWardensFilters,
+  setWardensPage,
   toggleDetailedView,
 } from "@/features/dashboard/dashboardSlice";
 import {
@@ -38,8 +43,8 @@ import {
   selectUsersState,
   setStudentsFilters as setUsersStudentsFilters,
   setStudentsPage as setUsersStudentsPage,
-  setWardensFilters,
-  setWardensPage,
+  setWardensFilters as setUsersWardensFilters,
+  setWardensPage as setUsersWardensPage,
   updateUser,
 } from "@/features/users";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -98,6 +103,7 @@ export function AdminDashboardLayout() {
   const studentsState = useAppSelector(selectDetailedStudents);
   const feesState = useAppSelector(selectDetailedFees);
   const messState = useAppSelector(selectDetailedMessFeedback);
+  const wardensState = useAppSelector(selectDetailedWardens);
   const usersState = useAppSelector(selectUsersState);
 
   // Fetch initial dashboard data (all hostels)
@@ -110,6 +116,8 @@ export function AdminDashboardLayout() {
     // Fetch users data for user management tab
     dispatch(fetchStudents());
     dispatch(fetchWardens());
+    // Fetch wardens data for wardens tab
+    dispatch(fetchDetailedWardens({ page: 1 }));
   }, [dispatch]);
 
   // Handle tab change
@@ -155,9 +163,13 @@ export function AdminDashboardLayout() {
           })
         );
         break;
-      case "users":
-        dispatch(fetchStudents());
-        dispatch(fetchWardens());
+      case "wardens":
+        dispatch(
+          fetchDetailedWardens({
+            page: wardensState.pagination.page,
+            filters: wardensState.filters,
+          })
+        );
         break;
     }
   };
@@ -205,9 +217,13 @@ export function AdminDashboardLayout() {
           })
         );
         break;
-      case "users":
-        dispatch(fetchStudents());
-        dispatch(fetchWardens());
+      case "wardens":
+        dispatch(
+          fetchDetailedWardens({
+            page: wardensState.pagination.page,
+            filters: wardensState.filters,
+          })
+        );
         break;
     }
   };
@@ -327,6 +343,39 @@ export function AdminDashboardLayout() {
     return filteredStudents.slice(startIndex, startIndex + limit);
   }, [filteredStudents, studentsState.pagination]);
 
+  // Client-side filtering and pagination for wardens
+  const filteredWardens = useMemo(() => {
+    let result = [...wardensState.items];
+
+    // Filter by Hostel
+    if (
+      wardensState.filters.hostel &&
+      wardensState.filters.hostel !== "all"
+    ) {
+      result = result.filter((w) => w.hostel === wardensState.filters.hostel);
+    }
+
+    // Filter by Search
+    if (wardensState.filters.query) {
+      const query = wardensState.filters.query.toLowerCase();
+      result = result.filter(
+        (w) =>
+          w.name.toLowerCase().includes(query) ||
+          w.email.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort case-insensitively by name
+    return sortByNameCaseInsensitive(result);
+  }, [wardensState.items, wardensState.filters]);
+
+  const paginatedWardens = useMemo(() => {
+    const page = wardensState.pagination.page;
+    const limit = wardensState.pagination.limit;
+    const startIndex = (page - 1) * limit;
+    return filteredWardens.slice(startIndex, startIndex + limit);
+  }, [filteredWardens, wardensState.pagination]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -392,6 +441,8 @@ export function AdminDashboardLayout() {
               onTabChange={handleTabChange}
               onRefresh={handleRefresh}
               loading={loading}
+              showUsersTab={false}
+              showWardensTab={true}
             >
               {detailedView.activeTab === "complaints" && (
                 <ComplaintsStatsView
@@ -482,6 +533,24 @@ export function AdminDashboardLayout() {
                   updateLoading={usersState.updateLoading}
                   deleteLoading={usersState.deleteLoading}
                   createWardenLoading={usersState.createWardenLoading}
+                />
+              )}
+
+              {detailedView.activeTab === "wardens" && (
+                <WardensStatsView
+                  wardens={paginatedWardens}
+                  filters={wardensState.filters}
+                  onFiltersChange={(filters) => {
+                    dispatch(setWardensFilters(filters));
+                  }}
+                  loading={wardensState.loading}
+                  pagination={{
+                    ...wardensState.pagination,
+                    total: filteredWardens.length,
+                  }}
+                  onPageChange={(page) => {
+                    dispatch(setWardensPage(page));
+                  }}
                 />
               )}
             </DetailedViewPanel>

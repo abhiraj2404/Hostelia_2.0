@@ -13,6 +13,8 @@ import type {
   PaginationState,
   Student,
   StudentsFilters,
+  Warden,
+  WardenFilters,
 } from "@/types/dashboard";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
@@ -75,6 +77,13 @@ interface DashboardState {
     loading: boolean;
   };
 
+  detailedWardens: {
+    items: Warden[];
+    filters: WardenFilters;
+    pagination: PaginationState;
+    loading: boolean;
+  };
+
   loading: boolean;
   error: string | null;
 }
@@ -115,6 +124,13 @@ const initialState: DashboardState = {
     items: [],
     filters: {},
     pagination: { page: 1, limit: 20, total: 0 },
+    loading: false,
+  },
+
+  detailedWardens: {
+    items: [],
+    filters: {},
+    pagination: { page: 1, limit: 10, total: 0 },
     loading: false,
   },
 
@@ -501,6 +517,47 @@ export const fetchDetailedMessFeedback = createAsyncThunk(
   }
 );
 
+export const fetchDetailedWardens = createAsyncThunk(
+  "dashboard/fetchDetailedWardens",
+  async (
+    params: { page?: number; filters?: WardenFilters },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { page = 1, filters = {} } = params;
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+        ...(filters.hostel &&
+          filters.hostel !== "all" && { hostel: filters.hostel }),
+        ...(filters.query && { search: filters.query }),
+      });
+
+      const queryString = queryParams.toString();
+      const res = await apiClient.get(
+        `/user/wardens/all${queryString ? "?" + queryString : ""}`
+      );
+      const wardens = res.data.wardens || [];
+
+      console.log("[Wardens] Fetched:", {
+        count: wardens.length,
+        page,
+        filters,
+      });
+
+      return {
+        items: wardens,
+        total: res.data.count || wardens.length,
+      };
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      return rejectWithValue(
+        axiosError.response?.data?.message || "Failed to fetch wardens"
+      );
+    }
+  }
+);
+
 // Slice
 const dashboardSlice = createSlice({
   name: "dashboard",
@@ -534,6 +591,10 @@ const dashboardSlice = createSlice({
       state.detailedMessFeedback.filters = action.payload;
       state.detailedMessFeedback.pagination.page = 1;
     },
+    setWardensFilters: (state, action: PayloadAction<WardenFilters>) => {
+      state.detailedWardens.filters = action.payload;
+      state.detailedWardens.pagination.page = 1;
+    },
     setComplaintsPage: (state, action: PayloadAction<number>) => {
       state.detailedComplaints.pagination.page = action.payload;
     },
@@ -545,6 +606,9 @@ const dashboardSlice = createSlice({
     },
     setMessPage: (state, action: PayloadAction<number>) => {
       state.detailedMessFeedback.pagination.page = action.payload;
+    },
+    setWardensPage: (state, action: PayloadAction<number>) => {
+      state.detailedWardens.pagination.page = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -671,6 +735,19 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDetailedMessFeedback.rejected, (state) => {
         state.detailedMessFeedback.loading = false;
+      })
+
+      // Detailed Wardens
+      .addCase(fetchDetailedWardens.pending, (state) => {
+        state.detailedWardens.loading = true;
+      })
+      .addCase(fetchDetailedWardens.fulfilled, (state, action) => {
+        state.detailedWardens.loading = false;
+        state.detailedWardens.items = action.payload.items;
+        state.detailedWardens.pagination.total = action.payload.total;
+      })
+      .addCase(fetchDetailedWardens.rejected, (state) => {
+        state.detailedWardens.loading = false;
       });
   },
 });
@@ -684,10 +761,12 @@ export const {
   setStudentsFilters,
   setFeesFilters,
   setMessFilters,
+  setWardensFilters,
   setComplaintsPage,
   setStudentsPage,
   setFeesPage,
   setMessPage,
+  setWardensPage,
 } = dashboardSlice.actions;
 
 // Selectors
@@ -709,5 +788,7 @@ export const selectDetailedFees = (state: RootState) =>
   state.dashboard.detailedFees;
 export const selectDetailedMessFeedback = (state: RootState) =>
   state.dashboard.detailedMessFeedback;
+export const selectDetailedWardens = (state: RootState) =>
+  state.dashboard.detailedWardens;
 
 export default dashboardSlice.reducer;
