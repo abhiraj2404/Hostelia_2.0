@@ -43,8 +43,6 @@ import {
   selectUsersState,
   setStudentsFilters as setUsersStudentsFilters,
   setStudentsPage as setUsersStudentsPage,
-  setWardensFilters as setUsersWardensFilters,
-  setWardensPage as setUsersWardensPage,
   updateUser,
 } from "@/features/users";
 import { useAppDispatch, useAppSelector } from "@/hooks";
