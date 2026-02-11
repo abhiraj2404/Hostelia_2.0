@@ -377,6 +377,7 @@ const complaintsSlice = createSlice({
 });
 
 export const { setFilters, clearSelected, clearError } = complaintsSlice.actions;
+export const { setFilters, clearSelected, clearError } = complaintsSlice.actions;
 
 export const selectComplaintsState = (state: RootState) => state.complaints;
 export const selectComplaints = (state: RootState) => state.complaints.items;
