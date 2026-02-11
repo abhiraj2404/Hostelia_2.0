@@ -280,7 +280,7 @@ const complaintsSlice = createSlice({
       state.selected = null;
       state.detailStatus = "idle";
     },
-    clearError(state) {
+    clearError(state) {//clean
       state.error = null;
     },
   },
