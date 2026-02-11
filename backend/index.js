@@ -46,6 +46,14 @@ connectDB()
 
         app.use("/api", apiRoutes);
 
+        app.use('*path', (req, res) => {
+            logger.error(`Path ${req.originalUrl} does not exist for ${req.method} method`)
+            res.status(404).json({
+                success: false,
+                message: `Path ${req.originalUrl} does not exist for ${req.method} method`,
+            });
+        });
+
         app.use((err, req, res, next) => {
             console.error(err);
 
