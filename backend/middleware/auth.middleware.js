@@ -13,6 +13,7 @@ export const authMiddleware = async (req, res, next) => {
     const token = req.cookies?.jwt;
 
     if (!token) {
+      logger.error("Unauthorized access");
       return res.status(401).json({
         success: false,
         message: "Unauthorized - No token provided",
