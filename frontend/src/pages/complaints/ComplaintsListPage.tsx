@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  clearError,
   fetchComplaints,
   selectComplaintsState,
   setFilters,
@@ -43,6 +44,12 @@ function ComplaintsListPage() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [page, setPage] = useState(1);
   const limit = 8;
+
+  // Clear error state and dismiss toasts on mount to prevent stale errors
+  useEffect(() => {
+    dispatch(clearError());
+    toast.dismiss();
+  }, [dispatch]);
 
   useEffect(() => {
     if (isAuthenticated) {

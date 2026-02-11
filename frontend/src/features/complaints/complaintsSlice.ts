@@ -280,6 +280,9 @@ const complaintsSlice = createSlice({
       state.selected = null;
       state.detailStatus = "idle";
     },
+    clearError(state) {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -373,7 +376,7 @@ const complaintsSlice = createSlice({
   },
 });
 
-export const { setFilters, clearSelected } = complaintsSlice.actions;
+export const { setFilters, clearSelected, clearError } = complaintsSlice.actions;
 
 export const selectComplaintsState = (state: RootState) => state.complaints;
 export const selectComplaints = (state: RootState) => state.complaints.items;
