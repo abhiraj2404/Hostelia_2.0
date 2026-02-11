@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Complaint } from "@/features/complaints/complaintsSlice";
 import {
   addComplaintComment,
+  clearError,
   fetchComplaintById,
   selectComplaintsState,
   updateComplaintStatus,
@@ -49,6 +50,12 @@ function ComplaintDetailPage() {
       message: "",
     },
   });
+
+  // Clear error state and dismiss toasts on mount to prevent stale errors
+  useEffect(() => {
+    dispatch(clearError());
+    toast.dismiss();
+  }, [dispatch]);
 
   useEffect(() => {
     if (id) {
