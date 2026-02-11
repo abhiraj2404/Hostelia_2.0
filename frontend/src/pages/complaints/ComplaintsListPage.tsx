@@ -24,6 +24,7 @@ import {
   fetchComplaints,
   selectComplaintsState,
   setFilters,
+  clearError,
 } from "@/features/complaints/complaintsSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,12 @@ function ComplaintsListPage() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [page, setPage] = useState(1);
   const limit = 8;
+
+  // Clear any previous errors and toasts on component mount
+  useEffect(() => {
+    dispatch(clearError());
+    toast.dismiss();
+  }, [dispatch]);
 
   useEffect(() => {
     if (isAuthenticated) {
