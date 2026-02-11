@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // import useForm from "react-hook-form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { authStart, loginSuccess, authFailure } from "@/features/auth/authSlice";
+import { authStart, loginSuccess, authFailure, clearError } from "@/features/auth/authSlice";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -33,6 +33,13 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string>("");
+
+  // Clear any previous errors when the component mounts
+  useEffect(() => {
+    dispatch(clearError());
+    setApiError("");
+    toast.dismiss(); // Dismiss any previous toast messages
+  }, [dispatch]);
 
   const {
     register,
