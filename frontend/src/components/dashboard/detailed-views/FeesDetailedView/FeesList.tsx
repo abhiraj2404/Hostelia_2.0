@@ -115,7 +115,7 @@ export function FeesList({
                         </TableCell>
                         {!isWarden && (
                           <TableCell>
-                            {emailToHostel[fee.studentEmail] || "N/A"}
+                            {(fee.hostelName ?? emailToHostel[fee.studentEmail]) || "N/A"}
                           </TableCell>
                         )}
                         <TableCell>

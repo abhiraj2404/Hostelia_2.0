@@ -39,6 +39,7 @@ interface UserEditDialogProps {
   user: User | null;
   onSave: (userId: string, data: Partial<UserFormData>) => Promise<void>;
   isLoading?: boolean;
+  wardenCounts?: Record<string, number>;
 }
 
 export function UserEditDialog({
@@ -47,6 +48,7 @@ export function UserEditDialog({
   user,
   onSave,
   isLoading = false,
+  wardenCounts: _wardenCounts,
 }: UserEditDialogProps) {
   const [messes, setMesses] = useState<Mess[]>([]);
   const [selectedMessId, setSelectedMessId] = useState<string>("unassigned");
@@ -223,11 +225,11 @@ export function UserEditDialog({
 
           {(isStudent || isWarden) && (
             <div className="space-y-2">
-              <Label htmlFor="hostelId">Hostel ID</Label>
+              <Label htmlFor="hostelId">Hostel</Label>
               <Input
                 id="hostelId"
                 {...register("hostelId")}
-                placeholder="Hostel ID"
+                placeholder="Hostel"
                 disabled
               />
               <p className="text-xs text-muted-foreground">

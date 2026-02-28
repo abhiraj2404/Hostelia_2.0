@@ -202,7 +202,7 @@ export function StudentsManagement({
                       {student.email}
                     </TableCell>
                     {!isWarden && (
-                      <TableCell>{student.hostelId || "N/A"}</TableCell>
+                      <TableCell>{(student.hostelName ?? student.hostelId) || "N/A"}</TableCell>
                     )}
                     <TableCell>
                       {student.messId ? (

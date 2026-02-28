@@ -53,7 +53,7 @@ export function WardensList({
                   <TableCell className="text-muted-foreground text-sm">
                     {warden.email}
                   </TableCell>
-                  <TableCell>{warden.hostel}</TableCell>
+                  <TableCell>{(warden.hostelName ?? warden.hostelId) || 'N/A'}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {formatDate(warden.createdAt)}
                   </TableCell>

@@ -94,7 +94,7 @@ export function ComplaintCard({ complaint, detailPath }: ComplaintCardProps) {
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
           <span>
-            {complaint.hostel} • Room {complaint.roomNo}
+            {(complaint.hostelName ?? complaint.hostelId) || 'N/A'} • Room {complaint.roomNo}
           </span>
         </div>
         <div className="flex items-center gap-2">

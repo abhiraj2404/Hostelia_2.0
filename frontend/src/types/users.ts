@@ -7,6 +7,7 @@ export interface User {
   role: "student" | "warden" | "collegeAdmin";
   rollNo?: string;
   hostelId?: string;
+  hostelName?: string | null;
   messId?: string | null;
   roomNo?: string;
   collegeId?: string;

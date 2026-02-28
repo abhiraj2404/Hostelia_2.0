@@ -79,13 +79,32 @@ export async function listTransitEntries(req, res) {
     try {
         const filter = await buildTransitFilter(req);
         const transitEntries = await Transit.find(filter)
-            .populate('studentId', 'name rollNo hostelId roomNo')
+            .populate({
+                path: 'studentId',
+                select: 'name rollNo hostelId roomNo',
+                populate: { path: 'hostelId', select: 'name' },
+            })
             .sort({ createdAt: -1 });
+        const entriesWithHostelName = transitEntries.map((e) => {
+            const plain = e.toObject ? e.toObject() : { ...e };
+            const sid = plain.studentId;
+            if (sid) {
+                plain.studentId = {
+                    _id: sid._id,
+                    name: sid.name,
+                    rollNo: sid.rollNo,
+                    roomNo: sid.roomNo,
+                    hostelId: sid.hostelId?._id?.toString() ?? sid.hostelId?.toString(),
+                    hostelName: sid.hostelId?.name ?? null,
+                };
+            }
+            return plain;
+        });
         logger.info('Transit entries fetched', { count: transitEntries.length });
         return res.status(200).json({
             success: true,
             message: 'Transit entries fetched',
-            transitEntries
+            transitEntries: entriesWithHostelName
         });
     } catch (err) {
         logger.error('Failed to list transit entries', { error: err.message });

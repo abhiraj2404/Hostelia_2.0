@@ -15,8 +15,8 @@ export function useEmailToHostelMapping() {
 
         const mapping: Record<string, string> = {};
         students.forEach((student) => {
-          if (student.email && student.hostel) {
-            mapping[student.email] = student.hostel;
+          if (student.email && student.hostelId) {
+            mapping[student.email] = student.hostelId;
           }
         });
 

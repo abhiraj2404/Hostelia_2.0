@@ -130,6 +130,7 @@ export const getAllStudents = async (req, res) => {
         // Find all students (with optional hostel filter for warden)
         const students = await User.find(filter)
             .select("-password")
+            .populate("hostelId", "name")
             .sort({ name: 1 });
 
         logger.info("Students retrieved", {
@@ -147,7 +148,8 @@ export const getAllStudents = async (req, res) => {
                 email: student.email,
                 role: student.role,
                 rollNo: student.rollNo,
-                hostelId: student.hostelId,
+                hostelId: student.hostelId?._id?.toString() ?? student.hostelId?.toString(),
+                hostelName: student.hostelId?.name ?? null,
                 roomNo: student.roomNo,
                 createdAt: student.createdAt,
                 updatedAt: student.updatedAt,
@@ -172,6 +174,7 @@ export const getAllWardens = async (req, res) => {
         // Find all wardens
         const wardens = await User.find({ role: "warden", collegeId: req.user.collegeId })
             .select("-password")
+            .populate("hostelId", "name")
             .sort({ hostelId: 1, name: 1 });
 
         logger.info("Wardens retrieved", {
@@ -187,7 +190,8 @@ export const getAllWardens = async (req, res) => {
                 name: warden.name,
                 email: warden.email,
                 role: warden.role,
-                hostelId: warden.hostelId,
+                hostelId: warden.hostelId?._id?.toString() ?? warden.hostelId?.toString(),
+                hostelName: warden.hostelId?.name ?? null,
                 createdAt: warden.createdAt,
                 updatedAt: warden.updatedAt,
             })),

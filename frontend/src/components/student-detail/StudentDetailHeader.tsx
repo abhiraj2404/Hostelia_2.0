@@ -52,7 +52,7 @@ export function StudentDetailHeader({ student }: StudentDetailHeaderProps) {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Hostel</p>
-              <p className="text-xl font-bold mt-1">{student.hostelId || 'N/A'}</p>
+              <p className="text-xl font-bold mt-1">{(student.hostelName ?? student.hostelId) || 'N/A'}</p>
             </div>
           </div>
 

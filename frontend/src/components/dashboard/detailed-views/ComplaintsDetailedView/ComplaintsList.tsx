@@ -72,7 +72,7 @@ export function ComplaintsList({
                         {complaint.problemTitle}
                       </TableCell>
                       <TableCell>{complaint.category}</TableCell>
-                      {!isWarden && <TableCell>{complaint.hostel || 'N/A'}</TableCell>}
+                      {!isWarden && <TableCell>{(complaint.hostelName ?? complaint.hostelId) || 'N/A'}</TableCell>}
                       <TableCell>
                         {complaint.roomNo || 'N/A'}
                       </TableCell>

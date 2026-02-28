@@ -51,6 +51,7 @@ export interface Student {
   email: string;
   rollNo?: string;
   hostelId: string;
+  hostelName?: string | null;
   roomNo: string;
   role: string;
   createdAt: string;
@@ -63,6 +64,7 @@ export interface FeeSubmission {
   studentId: string; // Not populated - just ObjectId
   studentName: string;
   studentEmail: string;
+  hostelName?: string | null;
   hostelFee: {
     status: "documentNotSubmitted" | "pending" | "approved" | "rejected";
     documentUrl?: string;
@@ -82,12 +84,22 @@ export interface FeeSubmission {
 // Mess Feedback
 export interface MessFeedback {
   _id: string;
-  studentId: {
+  studentId?: {
     _id: string;
     name: string;
     email?: string;
     rollNo?: string;
     hostelId?: string;
+    hostelName?: string | null;
+    roomNo?: string;
+  };
+  user?: {
+    _id: string;
+    name: string;
+    email?: string;
+    rollNo?: string;
+    hostelId?: string;
+    hostelName?: string | null;
     roomNo?: string;
   };
   day: string;
@@ -173,6 +185,7 @@ export interface Warden {
   name: string;
   email: string;
   hostelId: string;
+  hostelName?: string | null;
   role: string;
   createdAt: string;
   updatedAt?: string;

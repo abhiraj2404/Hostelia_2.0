@@ -11,8 +11,18 @@ import { notifyUsers } from "../utils/notificationService.js";
 export async function getFeeStatus(req, res) {
   try {
     const filter = await scopedFeeFilter(req);
-    const feeSubmissions = await FeeSubmission.find(filter).sort({
-      createdAt: -1,
+    const feeSubmissions = await FeeSubmission.find(filter)
+      .populate({
+        path: "studentId",
+        select: "hostelId",
+        populate: { path: "hostelId", select: "name" },
+      })
+      .sort({ createdAt: -1 });
+    const data = feeSubmissions.map((f) => {
+      const plain = f.toObject ? f.toObject() : { ...f };
+      plain.hostelName = f.studentId?.hostelId?.name ?? null;
+      plain.studentId = f.studentId?._id?.toString() ?? f.studentId?.toString();
+      return plain;
     });
     logger.info("Fee status fetched", {
       role: req.user.role,
@@ -21,7 +31,7 @@ export async function getFeeStatus(req, res) {
     return res.status(200).json({
       success: true,
       message: "Fee status fetched successfully",
-      data: feeSubmissions,
+      data,
     });
   } catch (err) {
     logger.error("Failed to fetch fee status", {

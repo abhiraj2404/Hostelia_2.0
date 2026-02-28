@@ -66,7 +66,7 @@ export function StudentsList({
                     {student.email}
                   </TableCell>
                   {!isWarden && (
-                    <TableCell>{student.hostelId || "N/A"}</TableCell>
+                    <TableCell>{(student.hostelName ?? student.hostelId) || "N/A"}</TableCell>
                   )}
                   <TableCell>{student.roomNo || "N/A"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">

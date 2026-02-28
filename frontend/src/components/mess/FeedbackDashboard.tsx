@@ -54,6 +54,7 @@ interface Feedback {
     email: string;
     rollNo: string;
     hostelId: string;
+    hostelName?: string | null;
     roomNo: string;
   };
   createdAt: string;
@@ -629,12 +630,12 @@ export function FeedbackDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="text-xs">
-                            {feedback.user.hostelId}
+                            {(feedback.user.hostelName ?? feedback.user.hostelId) || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-md">
                           {feedback.comment ? (
-                            <p className="text-sm text-muted-foreground break-words whitespace-normal">
+                            <p className="text-sm text-muted-foreground wrap-break-word whitespace-normal">
                               {feedback.comment}
                             </p>
                           ) : (

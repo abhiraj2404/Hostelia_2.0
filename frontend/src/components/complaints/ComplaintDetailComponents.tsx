@@ -52,7 +52,7 @@ export function ComplaintDetailHeader({
         </h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Room {complaint.roomNo} · {complaint.hostelId} · {complaint.category}
+          Room {complaint.roomNo} · {(complaint.hostelName ?? complaint.hostelId) || 'N/A'} · {complaint.category}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2">

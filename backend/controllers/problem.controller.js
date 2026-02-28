@@ -187,10 +187,18 @@ export async function listProblems(req, res) {
       }
     }
 
-    const problems = await Problem.find(filter).sort({ createdAt: -1 });
+    const problems = await Problem.find(filter)
+      .populate("hostelId", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+    const problemsWithHostelName = problems.map((p) => ({
+      ...p,
+      hostelId: p.hostelId?._id?.toString() ?? p.hostelId?.toString(),
+      hostelName: p.hostelId?.name ?? null,
+    }));
     return res
       .status(200)
-      .json({ success: true, message: "Problems fetched", problems });
+      .json({ success: true, message: "Problems fetched", problems: problemsWithHostelName });
   } catch (err) {
     logger.error("Failed to list problems", { error: err.message, filter });
     return res.status(500).json({

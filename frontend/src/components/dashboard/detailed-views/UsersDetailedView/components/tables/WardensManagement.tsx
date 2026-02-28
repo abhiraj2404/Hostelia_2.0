@@ -110,15 +110,11 @@ export function WardensManagement({
     return map;
   }, [hostelOptions]);
 
-  // Helper to get hostel display name
+  // Helper to get hostel display name (prefer backend hostelName)
   const getHostelName = (warden: Warden) => {
-    // If hostelId is populated (object with name), use that
-    const hid = warden.hostelId;
-    if (!hid) return "Unassigned";
-    // Check our map first
-    if (hostelNameMap[hid]) return hostelNameMap[hid];
-    // Fallback: hostelId might be the name itself (from populated response)
-    return hid;
+    if (warden.hostelName) return warden.hostelName;
+    if (!warden.hostelId) return "Unassigned";
+    return hostelNameMap[warden.hostelId] ?? warden.hostelId;
   };
 
   // Calculate warden counts per hostel (using hostelId)

@@ -307,8 +307,29 @@ export const submitFeedback = async (req, res) => {
 export const getAllFeedbacks = async (req, res) => {
     try {
         const feedbacks = await Feedback.find({ collegeId: req.user.collegeId })
-            .populate('user', 'name email rollNo hostelId roomNo')
+            .populate({
+                path: 'user',
+                select: 'name email rollNo hostelId roomNo',
+                populate: { path: 'hostelId', select: 'name' },
+            })
             .sort({ createdAt: -1 });
+
+        const feedbacksWithHostelName = feedbacks.map((f) => {
+            const u = f.user;
+            const plain = f.toObject ? f.toObject() : { ...f };
+            plain.user = u
+                ? {
+                    _id: u._id,
+                    name: u.name,
+                    email: u.email,
+                    rollNo: u.rollNo,
+                    roomNo: u.roomNo,
+                    hostelId: u.hostelId?._id?.toString() ?? u.hostelId?.toString(),
+                    hostelName: u.hostelId?.name ?? null,
+                }
+                : u;
+            return plain;
+        });
 
         logger.info("Feedbacks fetched", {
             count: feedbacks.length,
@@ -319,7 +340,7 @@ export const getAllFeedbacks = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Feedbacks fetched successfully",
-            feedbacks,
+            feedbacks: feedbacksWithHostelName,
             count: feedbacks.length,
         });
     } catch (error) {

@@ -29,7 +29,7 @@ export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
   const hostelData = useMemo(() => {
     const counts: Record<string, number> = {};
     students.forEach((s) => {
-      const h = s.hostelId || "Unassigned";
+      const h = (s.hostelName ?? s.hostelId) || "Unassigned";
       counts[h] = (counts[h] || 0) + 1;
     });
     return sortByPropertyCaseInsensitive(

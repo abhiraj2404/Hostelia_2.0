@@ -20,6 +20,7 @@ export interface Complaint {
   problemDescription: string;
   problemImage: string;
   hostelId: string;
+  hostelName?: string | null;
   roomNo: string;
   category:
     | "Electrical"
