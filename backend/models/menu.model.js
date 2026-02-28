@@ -15,7 +15,19 @@ const mealArraySchema = {
 
 const menuSchema = new mongoose.Schema(
     {
-        day: { type: String, enum: days, required: true, unique: true },
+        day: { type: String, enum: days, required: true },
+        hostel: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Hostel",
+            required: true,
+            index: true
+        },
+        collegeId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "College",
+            required: true,
+            index: true
+        },
         meals: {
             Breakfast: mealArraySchema,
             Lunch: mealArraySchema,
@@ -25,6 +37,9 @@ const menuSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+// Compound index: Each hostel can only have one menu per day
+menuSchema.index({ hostel: 1, day: 1 }, { unique: true });
 
 export default mongoose.model("Menu", menuSchema);
 

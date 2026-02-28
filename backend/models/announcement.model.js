@@ -32,6 +32,12 @@ const announcementSchema = new mongoose.Schema({
         type: String,
         default: undefined
     },
+    collegeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'College',
+        required: true,
+        index: true
+    },
     comments: {
         type: [ commentSubSchema ],
         default: [],

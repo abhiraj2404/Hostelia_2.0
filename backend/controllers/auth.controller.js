@@ -12,8 +12,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret";
 /**
  * Generate JWT token and set cookie
  */
-export const generateToken = (userID, res) => {
-  const token = jwt.sign({ userID }, JWT_SECRET, {
+export const generateToken = (userID, collegeId, res) => {
+  const token = jwt.sign({ userID, collegeId }, JWT_SECRET, {
     expiresIn: "7d",
   });
 
@@ -30,15 +30,10 @@ export const generateToken = (userID, res) => {
 /**
  * Zod schemas for validation
  */
-const emailSchema = z
-  .email()
-  .refine((email) => email.endsWith("@iiits.in"), {
-    message: "Email must be a valid @iiits.in address.",
-  });
-
 const loginSchema = z.object({
-  email: emailSchema,
+  email: z.string().email(),
   password: z.string().min(1, "Password is required"),
+  collegeId: z.string().min(1, "College ID is required"),
 });
 
 const signupSchema = z.object({
@@ -55,33 +50,32 @@ const signupSchema = z.object({
   rollNo: z
     .string()
     .regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
-  email: emailSchema,
-  hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ], {
-    errorMap: () => ({ message: "Invalid hostel selection" }),
-  }),
+  email: z.string().email(),
+  collegeId: z.string().min(1, "College ID is required"),
+  hostel: z.string().min(1, "Hostel ID is required"),
   roomNo: z.string().min(1, "Room number is required"),
-  year: z.enum([ "UG-1", "UG-2", "UG-3", "UG-4" ], {
-    errorMap: () => ({ message: "Invalid year selection" }),
-  }),
+  year: z.string().min(1, "Year is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const generateOTPSchema = z.object({
-  email: emailSchema,
+  email: z.string().email(),
+  collegeId: z.string().min(1, "College ID is required"),
   name: z.string(),
   rollNo: z.string().regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
 });
 
 const verifyOTPSchema = z.object({
-  email: emailSchema,
+  email: z.string().email(),
+  collegeId: z.string().min(1, "College ID is required"),
   otp: z.string().length(6, "OTP must be 6 digits"),
   userData: z
     .object({
       name: z.string().min(1),
       rollNo: z.string().regex(/^[0-9]{3}$/),
-      hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),
+      hostel: z.string().min(1),
       roomNo: z.string().min(1),
-      year: z.enum([ "UG-1", "UG-2", "UG-3", "UG-4" ]),
+      year: z.string().min(1),
       password: z.string().min(6),
     })
     .optional(),
@@ -103,6 +97,7 @@ export const generateOTP = async (req, res) => {
     }
 
     const { email, name, rollNo } = validationResult.data;
+    const college = req.college;
 
     // Check if email is already registered
     const existingUserByEmail = await User.findOne({ email });
@@ -131,9 +126,9 @@ export const generateOTP = async (req, res) => {
 
     // Email content
     const mailOptions = {
-      from: `"Hostelia - IIIT Sri City" <${getEmailUser()}>`,
+      from: `"Hostelia - ${college.name}" <${getEmailUser()}>`,
       to: email,
-      subject: "Email Verification OTP for Hostelia",
+      subject: `Email Verification OTP for ${college.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">
           <h2 style="color: #4f46e5;">Hostelia - Email Verification</h2>
@@ -206,6 +201,7 @@ export const verifyOTP = async (req, res) => {
     // If userData is provided, create the user account
     if (userData) {
       const { name, rollNo, hostel, roomNo, year, password } = userData;
+      const college = req.college;
 
       // Check for existing user by email
       const existingUserByEmail = await User.findOne({ email });
@@ -239,6 +235,7 @@ export const verifyOTP = async (req, res) => {
         year,
         password: hashedPassword,
         role: "student",
+        collegeId: college._id,
       });
 
       // Create base FeeSubmission entry with both fees as documentNotSubmitted
@@ -246,6 +243,7 @@ export const verifyOTP = async (req, res) => {
         studentId: newUser._id,
         studentName: name,
         studentEmail: email,
+        collegeId: college._id,
         hostelFee: {
           status: "documentNotSubmitted",
         },
@@ -255,7 +253,7 @@ export const verifyOTP = async (req, res) => {
       });
 
       // Generate token and set cookies
-      generateToken(newUser._id, res);
+      generateToken(newUser._id, college._id, res);
       res.cookie("userid", newUser._id.toString());
       res.cookie("role", newUser.role);
 
@@ -313,6 +311,7 @@ export const signup = async (req, res) => {
 
     const { name, rollNo, email, hostel, roomNo, year, password } =
       validationResult.data;
+    const college = req.college;
 
     // Check if email is verified (OTP should have been deleted after verification)
     const otpRecord = await OTP.findOne({ email });
@@ -355,6 +354,7 @@ export const signup = async (req, res) => {
       year,
       password: hashedPassword,
       role: "student",
+      collegeId: college._id,
     });
 
     // Create base FeeSubmission entry with both fees as documentNotSubmitted
@@ -362,6 +362,7 @@ export const signup = async (req, res) => {
       studentId: newUser._id,
       studentName: name,
       studentEmail: email,
+      collegeId: college._id,
       hostelFee: {
         status: "documentNotSubmitted",
       },
@@ -371,7 +372,7 @@ export const signup = async (req, res) => {
     });
 
     // Generate token and set cookies
-    generateToken(newUser._id, res);
+    generateToken(newUser._id, college._id, res);
     res.cookie("userid", newUser._id.toString());
     res.cookie("role", newUser.role);
 
@@ -416,10 +417,10 @@ export const login = async (req, res) => {
       });
     }
 
-    const { email, password } = req.body;
+    const { email, password, collegeId } = validationResult.data;
 
-    // Find user
-    const user = await User.findOne({ email });
+    // Find user within specific college
+    const user = await User.findOne({ email, collegeId });
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -437,7 +438,7 @@ export const login = async (req, res) => {
     }
 
     // Generate token and set cookies
-    generateToken(user._id, res);
+    generateToken(user._id, user.collegeId, res);
     res.cookie("role", user.role);
     res.cookie("userid", user._id.toString());
 

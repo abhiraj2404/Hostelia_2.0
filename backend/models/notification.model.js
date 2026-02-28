@@ -8,6 +8,12 @@ const notificationSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    collegeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "College",
+      required: true,
+      index: true,
+    },
     type: {
       type: String,
       enum: [
@@ -42,7 +48,7 @@ const notificationSchema = new mongoose.Schema(
     },
     relatedEntityType: {
       type: String,
-      enum: ["problem", "announcement", "fee", "transit", "mess", "contact"],
+      enum: [ "problem", "announcement", "fee", "transit", "mess", "contact" ],
       required: true,
     },
     read: {
@@ -60,7 +66,7 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for efficient queries: get unread notifications for a user
-notificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
+// Compound index for efficient queries: get unread notifications for a user within a college
+notificationSchema.index({ collegeId: 1, userId: 1, read: 1, createdAt: -1 });
 
 export default mongoose.model("Notification", notificationSchema);

@@ -7,6 +7,12 @@ const transitSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    collegeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'College',
+        required: true,
+        index: true
+    },
     purpose: {
         type: String,
         required: true

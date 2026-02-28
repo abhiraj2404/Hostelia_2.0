@@ -22,12 +22,17 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     year: {
-        type: String,
-        enum: [ 'UG-1', 'UG-2', 'UG-3', 'UG-4' ]
+        type: String, // 'UG-1', 'UG-2', 'PG-1', etc. Could vary by college
     },
     hostel: {
-        type: String,
-        enum: [ 'BH-1', 'BH-2', 'BH-3', 'BH-4' ]
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Hostel'
+    },
+    collegeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'College',
+        required: true,
+        index: true
     },
     roomNo: String,
     password: {

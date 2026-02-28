@@ -29,8 +29,14 @@ const problemSchema = new mongoose.Schema(
       required: true,
     },
     hostel: {
-      type: String,
-      enum: [ "BH-1", "BH-2", "BH-3", "BH-4" ],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hostel",
+      required: true,
+      index: true,
+    },
+    collegeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "College",
       required: true,
       index: true,
     },
@@ -88,6 +94,6 @@ const problemSchema = new mongoose.Schema(
   }
 );
 
-problemSchema.index({ hostel: 1, status: 1, createdAt: -1 });
+problemSchema.index({ collegeId: 1, hostel: 1, status: 1, createdAt: -1 });
 
 export default mongoose.model("Problem", problemSchema);

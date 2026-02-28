@@ -4,7 +4,7 @@ import 'winston-daily-rotate-file';
 const combinedTransport = new winston.transports.DailyRotateFile({
   // level: "debug",
   filename: '%DATE%.log',
-  frequency: '1m',
+  frequency: '1h',
   datePattern: 'YYYY-MM-DD_HH-mm',
   dirname: 'logs/combined',
   maxFiles: '7d',
@@ -13,7 +13,7 @@ const combinedTransport = new winston.transports.DailyRotateFile({
 const errorTransport = new winston.transports.DailyRotateFile({
   level: "error",
   filename: '%DATE%.log',
-  frequency: '1m',
+  frequency: '1h',
   datePattern: 'YYYY-MM-DD_HH-mm',
   dirname: 'logs/error',
   maxFiles: '7d',

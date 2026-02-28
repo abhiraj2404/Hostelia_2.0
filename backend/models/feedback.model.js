@@ -23,11 +23,23 @@ const feedbackSchema = new mongoose.Schema(
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String, trim: true, default: "" },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    collegeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "College",
+      required: true,
+      index: true,
+    },
+    hostel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hostel",
+      required: true,
+      index: true,
+    },
   },
   { timestamps: true }
 );
 
-feedbackSchema.index({ date: 1, mealType: 1 });
-feedbackSchema.index({ user: 1, date: 1 });
+feedbackSchema.index({ collegeId: 1, hostel: 1, date: 1, mealType: 1 });
+feedbackSchema.index({ collegeId: 1, user: 1, date: 1 });
 
 export default mongoose.model("Feedback", feedbackSchema);
