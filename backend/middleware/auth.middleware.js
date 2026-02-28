@@ -25,7 +25,7 @@ export const authMiddleware = async (req, res, next) => {
 
     // Load user and attach to req.user with required fields
     const user = await User.findById(decoded.userID).select(
-      "name email role hostel"
+      "name email role hostel collegeId"
     );
     if (!user) {
       return res.status(401).json({
@@ -35,6 +35,7 @@ export const authMiddleware = async (req, res, next) => {
     }
     req.user = {
       _id: user._id,
+      collegeId: user.collegeId,
       role: user.role,
       hostel: user.hostel,
       name: user.name,

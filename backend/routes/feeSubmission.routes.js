@@ -33,19 +33,19 @@ router.post(
 );
 
 // Update fee status (admin only)
-router.patch("/:studentId/status", authorizeRoles("admin"), updateFeeStatus);
+router.patch("/:studentId/status", authorizeRoles("collegeAdmin"), updateFeeStatus);
 
 // Send single fee reminder (admin and warden)
 router.post(
   "/email/reminder",
-  authorizeRoles("admin", "warden"),
+  authorizeRoles("collegeAdmin", "warden"),
   sendFeeReminder
 );
 
 // Send bulk fee reminders (admin and warden)
 router.post(
   "/email/bulk-reminder",
-  authorizeRoles("admin", "warden"),
+  authorizeRoles("collegeAdmin", "warden"),
   sendBulkFeeReminders
 );
 

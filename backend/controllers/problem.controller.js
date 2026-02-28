@@ -31,7 +31,7 @@ const createProblemSchema = z.object({
     "Student Misconduct",
     "Other",
   ]),
-  hostel: z.enum(["BH-1", "BH-2", "BH-3", "BH-4"]),
+  hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),
   roomNo: z.string().min(1),
 });
 
@@ -84,7 +84,7 @@ export async function createProblem(req, res) {
     // Notify admins and wardens about the new problem
     try {
       // Find all admins
-      const admins = await User.find({ role: "admin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin" }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       // Find wardens for the problem's hostel
@@ -95,7 +95,7 @@ export async function createProblem(req, res) {
       const wardenIds = wardens.map((warden) => warden._id.toString());
 
       // Combine admin and warden IDs
-      const notifyUserIds = [...adminIds, ...wardenIds];
+      const notifyUserIds = [ ...adminIds, ...wardenIds ];
 
       if (notifyUserIds.length > 0) {
         await notifyUsers(notifyUserIds, {
@@ -151,7 +151,7 @@ export async function listProblems(req, res) {
     }
 
     // Only admins can filter by hostel (students/wardens already scoped by scopedProblemsFilter)
-    if (hostel && req.user.role === "admin") {
+    if (hostel && req.user.role === "collegeAdmin") {
       filter.hostel = hostel;
     }
 
@@ -248,7 +248,7 @@ export async function addProblemComment(req, res) {
 }
 
 const statusSchema = z.object({
-  status: z.enum(["Pending", "Resolved", "Rejected", "ToBeConfirmed"]),
+  status: z.enum([ "Pending", "Resolved", "Rejected", "ToBeConfirmed" ]),
 });
 
 export async function updateProblemStatus(req, res) {
@@ -308,9 +308,9 @@ export async function updateProblemStatus(req, res) {
         ToBeConfirmed: "needs your confirmation",
       };
       const statusMessage =
-        statusMessages[parsed.data.status] || "status has been updated";
+        statusMessages[ parsed.data.status ] || "status has been updated";
 
-      await notifyUsers([studentId], {
+      await notifyUsers([ studentId ], {
         type: "problem_status_updated",
         title: "Problem Status Updated",
         message: `Your problem "${problem.problemTitle}" ${statusMessage}.`,
@@ -347,7 +347,7 @@ export async function updateProblemStatus(req, res) {
 }
 
 const verifySchema = z.object({
-  studentStatus: z.enum(["NotResolved", "Resolved", "Rejected"]),
+  studentStatus: z.enum([ "NotResolved", "Resolved", "Rejected" ]),
 });
 
 export async function verifyProblemResolution(req, res) {

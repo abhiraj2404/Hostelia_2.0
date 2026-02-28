@@ -29,7 +29,7 @@ const updateUserDetailsSchema = z.object({
 
 /**
  * Get user by ID
- * - Admin and warden can access any user
+ * - College Admin and warden can access any user
  * - Students can only access their own user info
  */
 export const getUserById = async (req, res) => {
@@ -101,7 +101,7 @@ export const getUserById = async (req, res) => {
 
 /**
  * Get all students
- * - Admin: gets all students
+ * - CollegeAdmin: gets all students
  * - Warden: gets only students from their hostel
  */
 export const getAllStudents = async (req, res) => {
@@ -162,7 +162,7 @@ export const getAllStudents = async (req, res) => {
 };
 
 /**
- * Get all wardens (admin only)
+ * Get all wardens (collegeAdmin only)
  */
 export const getAllWardens = async (req, res) => {
     try {

@@ -3,6 +3,7 @@ import z from "zod";
 import { logger } from "../middleware/logger.js";
 import College from "../models/college.model.js";
 import Hostel from "../models/hostel.model.js";
+import Mess from "../models/mess.model.js";
 import User from "../models/user.model.js";
 import { getEmailUser, sendEmail } from "../utils/email-client.js";
 
@@ -16,11 +17,13 @@ const registerCollegeSchema = z.object({
         .regex(/^@/, "Email domain must start with @"),
     adminEmail: z.string().email("Invalid admin email format").trim().toLowerCase(),
     address: z.string().optional(),
-    numberOfHostels: z.number().int().positive("Must be at least 1 hostel"),
     password: z.string(),
     hostels: z
         .array(z.string().min(1, "Hostel name cannot be empty").trim())
         .min(1, "At least one hostel is required"),
+    messes: z
+        .array(z.string().min(1, "Mess name cannot be empty").trim())
+        .min(1, "At least one mess is required"),
 });
 
 /**
@@ -42,17 +45,10 @@ export const registerCollege = async (req, res) => {
             emailDomain,
             adminEmail,
             address,
-            numberOfHostels,
             hostels,
+            messes,
             password,
         } = validationResult.data;
-
-        if (numberOfHostels !== hostels.length) {
-            return res.status(400).json({
-                success: false,
-                message: "numberOfHostels must match the length of the hostels array.",
-            });
-        }
 
         // Check if college/domain already exists
         const existingCollege = await College.findOne({
@@ -80,7 +76,6 @@ export const registerCollege = async (req, res) => {
             emailDomain,
             adminEmail,
             address,
-            numberOfHostels,
         });
 
         // Phase 2: Create Hostels
@@ -90,7 +85,14 @@ export const registerCollege = async (req, res) => {
         }));
         await Hostel.insertMany(hostelDocs);
 
-        // Phase 3: Create Admin User
+        // Phase 3: Create Messes
+        const messDocs = messes.map((messName) => ({
+            name: messName,
+            collegeId: newCollege._id,
+        }));
+        await Mess.insertMany(messDocs);
+
+        // Phase 4: Create Admin User
         // const plainPassword =
         //     Math.random().toString(36).slice(-8) +
         //     Math.random().toString(36).slice(-4);
@@ -99,15 +101,15 @@ export const registerCollege = async (req, res) => {
         const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
         await User.create({
-            name: "Super Admin",
+            name: "College Admin",
             email: adminEmail,
             password: hashedPassword,
-            role: "admin",
+            role: "collegeAdmin",
             collegeId: newCollege._id,
             // rollNo, year, hostel, roomNo are intentionally omitted
         });
 
-        // Phase 4: Send Credentials via Email
+        // Phase 5: Send Credentials via Email
         const mailOptions = {
             from: `"Hostelia Platform" <${getEmailUser()}>`,
             to: adminEmail,

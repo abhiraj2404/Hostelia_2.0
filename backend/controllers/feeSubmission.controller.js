@@ -7,7 +7,7 @@ import User from "../models/user.model.js";
 import { getEmailUser, sendEmail } from "../utils/email-client.js";
 import { notifyUsers } from "../utils/notificationService.js";
 
-// Get fee status - role-based (student sees own, admin sees all)
+// Get fee status - role-based (student sees own, collegeAdmin sees all)
 export async function getFeeStatus(req, res) {
   try {
     const filter = await scopedFeeFilter(req);
@@ -83,7 +83,7 @@ export async function submitHostelFee(req, res) {
     if (!feeSubmission) {
       return res.status(404).json({
         success: false,
-        message: "Fee submission entry not found. Please contact admin.",
+        message: "Fee submission entry not found. Please contact college admin.",
       });
     }
 
@@ -94,7 +94,7 @@ export async function submitHostelFee(req, res) {
 
     // Notify admins about hostel fee submission
     try {
-      const admins = await User.find({ role: "admin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin" }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       if (adminIds.length > 0) {
@@ -182,7 +182,7 @@ export async function submitMessFee(req, res) {
     if (!feeSubmission) {
       return res.status(404).json({
         success: false,
-        message: "Fee submission entry not found. Please contact admin.",
+        message: "Fee submission entry not found. Please contact college admin.",
       });
     }
 
@@ -193,7 +193,7 @@ export async function submitMessFee(req, res) {
 
     // Notify admins about mess fee submission
     try {
-      const admins = await User.find({ role: "admin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin" }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       if (adminIds.length > 0) {
@@ -234,7 +234,7 @@ export async function submitMessFee(req, res) {
   }
 }
 
-// Update fee status (admin only)
+// Update fee status (collegeAdmin only)
 const updateFeeStatusSchema = z.object({
   hostelFeeStatus: z
     .enum([ "documentNotSubmitted", "pending", "approved", "rejected" ])

@@ -7,11 +7,11 @@ import {
 
 const router = Router();
 
-// Get all wardens (admin only)
-router.get('/', authorizeRoles('admin'), listWardens);
+// Get all wardens (collegeAdmin only)
+router.get('/', authorizeRoles('collegeAdmin'), listWardens);
 
-// Appoint a student as warden (admin only)
-router.post('/create', authorizeRoles('admin'), appointWarden);
+// Appoint a student as warden (collegeAdmin only)
+router.post('/create', authorizeRoles('collegeAdmin'), appointWarden);
 
 
 export default router;

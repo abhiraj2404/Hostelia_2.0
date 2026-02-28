@@ -1,9 +1,11 @@
 import Feedback from "../models/feedback.model.js";
-import User from "../models/user.model.js";
+import { z } from 'zod';
+import Mess from '../models/mess.model.js';
+import User from '../models/user.model.js';
 import Menu from "../models/menu.model.js";
-import z from "zod";
-import { logger } from "../middleware/logger.js";
-import { notifyUsers } from "../utils/notificationService.js";
+import { authorizeRoles } from '../middleware/roles.js';
+import { logger } from '../middleware/logger.js';
+import { notifyUsers } from '../utils/notificationService.js';
 
 const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
 const mealTypes = [ "Breakfast", "Lunch", "Snacks", "Dinner" ];
@@ -149,7 +151,7 @@ export const updateMenu = async (req, res) => {
                     title: 'Mess Menu Updated',
                     message,
                     relatedEntityId: req.user._id,
-                    relatedEntityType: 'mess',  
+                    relatedEntityType: 'mess',
                 });
 
                 logger.info('Notifications sent for mess menu update', {
@@ -208,7 +210,7 @@ export const submitFeedback = async (req, res) => {
         // Notify admins and wardens about the new mess feedback
         try {
             // Find all admins
-            const admins = await User.find({ role: 'admin' }).select('_id');
+            const admins = await User.find({ role: 'collegeAdmin' }).select('_id');
             const adminIds = admins.map((admin) => admin._id.toString());
 
             // Find wardens for the student's hostel

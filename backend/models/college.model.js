@@ -29,10 +29,6 @@ const collegeSchema = new mongoose.Schema(
             type: String, // Cloudinary URL
             trim: true,
         },
-        numberOfHostels: {
-            type: Number,
-            default: 0,
-        },
         subscriptionStatus: {
             type: String,
             enum: [ "trial", "active", "inactive" ],

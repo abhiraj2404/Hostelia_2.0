@@ -1,17 +1,15 @@
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import User from '../models/user.model.js';
+import Hostel from '../models/hostel.model.js';
+import College from '../models/college.model.js';
 import { logger } from '../middleware/logger.js';
 import { sendEmail, getEmailUser } from '../utils/email-client.js';
 
 const appointWardenSchema = z.object({
     name: z.string().min(1, "Name is required"),
-    email: z.email().refine((email) => email.endsWith("@iiits.in"), {
-        message: "Email must be a valid @iiits.in address.",
-    }),
-    hostel: z.enum([ 'BH-1', 'BH-2', 'BH-3', 'BH-4' ], {
-        errorMap: () => ({ message: "Hostel must be one of: BH-1, BH-2, BH-3, BH-4" })
-    }),
+    email: z.string().email("Valid email is required."),
+    hostelId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid hostel ID format"),
     password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -25,10 +23,30 @@ export async function appointWarden(req, res) {
         });
     }
 
-    const { name, email, hostel, password } = parsed.data;
-    const { _id: adminId } = req.user;
+    const { name, email, hostelId, password } = parsed.data;
+    const { _id: adminId, collegeId } = req.user;
 
     try {
+        // Validate domain matches college domain
+        const college = await College.findById(collegeId);
+        if (!college) {
+            return res.status(404).json({ success: false, message: "College not found" });
+        }
+        if (!email.endsWith(college.emailDomain)) {
+            return res.status(400).json({
+                success: false,
+                message: `Warden email must belong to the college domain (${college.emailDomain})`,
+            });
+        }
+
+        // Validate hostel exists in this college
+        const hostelDoc = await Hostel.findOne({ _id: hostelId, collegeId });
+        if (!hostelDoc) {
+            return res.status(404).json({
+                success: false,
+                message: "Hostel not found in your college.",
+            });
+        }
         // Check if email already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -41,13 +59,14 @@ export async function appointWarden(req, res) {
         // Check if hostel already has 2 wardens
         const wardenCount = await User.countDocuments({
             role: 'warden',
-            hostel: hostel,
+            hostel: hostelId,
+            collegeId: collegeId,
         });
 
         if (wardenCount >= 2) {
             return res.status(400).json({
                 success: false,
-                message: `Hostel ${hostel} already has 2 wardens. Maximum 2 wardens allowed per hostel.`,
+                message: `This hostel already has 2 wardens. Maximum 2 wardens allowed per hostel.`,
             });
         }
 
@@ -59,7 +78,8 @@ export async function appointWarden(req, res) {
         const newWarden = await User.create({
             name,
             email,
-            hostel,
+            hostel: hostelId, // Assign object ID
+            collegeId, // Assign to the collegeAdmin's college
             password: hashedPassword,
             role: 'warden',
         });
@@ -73,7 +93,7 @@ export async function appointWarden(req, res) {
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">
                     <h2 style="color: #4f46e5;">Warden Appointment - Hostelia</h2>
                     <p>Hello ${name},</p>
-                    <p>You have been appointed as a warden for <strong>${hostel}</strong> in Hostelia.</p>
+                    <p>You have been appointed as a warden for <strong>${hostelDoc.name}</strong> in Hostelia.</p>
                     <p>Your login credentials are:</p>
                     <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
                         <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
@@ -137,8 +157,10 @@ export async function appointWarden(req, res) {
 
 export async function listWardens(req, res) {
     try {
-        const wardens = await User.find({ role: 'warden' })
+        const { collegeId } = req.user;
+        const wardens = await User.find({ role: 'warden', collegeId })
             .select('_id name email role hostel createdAt')
+            .populate('hostel', 'name')
             .sort({ hostel: 1, createdAt: -1 });
 
         logger.info('Wardens listed', {

@@ -374,6 +374,7 @@ export const signup = async (req, res) => {
     // Generate token and set cookies
     generateToken(newUser._id, college._id, res);
     res.cookie("userid", newUser._id.toString());
+    res.cookie("collegeId", newUser.collegeId.toString());
     res.cookie("role", newUser.role);
 
     logger.info("User created with fee submission entry", {
@@ -441,6 +442,7 @@ export const login = async (req, res) => {
     generateToken(user._id, user.collegeId, res);
     res.cookie("role", user.role);
     res.cookie("userid", user._id.toString());
+    res.cookie("collegeId", user.collegeId.toString());
 
     return res.status(200).json({
       success: true,
@@ -450,6 +452,7 @@ export const login = async (req, res) => {
         name: user.name,
         rollNo: user.rollNo,
         email: user.email,
+        collegeId: user.collegeId,
         hostel: user.hostel,
         roomNo: user.roomNo,
         year: user.year,
@@ -473,9 +476,11 @@ export const logout = (req, res) => {
     res.cookie("jwt", "", { maxAge: 0 });
     res.cookie("role", "", { maxAge: 0 });
     res.cookie("userid", "", { maxAge: 0 });
+    res.cookie("collegeId", "", { maxAge: 0 });
     res.clearCookie("jwt");
     res.clearCookie("role");
     res.clearCookie("userid");
+    res.clearCookie("collegeId"); 
 
     return res.status(200).json({
       success: true,

@@ -32,7 +32,7 @@ export function scopedProblemsFilter(req) {
 // Optional helper to verify a single problem is within the requester scope
 export function isProblemInScope(problemDoc, req) {
     const role = req.user?.role;
-    if (role === 'admin') return true;
+    if (role === 'collegeAdmin') return true;
     if (role === 'student') return String(problemDoc.studentId) === String(req.user._id);
     if (role === 'warden') return problemDoc.hostel === req.user.hostel;
     return false;
@@ -61,7 +61,7 @@ export async function scopedFeeFilter(req) {
         return { studentId: { $in: studentIds } };
     }
 
-    // admin (or any higher role) sees all
+    // collegeAdmin (or any higher role) sees all
     return {};
 }
 
