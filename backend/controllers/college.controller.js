@@ -106,7 +106,7 @@ export const registerCollege = async (req, res) => {
             password: hashedPassword,
             role: "collegeAdmin",
             collegeId: newCollege._id,
-            // rollNo, year, hostel, roomNo are intentionally omitted
+            // rollNo, hostelId, roomNo are intentionally omitted
         });
 
         // Phase 5: Send Credentials via Email

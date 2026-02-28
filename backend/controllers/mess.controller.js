@@ -52,7 +52,8 @@ const updateMenuSchema = z.object({
 
 export const getMenu = async (req, res) => {
     try {
-        const menuDocs = await Menu.find().lean();
+        const collegeId = req.user.collegeId;
+        const menuDocs = await Menu.find({ collegeId }).lean();
         const menu = buildMenuResponse(menuDocs);
 
         return res.status(200).json({
@@ -107,10 +108,11 @@ export const updateMenu = async (req, res) => {
             if (Object.keys(setOperations).length > 0) {
                 bulkOps.push({
                     updateOne: {
-                        filter: { day },
+                        filter: { day, collegeId: req.user.collegeId },
                         update: {
                             $set: {
                                 day,
+                                collegeId: req.user.collegeId,
                                 ...setOperations,
                             },
                         },
@@ -141,7 +143,7 @@ export const updateMenu = async (req, res) => {
 
         // Send notification to all students about the batch update
         try {
-            const students = await User.find({ role: 'student' }).select('_id hostel');
+            const students = await User.find({ role: 'student', collegeId: req.user.collegeId }).select('_id hostel');
             const studentIds = students.map((student) => student._id.toString());
             if (studentIds.length > 0) {
                 const message = `${req.user.name} updated the mess menu`;
@@ -164,7 +166,7 @@ export const updateMenu = async (req, res) => {
             });
         }
 
-        const latestMenuDocs = await Menu.find().lean();
+        const latestMenuDocs = await Menu.find({ collegeId: req.user.collegeId }).lean();
 
         return res.status(200).json({
             success: true,
@@ -203,21 +205,23 @@ export const submitFeedback = async (req, res) => {
             rating,
             comment,
             user: req.user._id,
+            collegeId: req.user.collegeId,
         });
 
         logger.info("Feedback submitted", { userId: req.user._id, mealType, rating });
 
         // Notify admins and wardens about the new mess feedback
         try {
-            // Find all admins
-            const admins = await User.find({ role: 'collegeAdmin' }).select('_id');
+            // Find all admins in this college
+            const admins = await User.find({ role: 'collegeAdmin', collegeId: req.user.collegeId }).select('_id');
             const adminIds = admins.map((admin) => admin._id.toString());
 
             // Find wardens for the student's hostel
-            const studentHostel = req.user.hostel;
+            const studentHostel = req.user.hostelId;
             const wardens = await User.find({
                 role: 'warden',
-                hostel: studentHostel,
+                hostelId: studentHostel,
+                collegeId: req.user.collegeId,
             }).select('_id');
             const wardenIds = wardens.map((warden) => warden._id.toString());
 
@@ -228,7 +232,7 @@ export const submitFeedback = async (req, res) => {
                 await notifyUsers(notifyUserIds, {
                     type: 'mess_feedback_submitted',
                     title: 'New Mess Feedback',
-                    message: `${req.user.name} (${req.user.hostel}) submitted ${mealType} feedback with rating ${rating}/5`,
+                    message: `${req.user.name} (${req.user.hostelId}) submitted ${mealType} feedback with rating ${rating}/5`,
                     relatedEntityId: feedback._id,
                     relatedEntityType: 'mess',
                 });
@@ -261,8 +265,8 @@ export const submitFeedback = async (req, res) => {
 
 export const getAllFeedbacks = async (req, res) => {
     try {
-        const feedbacks = await Feedback.find()
-            .populate('user', 'name email rollNo hostel roomNo year')
+        const feedbacks = await Feedback.find({ collegeId: req.user.collegeId })
+            .populate('user', 'name email rollNo hostelId roomNo')
             .sort({ createdAt: -1 });
 
         logger.info("Feedbacks fetched", {

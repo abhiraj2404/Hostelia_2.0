@@ -70,7 +70,7 @@ export async function submitHostelFee(req, res) {
 
     // Update FeeSubmission - entry should already exist from signup
     const feeSubmission = await FeeSubmission.findOneAndUpdate(
-      { studentId: userId },
+      { studentId: userId, collegeId: req.user.collegeId },
       {
         "hostelFee.documentUrl": documentUrl,
         "hostelFee.status": "pending",
@@ -94,7 +94,7 @@ export async function submitHostelFee(req, res) {
 
     // Notify admins about hostel fee submission
     try {
-      const admins = await User.find({ role: "collegeAdmin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin", collegeId: req.user.collegeId }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       if (adminIds.length > 0) {
@@ -169,7 +169,7 @@ export async function submitMessFee(req, res) {
 
     // Update FeeSubmission - entry should already exist from signup
     const feeSubmission = await FeeSubmission.findOneAndUpdate(
-      { studentId: userId },
+      { studentId: userId, collegeId: req.user.collegeId },
       {
         "messFee.documentUrl": documentUrl,
         "messFee.status": "pending",
@@ -193,7 +193,7 @@ export async function submitMessFee(req, res) {
 
     // Notify admins about mess fee submission
     try {
-      const admins = await User.find({ role: "collegeAdmin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin", collegeId: req.user.collegeId }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       if (adminIds.length > 0) {
@@ -259,7 +259,7 @@ export async function updateFeeStatus(req, res) {
 
   try {
     // Verify student exists
-    const student = await User.findById(studentId);
+    const student = await User.findOne({ _id: studentId, collegeId: req.user.collegeId });
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -285,7 +285,7 @@ export async function updateFeeStatus(req, res) {
 
     // Update FeeSubmission
     const feeSubmission = await FeeSubmission.findOneAndUpdate(
-      { studentId },
+      { studentId, collegeId: req.user.collegeId },
       updateFields,
       { new: true, upsert: false }
     );
@@ -375,7 +375,7 @@ export async function sendFeeReminder(req, res) {
   const { studentId, emailType, notes } = parsed.data;
 
   try {
-    const student = await User.findById(studentId);
+    const student = await User.findOne({ _id: studentId, collegeId: req.user.collegeId });
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -448,7 +448,7 @@ export async function sendFeeReminder(req, res) {
     // Attempt to create in-app notification (regardless of email success)
     try {
       // Get fee submission for the student to use as relatedEntityId
-      const feeSubmission = await FeeSubmission.findOne({ studentId });
+      const feeSubmission = await FeeSubmission.findOne({ studentId, collegeId: req.user.collegeId });
 
       if (feeSubmission) {
         const feeTypeMessage =
@@ -558,7 +558,7 @@ export async function sendBulkFeeReminders(req, res) {
   try {
     const sender = req.user;
 
-    const students = await User.find({ _id: { $in: studentIds } });
+    const students = await User.find({ _id: { $in: studentIds }, collegeId: req.user.collegeId });
     if (students.length === 0) {
       return res.status(404).json({
         success: false,

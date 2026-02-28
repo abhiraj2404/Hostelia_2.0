@@ -7,7 +7,7 @@ import { notifyUsers } from "../utils/notificationService.js";
 
 export async function getAnnouncement(req, res) {
     try {
-        const announcements = await Announcement.find({}).sort({ createdAt: -1 });
+        const announcements = await Announcement.find({ collegeId: req.user.collegeId }).sort({ createdAt: -1 });
         return res.status(200).json({
             success: true,
             message: "Announcements fetched successfully",
@@ -69,6 +69,7 @@ export async function createAnnouncement(req, res) {
         const announcement = await Announcement.create({
             title,
             message,
+            collegeId: req.user.collegeId,
             postedBy: {
                 name: req.user.name,
                 email: req.user.email,
@@ -81,7 +82,7 @@ export async function createAnnouncement(req, res) {
 
         // Notify all students about the new announcement
         try {
-            const students = await User.find({ role: 'student' }).select('_id');
+            const students = await User.find({ role: 'student', collegeId: req.user.collegeId }).select('_id');
             const studentIds = students.map((student) => student._id.toString());
 
             if (studentIds.length > 0) {
@@ -123,7 +124,7 @@ export async function createAnnouncement(req, res) {
 export async function deleteAnnouncement(req, res) {
     try {
         const { id } = req.params;
-        const doc = await Announcement.findByIdAndDelete(id);
+        const doc = await Announcement.findOneAndDelete({ _id: id, collegeId: req.user.collegeId });
         if (!doc) {
             return res.status(404).json({ success: false, message: "Announcement not found" });
         }
@@ -155,7 +156,7 @@ export async function addAnnouncementComment(req, res) {
     }
     const { id } = req.params;
     try {
-        const announcement = await Announcement.findById(id);
+        const announcement = await Announcement.findOne({ _id: id, collegeId: req.user.collegeId });
         if (!announcement) {
             return res
                 .status(404)

@@ -23,7 +23,7 @@ export async function createTransitEntry(req, res) {
     const { _id: userId } = req.user;
 
     try {
-        const lastTransit = await Transit.findOne({ studentId: userId }).sort({ createdAt: -1 });
+        const lastTransit = await Transit.findOne({ studentId: userId, collegeId: req.user.collegeId }).sort({ createdAt: -1 });
         const entryDate = parsed.data.date;
         const entryTime = parsed.data.time || new Date().toTimeString().split(' ')[ 0 ];
         if (lastTransit) {
@@ -47,6 +47,7 @@ export async function createTransitEntry(req, res) {
         }
         const transitData = {
             studentId: userId,
+            collegeId: req.user.collegeId,
             purpose: parsed.data.purpose,
             transitStatus: parsed.data.transitStatus,
             date: entryDate,
@@ -78,7 +79,7 @@ export async function listTransitEntries(req, res) {
     try {
         const filter = await buildTransitFilter(req);
         const transitEntries = await Transit.find(filter)
-            .populate('studentId', 'name rollNo hostel roomNo')
+            .populate('studentId', 'name rollNo hostelId roomNo')
             .sort({ createdAt: -1 });
         logger.info('Transit entries fetched', { count: transitEntries.length });
         return res.status(200).json({
@@ -105,22 +106,23 @@ function buildDateTime(dateValue, timeString) {
 
 async function buildTransitFilter(req) {
     const role = req.user?.role;
+    const collegeId = req.user?.collegeId;
     if (role === 'student') {
-        return { studentId: req.user._id };
+        return { studentId: req.user._id, collegeId };
     }
     if (role === 'warden') {
-        const hostel = req.user?.hostel;
+        const hostel = req.user?.hostelId;
         if (!hostel) {
             logger.warn('Transit filter: warden without hostel assignment', { userId: req.user?._id?.toString?.() });
             return { studentId: { $in: [] } };
         }
-        const hostelStudents = await User.find({ hostel }).select('_id');
+        const hostelStudents = await User.find({ hostelId: hostel, collegeId }).select('_id');
         const studentIds = hostelStudents.map((student) => student._id);
         if (studentIds.length === 0) {
             return { studentId: { $in: [] } };
         }
-        return { studentId: { $in: studentIds } };
+        return { studentId: { $in: studentIds }, collegeId };
     }
-    return {};
+    return { collegeId };
 }
 

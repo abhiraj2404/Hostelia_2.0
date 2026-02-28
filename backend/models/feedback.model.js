@@ -29,7 +29,7 @@ const feedbackSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    hostel: {
+    hostelId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hostel",
       required: true,
@@ -39,7 +39,7 @@ const feedbackSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-feedbackSchema.index({ collegeId: 1, hostel: 1, date: 1, mealType: 1 });
+feedbackSchema.index({ collegeId: 1, hostelId: 1, date: 1, mealType: 1 });
 feedbackSchema.index({ collegeId: 1, user: 1, date: 1 });
 
 export default mongoose.model("Feedback", feedbackSchema);

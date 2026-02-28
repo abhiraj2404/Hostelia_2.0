@@ -52,9 +52,8 @@ const signupSchema = z.object({
     .regex(/^[0-9]{3}$/, "Roll number must be exactly 3 digits"),
   email: z.string().email(),
   collegeId: z.string().min(1, "College ID is required"),
-  hostel: z.string().min(1, "Hostel ID is required"),
+  hostelId: z.string().min(1, "Hostel ID is required"),
   roomNo: z.string().min(1, "Room number is required"),
-  year: z.string().min(1, "Year is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -73,9 +72,8 @@ const verifyOTPSchema = z.object({
     .object({
       name: z.string().min(1),
       rollNo: z.string().regex(/^[0-9]{3}$/),
-      hostel: z.string().min(1),
+      hostelId: z.string().min(1),
       roomNo: z.string().min(1),
-      year: z.string().min(1),
       password: z.string().min(6),
     })
     .optional(),
@@ -200,7 +198,7 @@ export const verifyOTP = async (req, res) => {
 
     // If userData is provided, create the user account
     if (userData) {
-      const { name, rollNo, hostel, roomNo, year, password } = userData;
+      const { name, rollNo, hostelId, roomNo, password } = userData;
       const college = req.college;
 
       // Check for existing user by email
@@ -230,9 +228,8 @@ export const verifyOTP = async (req, res) => {
         name,
         rollNo,
         email,
-        hostel,
+        hostelId,
         roomNo,
-        year,
         password: hashedPassword,
         role: "student",
         collegeId: college._id,
@@ -309,7 +306,7 @@ export const signup = async (req, res) => {
       });
     }
 
-    const { name, rollNo, email, hostel, roomNo, year, password } =
+    const { name, rollNo, email, hostelId, roomNo, password } =
       validationResult.data;
     const college = req.college;
 
@@ -349,9 +346,8 @@ export const signup = async (req, res) => {
       name,
       rollNo,
       email,
-      hostel,
+      hostelId,
       roomNo,
-      year,
       password: hashedPassword,
       role: "student",
       collegeId: college._id,
@@ -453,9 +449,8 @@ export const login = async (req, res) => {
         rollNo: user.rollNo,
         email: user.email,
         collegeId: user.collegeId,
-        hostel: user.hostel,
+        hostelId: user.hostelId,
         roomNo: user.roomNo,
-        year: user.year,
         role: user.role,
       },
     });
@@ -480,7 +475,7 @@ export const logout = (req, res) => {
     res.clearCookie("jwt");
     res.clearCookie("role");
     res.clearCookie("userid");
-    res.clearCookie("collegeId"); 
+    res.clearCookie("collegeId");
 
     return res.status(200).json({
       success: true,

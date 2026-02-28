@@ -31,7 +31,7 @@ const createProblemSchema = z.object({
     "Student Misconduct",
     "Other",
   ]),
-  hostel: z.enum([ "BH-1", "BH-2", "BH-3", "BH-4" ]),
+  hostelId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid hostel ID format"),
   roomNo: z.string().min(1),
 });
 
@@ -73,6 +73,7 @@ export async function createProblem(req, res) {
     const problem = await Problem.create({
       ...parsed.data,
       studentId: userId,
+      collegeId: req.user.collegeId,
       problemImage: problemImageUrl,
     });
     logger.info("Problem created", {
@@ -83,14 +84,15 @@ export async function createProblem(req, res) {
 
     // Notify admins and wardens about the new problem
     try {
-      // Find all admins
-      const admins = await User.find({ role: "collegeAdmin" }).select("_id");
+      // Find all admins in this college
+      const admins = await User.find({ role: "collegeAdmin", collegeId: req.user.collegeId }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       // Find wardens for the problem's hostel
       const wardens = await User.find({
         role: "warden",
-        hostel: parsed.data.hostel,
+        hostelId: parsed.data.hostelId,
+        collegeId: req.user.collegeId,
       }).select("_id");
       const wardenIds = wardens.map((warden) => warden._id.toString());
 
@@ -101,7 +103,7 @@ export async function createProblem(req, res) {
         await notifyUsers(notifyUserIds, {
           type: "problem_created",
           title: "New Problem Reported",
-          message: `A new ${parsed.data.category} problem has been reported in ${parsed.data.hostel}, Room ${parsed.data.roomNo}: ${parsed.data.problemTitle}`,
+          message: `A new ${parsed.data.category} problem has been reported in Room ${parsed.data.roomNo}: ${parsed.data.problemTitle}`,
           relatedEntityId: problem._id,
           relatedEntityType: "problem",
         });
@@ -138,7 +140,7 @@ export async function createProblem(req, res) {
 
 export async function listProblems(req, res) {
   const filter = scopedProblemsFilter(req);
-  const { query, status, category, hostel } = req.query;
+  const { query, status, category, hostelId } = req.query;
 
   try {
     // Apply additional filters from query params
@@ -150,9 +152,9 @@ export async function listProblems(req, res) {
       filter.category = category;
     }
 
-    // Only admins can filter by hostel (students/wardens already scoped by scopedProblemsFilter)
-    if (hostel && req.user.role === "collegeAdmin") {
-      filter.hostel = hostel;
+    // Only admins can filter by hostelId (students/wardens already scoped by scopedProblemsFilter)
+    if (hostelId && req.user.role === "collegeAdmin") {
+      filter.hostelId = hostelId;
     }
 
     // If there's a search query, search across multiple fields
@@ -162,6 +164,7 @@ export async function listProblems(req, res) {
       // Try to find users by roll number or name
       const User = (await import("../models/user.model.js")).default;
       const userFilter = {
+        collegeId: req.user.collegeId,
         $or: [
           { rollNo: { $regex: searchTerm, $options: "i" } },
           { name: { $regex: searchTerm, $options: "i" } },
@@ -213,7 +216,7 @@ export async function addProblemComment(req, res) {
   }
   const { id } = req.params;
   try {
-    const problem = await Problem.findById(id);
+    const problem = await Problem.findOne({ _id: id, collegeId: req.user.collegeId });
     if (!problem)
       return res
         .status(404)
@@ -262,14 +265,14 @@ export async function updateProblemStatus(req, res) {
   }
   const { id } = req.params;
   try {
-    const problem = await Problem.findById(id);
+    const problem = await Problem.findOne({ _id: id, collegeId: req.user.collegeId });
     if (!problem)
       return res
         .status(404)
         .json({ success: false, message: "Problem not found" });
 
     // Only warden/admin should call this; route will be gated. For safety, check scope for wardens
-    if (req.user.role === "warden" && problem.hostel !== req.user.hostel) {
+    if (req.user.role === "warden" && problem.hostelId?.toString() !== req.user.hostelId?.toString()) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
@@ -362,7 +365,7 @@ export async function verifyProblemResolution(req, res) {
   }
   const { id } = req.params;
   try {
-    const problem = await Problem.findById(id);
+    const problem = await Problem.findOne({ _id: id, collegeId: req.user.collegeId });
     if (!problem)
       return res
         .status(404)

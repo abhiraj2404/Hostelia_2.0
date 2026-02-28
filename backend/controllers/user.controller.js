@@ -13,15 +13,13 @@ const getUserByIdSchema = z.object({
     userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID format"),
 });
 
-const updateableYears = [ "UG-1", "UG-2", "UG-3", "UG-4" ];
 const updateableHostels = [ "BH-1", "BH-2", "BH-3", "BH-4" ];
 
 const updateUserDetailsSchema = z.object({
     name: z.string().trim().min(1, "Name cannot be empty").optional(),
     rollNo: z.string().trim().min(1, "Roll number cannot be empty").optional(),
     email: z.string().trim().email("Invalid email address").optional(),
-    year: z.enum(updateableYears).optional(),
-    hostel: z.enum(updateableHostels).optional(),
+    hostelId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid hostel ID format").optional(),
     roomNo: z.string().trim().min(1, "Room number cannot be empty").optional(),
 }).refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided for update",
@@ -82,8 +80,7 @@ export const getUserById = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 rollNo: user.rollNo,
-                year: user.year,
-                hostel: user.hostel,
+                hostelId: user.hostelId,
                 roomNo: user.roomNo,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
@@ -107,10 +104,10 @@ export const getUserById = async (req, res) => {
 export const getAllStudents = async (req, res) => {
     try {
         const requesterRole = req.user.role;
-        const requesterHostel = req.user.hostel;
+        const requesterHostel = req.user.hostelId;
 
         // Build query filter
-        let filter = { role: "student" };
+        let filter = { role: "student", collegeId: req.user.collegeId };
 
         // If warden, filter by their hostel
         if (requesterRole === "warden") {
@@ -120,7 +117,7 @@ export const getAllStudents = async (req, res) => {
                     message: "Warden must have a hostel assigned",
                 });
             }
-            filter.hostel = requesterHostel;
+            filter.hostelId = requesterHostel;
         }
 
         // Find all students (with optional hostel filter for warden)
@@ -143,8 +140,7 @@ export const getAllStudents = async (req, res) => {
                 email: student.email,
                 role: student.role,
                 rollNo: student.rollNo,
-                year: student.year,
-                hostel: student.hostel,
+                hostelId: student.hostelId,
                 roomNo: student.roomNo,
                 createdAt: student.createdAt,
                 updatedAt: student.updatedAt,
@@ -167,9 +163,9 @@ export const getAllStudents = async (req, res) => {
 export const getAllWardens = async (req, res) => {
     try {
         // Find all wardens
-        const wardens = await User.find({ role: "warden" })
+        const wardens = await User.find({ role: "warden", collegeId: req.user.collegeId })
             .select("-password")
-            .sort({ hostel: 1, name: 1 });
+            .sort({ hostelId: 1, name: 1 });
 
         logger.info("Wardens retrieved", {
             requesterRole: req.user.role,
@@ -184,7 +180,7 @@ export const getAllWardens = async (req, res) => {
                 name: warden.name,
                 email: warden.email,
                 role: warden.role,
-                hostel: warden.hostel,
+                hostelId: warden.hostelId,
                 createdAt: warden.createdAt,
                 updatedAt: warden.updatedAt,
             })),

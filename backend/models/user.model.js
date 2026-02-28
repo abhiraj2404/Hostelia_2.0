@@ -21,10 +21,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    year: {
-        type: String, // 'UG-1', 'UG-2', 'PG-1', etc. Could vary by college
-    },
-    hostel: {
+    hostelId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Hostel'
     },

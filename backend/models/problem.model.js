@@ -28,7 +28,7 @@ const problemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    hostel: {
+    hostelId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hostel",
       required: true,
@@ -94,6 +94,6 @@ const problemSchema = new mongoose.Schema(
   }
 );
 
-problemSchema.index({ collegeId: 1, hostel: 1, status: 1, createdAt: -1 });
+problemSchema.index({ collegeId: 1, hostelId: 1, status: 1, createdAt: -1 });
 
 export default mongoose.model("Problem", problemSchema);

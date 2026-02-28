@@ -59,7 +59,7 @@ export async function appointWarden(req, res) {
         // Check if hostel already has 2 wardens
         const wardenCount = await User.countDocuments({
             role: 'warden',
-            hostel: hostelId,
+            hostelId: hostelId,
             collegeId: collegeId,
         });
 
@@ -78,8 +78,8 @@ export async function appointWarden(req, res) {
         const newWarden = await User.create({
             name,
             email,
-            hostel: hostelId, // Assign object ID
-            collegeId, // Assign to the collegeAdmin's college
+            hostelId: hostelId,
+            collegeId,
             password: hashedPassword,
             role: 'warden',
         });
@@ -137,7 +137,7 @@ export async function appointWarden(req, res) {
                 name: newWarden.name,
                 email: newWarden.email,
                 role: newWarden.role,
-                hostel: newWarden.hostel,
+                hostelId: newWarden.hostelId,
             },
         });
     } catch (err) {
@@ -159,9 +159,9 @@ export async function listWardens(req, res) {
     try {
         const { collegeId } = req.user;
         const wardens = await User.find({ role: 'warden', collegeId })
-            .select('_id name email role hostel createdAt')
-            .populate('hostel', 'name')
-            .sort({ hostel: 1, createdAt: -1 });
+            .select('_id name email role hostelId createdAt')
+            .populate('hostelId', 'name')
+            .sort({ hostelId: 1, createdAt: -1 });
 
         logger.info('Wardens listed', {
             count: wardens.length,
