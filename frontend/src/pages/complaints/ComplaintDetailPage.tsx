@@ -39,7 +39,7 @@ function ComplaintDetailPage() {
   const role = authUser?.role;
   const isStudent = role === "student";
   const isWarden = role === "warden";
-  const isAdmin = role === "admin";
+  const isAdmin = role === "collegeAdmin";
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);

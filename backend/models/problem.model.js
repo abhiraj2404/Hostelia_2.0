@@ -5,7 +5,7 @@ const commentSubSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     role: {
       type: String,
-      enum: [ "student", "warden", "admin" ],
+      enum: [ "student", "warden", "collegeAdmin" ],
       required: true,
     },
     message: { type: String, required: true, trim: true, maxlength: 2000 },
@@ -28,9 +28,15 @@ const problemSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    hostel: {
-      type: String,
-      enum: [ "BH-1", "BH-2", "BH-3", "BH-4" ],
+    hostelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hostel",
+      required: true,
+      index: true,
+    },
+    collegeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "College",
       required: true,
       index: true,
     },
@@ -88,6 +94,6 @@ const problemSchema = new mongoose.Schema(
   }
 );
 
-problemSchema.index({ hostel: 1, status: 1, createdAt: -1 });
+problemSchema.index({ collegeId: 1, hostelId: 1, status: 1, createdAt: -1 });
 
 export default mongoose.model("Problem", problemSchema);

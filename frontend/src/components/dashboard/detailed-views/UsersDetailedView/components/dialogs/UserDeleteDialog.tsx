@@ -62,9 +62,9 @@ export function UserDeleteDialog({
               <p className="text-sm text-muted-foreground">
                 <strong>Role:</strong> {user.role}
               </p>
-              {user.hostel && (
+              {user.hostelId && (
                 <p className="text-sm text-muted-foreground">
-                  <strong>Hostel:</strong> {user.hostel}
+                  <strong>Hostel:</strong> {(user.hostelName ?? user.hostelId) || 'N/A'}
                 </p>
               )}
             </div>

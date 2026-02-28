@@ -44,7 +44,8 @@ interface TransitEntry {
     _id: string;
     name: string;
     rollNo: string;
-    hostel: string;
+    hostelId: string;
+    hostelName?: string | null;
     roomNo: string;
   };
   purpose: string;
@@ -81,7 +82,7 @@ export function TransitList({
 
   // Get unique hostels from entries
   const uniqueHostels = Array.from(
-    new Set(entries.map((entry) => entry.studentId.hostel))
+    new Set(entries.map((entry) => entry.studentId.hostelId))
   ).sort();
 
   const formatDate = (dateStr: string) => {
@@ -102,14 +103,14 @@ export function TransitList({
     const matchesSearch =
       entry.studentId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.studentId.rollNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.studentId.hostel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.studentId.hostelId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.purpose.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === "ALL" || entry.transitStatus === statusFilter;
 
     const matchesHostel =
-      hostelFilter === "ALL" || entry.studentId.hostel === hostelFilter;
+      hostelFilter === "ALL" || entry.studentId.hostelId === hostelFilter;
 
     const matchesDate =
       !dateFilter ||
@@ -385,7 +386,7 @@ export function TransitList({
                               {entry.studentId.rollNo}
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300">
-                              {entry.studentId.hostel}
+                              {(entry.studentId.hostelName ?? entry.studentId.hostelId) || 'N/A'}
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300 text-center">
                               {entry.studentId.roomNo}
@@ -409,7 +410,7 @@ export function TransitList({
                               </Badge>
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300">
-                              <div className="text-sm leading-relaxed max-w-md break-words whitespace-normal">
+                              <div className="text-sm leading-relaxed max-w-md wrap-break-word whitespace-normal">
                                 {entry.purpose}
                               </div>
                             </TableCell>
@@ -466,7 +467,7 @@ export function TransitList({
                             Hostel
                           </p>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
-                            {entry.studentId.hostel}
+                            {(entry.studentId.hostelName ?? entry.studentId.hostelId) || 'N/A'}
                           </p>
                         </div>
                         <div>
@@ -500,7 +501,7 @@ export function TransitList({
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1.5">
                           Purpose
                         </p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed break-words whitespace-normal">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed wrap-break-word whitespace-normal">
                           {entry.purpose}
                         </p>
                       </div>

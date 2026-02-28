@@ -9,7 +9,7 @@ import type { RootState } from "@/store";
 
 export interface ComplaintComment {
   user: string;
-  role: "student" | "warden" | "admin";
+  role: "student" | "warden" | "collegeAdmin";
   message: string;
   createdAt: string;
 }
@@ -19,7 +19,8 @@ export interface Complaint {
   problemTitle: string;
   problemDescription: string;
   problemImage: string;
-  hostel: string;
+  hostelId: string;
+  hostelName?: string | null;
   roomNo: string;
   category:
     | "Electrical"
@@ -158,7 +159,7 @@ export interface CreateComplaintPayload {
   problemTitle: string;
   problemDescription: string;
   category: Complaint["category"];
-  hostel: string;
+  hostelId: string;
   roomNo: string;
   file: File;
 }
@@ -173,7 +174,7 @@ export const createComplaint = createAsyncThunk<
     formData.append("problemTitle", payload.problemTitle);
     formData.append("problemDescription", payload.problemDescription);
     formData.append("category", payload.category);
-    formData.append("hostel", payload.hostel);
+    formData.append("hostelId", payload.hostelId);
     formData.append("roomNo", payload.roomNo);
     formData.append("problemImage", payload.file);
 

@@ -16,6 +16,12 @@ const feeSubmissionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    collegeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'College',
+        required: true,
+        index: true
+    },
     hostelFee: {
         status: {
             type: String,

@@ -9,6 +9,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/hostelia';
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
 const adminName = process.env.ADMIN_NAME;
+const collegeId = process.env.ADMIN_COLLEGE_ID;
 
 async function addAdmin(email, password, name) {
     await mongoose.connect(MONGO_URI);
@@ -22,14 +23,15 @@ async function addAdmin(email, password, name) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const admin = new User({
-        role: 'admin',
+        role: 'collegeAdmin',
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        collegeId,
     });
 
     await admin.save();
-    console.log('Admin added successfully!');
+    console.log('College Admin added successfully!');
     mongoose.disconnect();
 }
 

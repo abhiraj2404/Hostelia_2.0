@@ -4,10 +4,17 @@ import { MenuEditor } from "@/components/mess/MenuEditor";
 import { TodayMenu } from "@/components/mess/TodayMenu";
 import { WeeklyMenu } from "@/components/mess/WeeklyMenu";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAppSelector } from "@/hooks";
 import apiClient from "@/lib/api-client";
 import { AxiosError } from "axios";
-import { AlertCircle, BarChart3, Edit, Plus } from "lucide-react";
+import { AlertCircle, BarChart3, Edit, Plus, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -24,9 +31,20 @@ interface FeedbackFormData {
   comment?: string;
 }
 
+interface Mess {
+  _id: string;
+  name: string;
+  capacity?: number;
+}
+
 function MessPage() {
   const user = useAppSelector((s) => s.auth.user);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+
+  // Mess list state
+  const [messes, setMesses] = useState<Mess[]>([]);
+  const [selectedMessId, setSelectedMessId] = useState<string | null>(null);
+  const [messListLoading, setMessListLoading] = useState(false);
 
   const [menu, setMenu] = useState<MenuData | null>(null);
   const [menuStatus, setMenuStatus] = useState<
@@ -49,34 +67,71 @@ function MessPage() {
   const canSubmitFeedback = user?.role === "student";
 
   // Admins and wardens can view dashboard
-  const canViewDashboard = user?.role === "admin" || user?.role === "warden";
+  const canViewDashboard =
+    user?.role === "collegeAdmin" || user?.role === "warden";
 
-  // Fetch menu
-  const fetchMenu = async () => {
+  // Fetch messes for the college
+  const fetchMesses = async () => {
+    try {
+      setMessListLoading(true);
+      const response = await apiClient.get("/mess/list");
+      const list: Mess[] = response.data.messes || [];
+      setMesses(list);
+      // Auto-select first mess if none selected
+      if (list.length > 0 && !selectedMessId) {
+        setSelectedMessId(list[0]._id);
+      }
+    } catch {
+      setMesses([]);
+    } finally {
+      setMessListLoading(false);
+    }
+  };
+
+  // Fetch menu for selected mess
+  const fetchMenu = async (messId?: string) => {
+    const id = messId || selectedMessId;
+    if (!id) {
+      setMenu(null);
+      setMenuStatus("succeeded");
+      return;
+    }
     try {
       setMenuStatus("loading");
-      const response = await apiClient.get("/mess/menu");
+      const response = await apiClient.get(`/mess/menu?messId=${id}`);
       setMenu(response.data.menu || {});
       setMenuStatus("succeeded");
     } catch {
+      setMenu(null);
       setMenuStatus("failed");
     }
   };
 
+  // Initial load — fetch messes
   useEffect(() => {
     if (isAuthenticated) {
-      fetchMenu();
+      fetchMesses();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
+
+  // Fetch menu when selected mess changes
+  useEffect(() => {
+    if (selectedMessId) {
+      fetchMenu(selectedMessId);
+    } else {
+      setMenu(null);
+      setMenuStatus("succeeded");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMessId]);
 
   useEffect(() => {
     if (feedbackStatus === "succeeded") {
-      // Clear status after 3 seconds
       const timer = setTimeout(() => {
         setFeedbackStatus("idle");
         setFeedbackError(null);
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [feedbackStatus]);
@@ -101,6 +156,48 @@ function MessPage() {
         axiosError.response?.data?.message || "Failed to submit feedback"
       );
     }
+  };
+
+  const handleMessChange = (messId: string) => {
+    setSelectedMessId(messId);
+  };
+
+  // Mess selector dropdown
+  const MessSelector = () => {
+    if (messListLoading) {
+      return (
+        <div className="text-sm text-muted-foreground animate-pulse">
+          Loading messes...
+        </div>
+      );
+    }
+
+    if (messes.length === 0) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-lg border border-dashed">
+          <Store className="size-4" />
+          <span>No messes registered yet</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <Store className="size-4 text-muted-foreground shrink-0" />
+        <Select value={selectedMessId || ""} onValueChange={handleMessChange}>
+          <SelectTrigger className="w-[200px] h-9">
+            <SelectValue placeholder="Select a mess" />
+          </SelectTrigger>
+          <SelectContent>
+            {messes.map((mess) => (
+              <SelectItem key={mess._id} value={mess._id}>
+                {mess.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
   };
 
   if (!isAuthenticated) {
@@ -132,11 +229,7 @@ function MessPage() {
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header Section */}
         <div className="mb-6">
-          {/* <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full border bg-card text-xs font-medium shadow-sm">
-            <UtensilsCrossed className="size-3.5 text-primary" />
-            <span>Mess Services</span>
-          </div> */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="text-center lg:text-left">
               <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Mess Menu & Feedback
@@ -149,40 +242,45 @@ function MessPage() {
                   : "Explore today's meals and browse the weekly menu schedule"}
               </p>
             </div>
-            {canSubmitFeedback && !showFeedbackForm && (
-              <Button
-                onClick={() => setShowFeedbackForm(true)}
-                className="shadow-lg"
-              >
-                <Plus className="size-4 mr-2" />
-                Give Feedback
-              </Button>
-            )}
-            {canViewDashboard && !showDashboard && (
-              <div className="flex gap-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Mess Selector */}
+              <MessSelector />
+
+              {canSubmitFeedback && !showFeedbackForm && (
                 <Button
-                  onClick={() => {
-                    setShowDashboard(true);
-                    setDashboardView("feedback");
-                  }}
+                  onClick={() => setShowFeedbackForm(true)}
                   className="shadow-lg"
                 >
-                  <BarChart3 className="size-4 mr-2" />
-                  View Feedback
+                  <Plus className="size-4 mr-2" />
+                  Give Feedback
                 </Button>
-                <Button
-                  onClick={() => {
-                    setShowDashboard(true);
-                    setDashboardView("menu");
-                  }}
-                  variant="outline"
-                  className="shadow-lg"
-                >
-                  <Edit className="size-4 mr-2" />
-                  Edit Menu
-                </Button>
-              </div>
-            )}
+              )}
+              {canViewDashboard && !showDashboard && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setShowDashboard(true);
+                      setDashboardView("feedback");
+                    }}
+                    className="shadow-lg"
+                  >
+                    <BarChart3 className="size-4 mr-2" />
+                    View Feedback
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowDashboard(true);
+                      setDashboardView("menu");
+                    }}
+                    variant="outline"
+                    className="shadow-lg"
+                  >
+                    <Edit className="size-4 mr-2" />
+                    Edit Menu
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -221,8 +319,24 @@ function MessPage() {
             {/* Dashboard Content */}
             {dashboardView === "feedback" ? (
               <FeedbackDashboard />
+            ) : selectedMessId ? (
+              <MenuEditor
+                currentMenu={menu}
+                messId={selectedMessId}
+                onMenuUpdate={() => fetchMenu(selectedMessId)}
+              />
             ) : (
-              <MenuEditor currentMenu={menu} onMenuUpdate={fetchMenu} />
+              <div className="flex items-center justify-center py-16 text-muted-foreground">
+                <div className="text-center space-y-2">
+                  <Store className="size-10 mx-auto opacity-50" />
+                  <p className="font-medium">No mess selected</p>
+                  <p className="text-sm">
+                    {messes.length === 0
+                      ? "No messes have been registered yet. Create a mess first."
+                      : "Select a mess from the dropdown above to edit its menu."}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         ) : canSubmitFeedback && showFeedbackForm ? (

@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import apiClient from "@/lib/api-client";
 import type { User, UserFormData } from "@/types/users";
 import {
   updateUserSchema,
@@ -23,9 +24,14 @@ import {
 } from "@/utils/userValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+interface Mess {
+  _id: string;
+  name: string;
+}
 
 interface UserEditDialogProps {
   open: boolean;
@@ -33,7 +39,7 @@ interface UserEditDialogProps {
   user: User | null;
   onSave: (userId: string, data: Partial<UserFormData>) => Promise<void>;
   isLoading?: boolean;
-  wardenCounts?: Record<string, number>; // hostel -> count
+  wardenCounts?: Record<string, number>;
 }
 
 export function UserEditDialog({
@@ -42,40 +48,40 @@ export function UserEditDialog({
   user,
   onSave,
   isLoading = false,
-  wardenCounts = {},
+  wardenCounts: _wardenCounts,
 }: UserEditDialogProps) {
+  const [messes, setMesses] = useState<Mess[]>([]);
+  const [selectedMessId, setSelectedMessId] = useState<string>("unassigned");
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch,
     reset,
-    setError,
   } = useForm<UpdateUserFormData>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
       name: "",
       email: "",
       rollNo: "",
-      year: undefined,
-      hostel: undefined,
+      hostelId: "",
       roomNo: "",
     },
-    mode: "onChange", // Validate on change to show errors immediately
+    mode: "onChange",
   });
 
-  const selectedHostel = watch("hostel");
-  const originalHostel = user?.hostel;
-
-  // Define these before onSubmit to avoid ReferenceError
   const isStudent = user?.role === "student";
   const isWarden = user?.role === "warden";
 
-  // Check if warden is sole warden of their hostel
-  const isSoleWarden =
-    isWarden && originalHostel && wardenCounts[originalHostel] === 1;
-  const canChangeHostel = !isWarden || !isSoleWarden;
+  // Fetch messes list
+  useEffect(() => {
+    if (open) {
+      apiClient
+        .get("/mess/list")
+        .then((res) => setMesses(res.data.messes || []))
+        .catch(() => setMesses([]));
+    }
+  }, [open]);
 
   useEffect(() => {
     if (user) {
@@ -83,120 +89,60 @@ export function UserEditDialog({
         name: user.name || "",
         email: user.email || "",
         rollNo: user.rollNo || "",
-        year: user.year,
-        hostel: user.hostel,
+        hostelId: user.hostelId || "",
         roomNo: user.roomNo || "",
       });
+      setSelectedMessId(user.messId || "unassigned");
     }
   }, [user, reset]);
 
   const onSubmit = async (data: UpdateUserFormData) => {
     if (!user) return;
 
-    // Validate year is required for students
-    if (isStudent) {
-      const currentYear = watch("year");
-      if (!currentYear) {
-        setError("year", {
-          type: "required",
-          message: "Year is required for students",
-        });
-        toast.error("Year is required for students");
-        return;
-      }
-    }
-
-    // Filter out undefined and empty string values, and only include changed values
+    // Filter out unchanged values
     const dataToUpdate: Partial<UserFormData> = {};
 
-    if (
-      data.name !== undefined &&
-      data.name !== null &&
-      typeof data.name === "string" &&
-      data.name !== "" &&
-      data.name !== user.name
-    ) {
-      dataToUpdate.name = data.name;
+    if (data.name && data.name !== user.name) {
+      dataToUpdate.name = data.name as string;
     }
-    if (
-      data.email !== undefined &&
-      data.email !== null &&
-      typeof data.email === "string" &&
-      data.email !== "" &&
-      data.email !== user.email
-    ) {
-      dataToUpdate.email = data.email;
+    if (data.email && data.email !== user.email) {
+      dataToUpdate.email = data.email as string;
     }
     if (isStudent) {
-      if (
-        data.rollNo !== undefined &&
-        data.rollNo !== null &&
-        typeof data.rollNo === "string" &&
-        data.rollNo !== "" &&
-        data.rollNo !== user.rollNo
-      ) {
-        dataToUpdate.rollNo = data.rollNo;
+      if (data.rollNo && data.rollNo !== user.rollNo) {
+        dataToUpdate.rollNo = data.rollNo as string;
       }
-      // Year is required for students, so always include it
-      const yearValue = (data.year || watch("year")) as
-        | "UG-1"
-        | "UG-2"
-        | "UG-3"
-        | "UG-4"
-        | undefined;
-      if (
-        yearValue &&
-        (yearValue === "UG-1" ||
-          yearValue === "UG-2" ||
-          yearValue === "UG-3" ||
-          yearValue === "UG-4")
-      ) {
-        if (yearValue !== user.year) {
-          dataToUpdate.year = yearValue;
-        }
-      }
-      if (
-        data.roomNo !== undefined &&
-        data.roomNo !== null &&
-        typeof data.roomNo === "string" &&
-        data.roomNo !== "" &&
-        data.roomNo !== user.roomNo
-      ) {
-        dataToUpdate.roomNo = data.roomNo;
+      if (data.roomNo && data.roomNo !== user.roomNo) {
+        dataToUpdate.roomNo = data.roomNo as string;
       }
     }
-    if (
-      (isStudent || isWarden) &&
-      data.hostel !== undefined &&
-      data.hostel !== null &&
-      (data.hostel === "BH-1" ||
-        data.hostel === "BH-2" ||
-        data.hostel === "BH-3" ||
-        data.hostel === "BH-4") &&
-      data.hostel !== user.hostel
-    ) {
-      dataToUpdate.hostel = data.hostel;
+    if ((isStudent || isWarden) && data.hostelId && data.hostelId !== user.hostelId) {
+      dataToUpdate.hostelId = data.hostelId as string;
     }
 
-    // Only proceed if there are actual changes
+    // Check if mess assignment changed
+    const currentMessId = user.messId || "unassigned";
+    if (selectedMessId !== currentMessId) {
+      dataToUpdate.messId =
+        selectedMessId === "unassigned" ? null : selectedMessId;
+    }
+
     if (Object.keys(dataToUpdate).length === 0) {
       toast.info("No changes to save");
-      return; // No changes to save
+      return;
     }
 
     try {
       await onSave(user._id, dataToUpdate);
-      // Close dialog only on successful save
       handleClose();
     } catch {
-      // Error handling is done in the parent component
-      // Don't close the dialog on error - let the user see the error and retry if needed
-      // The parent's onSave will handle the error and show toast
+      // Error handling in parent
     }
   };
 
   const handleClose = () => {
     reset();
+    setSelectedMessId("unassigned");
     onClose();
   };
 
@@ -211,7 +157,6 @@ export function UserEditDialog({
         </SheetHeader>
         <form
           onSubmit={handleSubmit(onSubmit, (errors) => {
-            // Log validation errors for debugging
             if (Object.keys(errors).length > 0) {
               console.error("Form validation errors:", errors);
               toast.error("Please fix the form errors before submitting");
@@ -238,7 +183,7 @@ export function UserEditDialog({
               id="email"
               type="email"
               {...register("email")}
-              placeholder="user@iiits.in"
+              placeholder="user@campus.edu"
             />
             {errors.email && (
               <p className="text-xs text-destructive">{errors.email.message}</p>
@@ -263,32 +208,15 @@ export function UserEditDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="year">Year</Label>
-                <Select
-                  value={(watch("year") as string | undefined) || ""}
-                  onValueChange={(value) => {
-                    setValue(
-                      "year",
-                      value as "UG-1" | "UG-2" | "UG-3" | "UG-4",
-                      {
-                        shouldValidate: true,
-                      }
-                    );
-                  }}
-                >
-                  <SelectTrigger id="year">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UG-1">UG-1</SelectItem>
-                    <SelectItem value="UG-2">UG-2</SelectItem>
-                    <SelectItem value="UG-3">UG-3</SelectItem>
-                    <SelectItem value="UG-4">UG-4</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.year && errors.year.message && (
+                <Label htmlFor="roomNo">Room Number</Label>
+                <Input
+                  id="roomNo"
+                  {...register("roomNo")}
+                  placeholder="e.g., 123"
+                />
+                {errors.roomNo && (
                   <p className="text-xs text-destructive">
-                    {errors.year.message}
+                    {errors.roomNo.message}
                   </p>
                 )}
               </div>
@@ -297,56 +225,47 @@ export function UserEditDialog({
 
           {(isStudent || isWarden) && (
             <div className="space-y-2">
-              <Label htmlFor="hostel">Hostel</Label>
-              <Select
-                value={(selectedHostel as string | undefined) || ""}
-                onValueChange={(value) =>
-                  setValue("hostel", value as "BH-1" | "BH-2" | "BH-3" | "BH-4")
-                }
-                disabled={!canChangeHostel}
-              >
-                <SelectTrigger
-                  id="hostel"
-                  className={!canChangeHostel ? "opacity-50" : ""}
-                >
-                  <SelectValue placeholder="Select hostel" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BH-1">BH-1</SelectItem>
-                  <SelectItem value="BH-2">BH-2</SelectItem>
-                  <SelectItem value="BH-3">BH-3</SelectItem>
-                  <SelectItem value="BH-4">BH-4</SelectItem>
-                </SelectContent>
-              </Select>
-              {!canChangeHostel && (
-                <p className="text-xs text-muted-foreground">
-                  Cannot change hostel. This warden is the only warden for{" "}
-                  {originalHostel}.
-                </p>
-              )}
-              {errors.hostel && errors.hostel.message && (
+              <Label htmlFor="hostelId">Hostel</Label>
+              <Input
+                id="hostelId"
+                {...register("hostelId")}
+                placeholder="Hostel"
+                disabled
+              />
+              <p className="text-xs text-muted-foreground">
+                Hostel assignment is managed by the admin.
+              </p>
+              {errors.hostelId && (
                 <p className="text-xs text-destructive">
-                  {errors.hostel.message}
+                  {errors.hostelId.message}
                 </p>
               )}
             </div>
           )}
 
-          {isStudent && (
-            <div className="space-y-2">
-              <Label htmlFor="roomNo">Room Number</Label>
-              <Input
-                id="roomNo"
-                {...register("roomNo")}
-                placeholder="e.g., 123"
-              />
-              {errors.roomNo && (
-                <p className="text-xs text-destructive">
-                  {errors.roomNo.message}
-                </p>
-              )}
-            </div>
-          )}
+          {/* Mess Assignment */}
+          <div className="space-y-2">
+            <Label>Mess Assignment</Label>
+            <Select
+              value={selectedMessId}
+              onValueChange={setSelectedMessId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a mess" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {messes.map((mess) => (
+                  <SelectItem key={mess._id} value={mess._id}>
+                    {mess.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Assign this user to a mess for meal tracking.
+            </p>
+          </div>
 
           <SheetFooter className="gap-2">
             <Button

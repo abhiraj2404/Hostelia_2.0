@@ -1,5 +1,4 @@
 import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -49,7 +48,6 @@ export function StudentsList({
                 <TableHead>Name</TableHead>
                 <TableHead>Roll No</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Year</TableHead>
                 {!isWarden && <TableHead>Hostel</TableHead>}
                 <TableHead>Room</TableHead>
                 <TableHead>Joined</TableHead>
@@ -67,11 +65,8 @@ export function StudentsList({
                   <TableCell className="text-muted-foreground text-sm">
                     {student.email}
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{student.year}</Badge>
-                  </TableCell>
                   {!isWarden && (
-                    <TableCell>{student.hostel || "N/A"}</TableCell>
+                    <TableCell>{(student.hostelName ?? student.hostelId) || "N/A"}</TableCell>
                   )}
                   <TableCell>{student.roomNo || "N/A"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">

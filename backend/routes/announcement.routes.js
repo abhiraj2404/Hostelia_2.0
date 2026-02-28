@@ -10,13 +10,13 @@ const router = Router();
 router.get('/', getAnnouncement);
 router.post(
     '/',
-    authorizeRoles('warden', 'admin'),
+    authorizeRoles('warden', 'collegeAdmin'),
     handleMulterError(announcementUpload.single('announcementFile')),
     createAnnouncement
 );
 router.delete(
     '/:id',
-    authorizeRoles('warden', 'admin'),
+    authorizeRoles('warden', 'collegeAdmin'),
     deleteAnnouncement
 );
 

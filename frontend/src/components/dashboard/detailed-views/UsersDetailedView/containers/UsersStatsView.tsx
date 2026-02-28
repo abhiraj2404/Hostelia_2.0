@@ -77,12 +77,12 @@ export function UsersStatsView({
   // Filter and sort students by hostel for wardens
   const filteredStudents = useMemo(() => {
     let filtered = students;
-    if (isWarden && user?.hostel) {
-      filtered = filtered.filter((s) => s.hostel === user.hostel);
+    if (isWarden && user?.hostelId) {
+      filtered = filtered.filter((s) => s.hostelId === user.hostelId);
     }
     // Sort case-insensitively
     return sortByNameCaseInsensitive(filtered);
-  }, [students, isWarden, user?.hostel]);
+  }, [students, isWarden, user?.hostelId]);
 
   const tabs = [
     { id: "students" as UsersTab, label: "Students", icon: Users },

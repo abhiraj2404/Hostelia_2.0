@@ -63,10 +63,11 @@ interface MenuData {
 
 interface MenuEditorProps {
   currentMenu: MenuData | null;
+  messId: string;
   onMenuUpdate?: () => void;
 }
 
-export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
+export function MenuEditor({ currentMenu, messId, onMenuUpdate }: MenuEditorProps) {
   const [selectedDay, setSelectedDay] = useState<DayName>("Monday");
   const [selectedMeal, setSelectedMeal] = useState<MealType>("Breakfast");
   const [items, setItems] = useState<string[]>([""]);
@@ -139,33 +140,13 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
         return;
       }
 
-      // Prepare updates payload matching backend schema (will sanitize below)
-
-      // Backend z.record(z.enum(days), dayMenuSchema) requires ALL days to be present
-      // Build updates object with all 7 days from currentMenu, then update the selected day/meal
-      const allDaysUpdates: Record<string, Record<string, string[]>> = {};
-
-      // Populate all days from current menu or with empty defaults
-      dayNames.forEach((day) => {
-        if (currentMenu && currentMenu[day]) {
-          // Copy existing meals for this day
-          allDaysUpdates[day] = { ...currentMenu[day] };
-        } else {
-          // Initialize with empty arrays for all meals if day doesn't exist
-          allDaysUpdates[day] = {
-            Breakfast: [],
-            Lunch: [],
-            Snacks: [],
-            Dinner: [],
-          };
-        }
-      });
-
-      // Update the selected day and meal with new items
-      allDaysUpdates[selectedDay][selectedMeal] = filteredItems;
-
       const payload = {
-        updates: allDaysUpdates,
+        messId,
+        updates: {
+          [selectedDay]: {
+            [selectedMeal]: filteredItems,
+          },
+        },
       };
 
       // Ensure selectedDay is a valid day string
@@ -175,10 +156,7 @@ export function MenuEditor({ currentMenu, onMenuUpdate }: MenuEditorProps) {
         return;
       }
 
-      console.log("MenuEditor - Selected day:", selectedDay);
-      console.log("MenuEditor - Selected meal:", selectedMeal);
       console.log("MenuEditor - Payload:", JSON.stringify(payload, null, 2));
-      console.log("MenuEditor - Payload keys:", Object.keys(payload.updates));
 
       const response = await apiClient.put("/mess/menu", payload);
 

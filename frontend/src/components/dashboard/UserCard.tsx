@@ -62,11 +62,11 @@ export function UserCard() {
             {(isWarden || isStudent) && (
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Hostel</p>
-                <p className="text-lg font-semibold text-foreground">{user.hostel || "N/A"}</p>
+                <p className="text-lg font-semibold text-foreground">{user.hostelId || "N/A"}</p>
               </div>
             )}
 
-            {/* Additional student fields - Roll No, Room No, Year */}
+            {/* Additional student fields - Roll No, Room No */}
             {isStudent && (
               <>
                 <div className="space-y-1">
@@ -76,10 +76,6 @@ export function UserCard() {
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Room No</p>
                   <p className="text-lg font-semibold text-foreground">{user.roomNo || "N/A"}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Year</p>
-                  <p className="text-lg font-semibold text-foreground">{user.year || "N/A"}</p>
                 </div>
               </>
             )}

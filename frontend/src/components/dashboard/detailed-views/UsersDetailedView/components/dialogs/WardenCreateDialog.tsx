@@ -23,13 +23,22 @@ import {
 } from "@/utils/userValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { apiClient } from "@/lib/api-client";
+
+interface Hostel {
+  _id: string;
+  name: string;
+}
 
 interface WardenCreateDialogProps {
   open: boolean;
   onClose: () => void;
   onCreate: (data: WardenCreateData) => Promise<void>;
   isLoading?: boolean;
+  /** Optional: if provided, pre-select the hostel and lock the field */
+  preselectedHostelId?: string;
 }
 
 export function WardenCreateDialog({
@@ -37,7 +46,11 @@ export function WardenCreateDialog({
   onClose,
   onCreate,
   isLoading = false,
+  preselectedHostelId,
 }: WardenCreateDialogProps) {
+  const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [hostelsLoading, setHostelsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -50,12 +63,38 @@ export function WardenCreateDialog({
     defaultValues: {
       name: "",
       email: "",
-      hostel: undefined,
+      hostelId: preselectedHostelId || "",
       password: "",
     },
   });
 
-  const selectedHostel = watch("hostel");
+  const selectedHostel = watch("hostelId");
+
+  // Fetch hostels when dialog opens
+  useEffect(() => {
+    if (!open) return;
+    const fetchHostels = async () => {
+      setHostelsLoading(true);
+      try {
+        const response = await apiClient.get("/hostel/list");
+        if (response.data?.success) {
+          setHostels(response.data.hostels || []);
+        }
+      } catch {
+        // silently fail — dropdown will be empty
+      } finally {
+        setHostelsLoading(false);
+      }
+    };
+    fetchHostels();
+  }, [open]);
+
+  // Set preselected hostel when it changes
+  useEffect(() => {
+    if (preselectedHostelId) {
+      setValue("hostelId", preselectedHostelId);
+    }
+  }, [preselectedHostelId, setValue]);
 
   const onSubmit = async (data: CreateWardenFormData) => {
     await onCreate(data);
@@ -100,7 +139,7 @@ export function WardenCreateDialog({
               id="email"
               type="email"
               {...register("email")}
-              placeholder="warden.name@iiits.in"
+              placeholder="warden.name@college.edu"
             />
             {errors.email && (
               <p className="text-xs text-destructive">{errors.email.message}</p>
@@ -111,25 +150,32 @@ export function WardenCreateDialog({
             <Label htmlFor="hostel">
               Hostel <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={selectedHostel}
-              onValueChange={(value) =>
-                setValue("hostel", value as "BH-1" | "BH-2" | "BH-3" | "BH-4")
-              }
-            >
-              <SelectTrigger id="hostel">
-                <SelectValue placeholder="Select hostel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="BH-1">BH-1</SelectItem>
-                <SelectItem value="BH-2">BH-2</SelectItem>
-                <SelectItem value="BH-3">BH-3</SelectItem>
-                <SelectItem value="BH-4">BH-4</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.hostel && (
+            {hostelsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading hostels...
+              </div>
+            ) : (
+              <Select
+                value={selectedHostel}
+                onValueChange={(value) => setValue("hostelId", value)}
+                disabled={!!preselectedHostelId}
+              >
+                <SelectTrigger id="hostel">
+                  <SelectValue placeholder="Select hostel" />
+                </SelectTrigger>
+                <SelectContent>
+                  {hostels.map((hostel) => (
+                    <SelectItem key={hostel._id} value={hostel._id}>
+                      {hostel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {errors.hostelId && (
               <p className="text-xs text-destructive">
-                {errors.hostel.message}
+                {errors.hostelId.message}
               </p>
             )}
           </div>

@@ -38,7 +38,7 @@ export function ComplaintsStatsView({
 
     // Filter by hostel (for admin)
     if (filters.hostel && filters.hostel !== 'all') {
-      result = result.filter(c => c.hostel === filters.hostel);
+      result = result.filter(c => c.hostelId === filters.hostel);
     }
 
     if (filters.status && filters.status !== 'all') {

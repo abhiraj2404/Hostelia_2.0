@@ -27,13 +27,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit,
+  Loader2,
   Trash2,
   UserPlus,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UserDeleteDialog } from "../dialogs/UserDeleteDialog";
 import { UserEditDialog } from "../dialogs/UserEditDialog";
 import { WardenCreateDialog } from "../dialogs/WardenCreateDialog";
+import { apiClient } from "@/lib/api-client";
+
+interface HostelOption {
+  _id: string;
+  name: string;
+}
 
 interface WardensManagementProps {
   wardens: Warden[];
@@ -73,13 +80,49 @@ export function WardensManagement({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [hostelOptions, setHostelOptions] = useState<HostelOption[]>([]);
+  const [hostelsLoading, setHostelsLoading] = useState(false);
 
-  // Calculate warden counts per hostel
+  // Fetch hostels for the filter dropdown
+  useEffect(() => {
+    const fetchHostels = async () => {
+      setHostelsLoading(true);
+      try {
+        const response = await apiClient.get("/hostel/list");
+        if (response.data?.success) {
+          setHostelOptions(response.data.hostels || []);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setHostelsLoading(false);
+      }
+    };
+    fetchHostels();
+  }, []);
+
+  // Build a map from hostelId -> hostelName
+  const hostelNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    hostelOptions.forEach((h) => {
+      map[h._id] = h.name;
+    });
+    return map;
+  }, [hostelOptions]);
+
+  // Helper to get hostel display name (prefer backend hostelName)
+  const getHostelName = (warden: Warden) => {
+    if (warden.hostelName) return warden.hostelName;
+    if (!warden.hostelId) return "Unassigned";
+    return hostelNameMap[warden.hostelId] ?? warden.hostelId;
+  };
+
+  // Calculate warden counts per hostel (using hostelId)
   const wardenCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     wardens.forEach((warden) => {
-      if (warden.hostel) {
-        counts[warden.hostel] = (counts[warden.hostel] || 0) + 1;
+      if (warden.hostelId) {
+        counts[warden.hostelId] = (counts[warden.hostelId] || 0) + 1;
       }
     });
     return counts;
@@ -99,7 +142,7 @@ export function WardensManagement({
     }
 
     if (filters.hostel && filters.hostel !== "all") {
-      filtered = filtered.filter((warden) => warden.hostel === filters.hostel);
+      filtered = filtered.filter((warden) => warden.hostelId === filters.hostel);
     }
 
     // Sort case-insensitively by name
@@ -142,7 +185,7 @@ export function WardensManagement({
 
   const handleConfirmDelete = async (userId: string) => {
     const warden = wardens.find((w) => w._id === userId);
-    if (warden?.hostel && wardenCounts[warden.hostel] === 1) {
+    if (warden?.hostelId && wardenCounts[warden.hostelId] === 1) {
       // This should be prevented by UI, but double-check
       return;
     }
@@ -157,8 +200,8 @@ export function WardensManagement({
   };
 
   const canDeleteWarden = (warden: Warden) => {
-    if (!warden.hostel) return true;
-    return wardenCounts[warden.hostel] > 1;
+    if (!warden.hostelId) return true;
+    return wardenCounts[warden.hostelId] > 1;
   };
 
   return (
@@ -166,29 +209,36 @@ export function WardensManagement({
       {/* Header with Appoint Button */}
       <div className="flex items-center justify-between">
         <div className="flex flex-wrap gap-2 flex-1">
-          <Select
-            value={filters.hostel || "all"}
-            onValueChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                hostel:
-                  value === "all"
-                    ? undefined
-                    : (value as UserManagementFilters["hostel"]),
-              })
-            }
-          >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Hostel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Hostels</SelectItem>
-              <SelectItem value="BH-1">BH-1</SelectItem>
-              <SelectItem value="BH-2">BH-2</SelectItem>
-              <SelectItem value="BH-3">BH-3</SelectItem>
-              <SelectItem value="BH-4">BH-4</SelectItem>
-            </SelectContent>
-          </Select>
+          {hostelsLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2 w-[150px]">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          ) : (
+            <Select
+              value={filters.hostel || "all"}
+              onValueChange={(value) =>
+                onFiltersChange({
+                  ...filters,
+                  hostel:
+                    value === "all"
+                      ? undefined
+                      : (value as UserManagementFilters["hostel"]),
+                })
+              }
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Hostel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Hostels</SelectItem>
+                {hostelOptions.map((h) => (
+                  <SelectItem key={h._id} value={h._id}>
+                    {h.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <Input
             placeholder="Search by name or email..."
@@ -248,8 +298,8 @@ export function WardensManagement({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{warden.hostel}</Badge>
-                        {warden.hostel && wardenCounts[warden.hostel] === 1 && (
+                        <Badge variant="outline">{getHostelName(warden)}</Badge>
+                        {warden.hostelId && wardenCounts[warden.hostelId] === 1 && (
                           <Badge
                             variant="outline"
                             className="text-xs text-yellow-700 border-yellow-500"
@@ -346,7 +396,7 @@ export function WardensManagement({
         onConfirm={handleConfirmDelete}
         isLoading={deletingUser ? deleteLoading[deletingUser._id] : false}
         warningMessage={
-          deletingUser?.hostel && wardenCounts[deletingUser.hostel] === 1
+          deletingUser?.hostelId && wardenCounts[deletingUser.hostelId] === 1
             ? "Cannot delete warden. This is the only warden for this hostel. Hostel must have at least one warden."
             : undefined
         }

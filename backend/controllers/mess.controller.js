@@ -1,9 +1,11 @@
 import Feedback from "../models/feedback.model.js";
-import User from "../models/user.model.js";
+import { z } from 'zod';
+import Mess from '../models/mess.model.js';
+import User from '../models/user.model.js';
 import Menu from "../models/menu.model.js";
-import z from "zod";
-import { logger } from "../middleware/logger.js";
-import { notifyUsers } from "../utils/notificationService.js";
+import { authorizeRoles } from '../middleware/roles.js';
+import { logger } from '../middleware/logger.js';
+import { notifyUsers } from '../utils/notificationService.js';
 
 const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
 const mealTypes = [ "Breakfast", "Lunch", "Snacks", "Dinner" ];
@@ -41,16 +43,38 @@ const dayMenuSchema = z.object({
     { message: "Provide at least one meal entry per day" }
 );
 
+// Build a partial object schema for updates – each day key is optional
+// so the client can send any subset of days.
+const daysObject = Object.fromEntries(days.map((d) => [ d, dayMenuSchema.optional() ]));
 const updateMenuSchema = z.object({
-    updates: z.record(z.enum(days), dayMenuSchema).refine(
-        (updates) => Object.keys(updates).length > 0,
+    updates: z.object(daysObject).refine(
+        (updates) => Object.values(updates).some((v) => v !== undefined),
         { message: "At least one day update is required" }
     ),
 });
 
 export const getMenu = async (req, res) => {
     try {
-        const menuDocs = await Menu.find().lean();
+        const collegeId = req.user.collegeId;
+        const { messId } = req.query;
+
+        if (!messId) {
+            return res.status(400).json({
+                success: false,
+                message: "messId query parameter is required",
+            });
+        }
+
+        // Verify mess belongs to user's college
+        const mess = await Mess.findOne({ _id: messId, collegeId });
+        if (!mess) {
+            return res.status(404).json({
+                success: false,
+                message: "Mess not found in your college",
+            });
+        }
+
+        const menuDocs = await Menu.find({ messId, collegeId }).lean();
         const menu = buildMenuResponse(menuDocs);
 
         return res.status(200).json({
@@ -69,7 +93,25 @@ export const getMenu = async (req, res) => {
 
 export const updateMenu = async (req, res) => {
     try {
-        const validationResult = updateMenuSchema.safeParse(req.body || {});
+        const { messId, updates: rawUpdates } = req.body || {};
+
+        if (!messId) {
+            return res.status(400).json({
+                success: false,
+                message: "messId is required",
+            });
+        }
+
+        // Verify mess belongs to user's college
+        const mess = await Mess.findOne({ _id: messId, collegeId: req.user.collegeId });
+        if (!mess) {
+            return res.status(404).json({
+                success: false,
+                message: "Mess not found in your college",
+            });
+        }
+
+        const validationResult = updateMenuSchema.safeParse({ updates: rawUpdates });
 
         if (!validationResult.success) {
             return res.status(400).json({
@@ -105,10 +147,12 @@ export const updateMenu = async (req, res) => {
             if (Object.keys(setOperations).length > 0) {
                 bulkOps.push({
                     updateOne: {
-                        filter: { day },
+                        filter: { day, messId, collegeId: req.user.collegeId },
                         update: {
                             $set: {
                                 day,
+                                messId,
+                                collegeId: req.user.collegeId,
                                 ...setOperations,
                             },
                         },
@@ -139,7 +183,7 @@ export const updateMenu = async (req, res) => {
 
         // Send notification to all students about the batch update
         try {
-            const students = await User.find({ role: 'student' }).select('_id hostel');
+            const students = await User.find({ role: 'student', collegeId: req.user.collegeId }).select('_id hostelId');
             const studentIds = students.map((student) => student._id.toString());
             if (studentIds.length > 0) {
                 const message = `${req.user.name} updated the mess menu`;
@@ -149,7 +193,7 @@ export const updateMenu = async (req, res) => {
                     title: 'Mess Menu Updated',
                     message,
                     relatedEntityId: req.user._id,
-                    relatedEntityType: 'mess',  
+                    relatedEntityType: 'mess',
                 });
 
                 logger.info('Notifications sent for mess menu update', {
@@ -162,7 +206,7 @@ export const updateMenu = async (req, res) => {
             });
         }
 
-        const latestMenuDocs = await Menu.find().lean();
+        const latestMenuDocs = await Menu.find({ messId, collegeId: req.user.collegeId }).lean();
 
         return res.status(200).json({
             success: true,
@@ -201,21 +245,24 @@ export const submitFeedback = async (req, res) => {
             rating,
             comment,
             user: req.user._id,
+            collegeId: req.user.collegeId,
+            messId: req.user.messId || undefined,
         });
 
         logger.info("Feedback submitted", { userId: req.user._id, mealType, rating });
 
         // Notify admins and wardens about the new mess feedback
         try {
-            // Find all admins
-            const admins = await User.find({ role: 'admin' }).select('_id');
+            // Find all admins in this college
+            const admins = await User.find({ role: 'collegeAdmin', collegeId: req.user.collegeId }).select('_id');
             const adminIds = admins.map((admin) => admin._id.toString());
 
             // Find wardens for the student's hostel
-            const studentHostel = req.user.hostel;
+            const studentHostel = req.user.hostelId;
             const wardens = await User.find({
                 role: 'warden',
-                hostel: studentHostel,
+                hostelId: studentHostel,
+                collegeId: req.user.collegeId,
             }).select('_id');
             const wardenIds = wardens.map((warden) => warden._id.toString());
 
@@ -226,7 +273,7 @@ export const submitFeedback = async (req, res) => {
                 await notifyUsers(notifyUserIds, {
                     type: 'mess_feedback_submitted',
                     title: 'New Mess Feedback',
-                    message: `${req.user.name} (${req.user.hostel}) submitted ${mealType} feedback with rating ${rating}/5`,
+                    message: `${req.user.name} (${req.user.hostelId}) submitted ${mealType} feedback with rating ${rating}/5`,
                     relatedEntityId: feedback._id,
                     relatedEntityType: 'mess',
                 });
@@ -259,9 +306,30 @@ export const submitFeedback = async (req, res) => {
 
 export const getAllFeedbacks = async (req, res) => {
     try {
-        const feedbacks = await Feedback.find()
-            .populate('user', 'name email rollNo hostel roomNo year')
+        const feedbacks = await Feedback.find({ collegeId: req.user.collegeId })
+            .populate({
+                path: 'user',
+                select: 'name email rollNo hostelId roomNo',
+                populate: { path: 'hostelId', select: 'name' },
+            })
             .sort({ createdAt: -1 });
+
+        const feedbacksWithHostelName = feedbacks.map((f) => {
+            const u = f.user;
+            const plain = f.toObject ? f.toObject() : { ...f };
+            plain.user = u
+                ? {
+                    _id: u._id,
+                    name: u.name,
+                    email: u.email,
+                    rollNo: u.rollNo,
+                    roomNo: u.roomNo,
+                    hostelId: u.hostelId?._id?.toString() ?? u.hostelId?.toString(),
+                    hostelName: u.hostelId?.name ?? null,
+                }
+                : u;
+            return plain;
+        });
 
         logger.info("Feedbacks fetched", {
             count: feedbacks.length,
@@ -272,7 +340,7 @@ export const getAllFeedbacks = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Feedbacks fetched successfully",
-            feedbacks,
+            feedbacks: feedbacksWithHostelName,
             count: feedbacks.length,
         });
     } catch (error) {
@@ -284,4 +352,60 @@ export const getAllFeedbacks = async (req, res) => {
     }
 }
 
+// Create a new mess (collegeAdmin only)
+export const createMess = async (req, res) => {
+    try {
+        const { name, capacity } = req.body;
+        const collegeId = req.user.collegeId;
 
+        if (!name || !name.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Mess name is required",
+            });
+        }
+
+        const mess = await Mess.create({
+            name: name.trim(),
+            capacity: capacity || 0,
+            collegeId,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Mess created successfully",
+            mess,
+        });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "A mess with this name already exists in your college",
+            });
+        }
+        logger.error("Failed to create mess:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to create mess",
+        });
+    }
+};
+
+// List all messes for the user's college
+export const listMesses = async (req, res) => {
+    try {
+        const collegeId = req.user.collegeId;
+        const messes = await Mess.find({ collegeId }).sort({ name: 1 }).lean();
+
+        return res.status(200).json({
+            success: true,
+            messes,
+        });
+    } catch (error) {
+        logger.error("Failed to list messes:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to list messes",
+        });
+    }
+};

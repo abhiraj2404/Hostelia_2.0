@@ -14,19 +14,19 @@ const router = Router();
 // Protected routes - require authentication (authMiddleware applied in index.js)
 // Specific routes must come before parameterized routes
 // Get all students - admin and warden can access
-router.get("/students/all", authorizeRoles("admin", "warden"), getAllStudents);
+router.get("/students/all", authorizeRoles("collegeAdmin", "warden"), getAllStudents);
 
 // Get all wardens - admin only
-router.get("/wardens/all", authorizeRoles("admin"), getAllWardens);
+router.get("/wardens/all", authorizeRoles("collegeAdmin"), getAllWardens);
 
 // Get only the name and role for a user
 router.get("/getName/:userId", getUserName);
 
 // Update a user's profile (admin only, no role/password updates)
-router.put("/update/:userId", authorizeRoles("admin", "warden"), updateUserDetails);
+router.put("/update/:userId", authorizeRoles("collegeAdmin", "warden"), updateUserDetails);
 
 // Delete a user (admin only)
-router.delete("/:userId", authorizeRoles("admin"), deleteUser);
+router.delete("/:userId", authorizeRoles("collegeAdmin"), deleteUser);
 
 // Get user by ID
 router.get("/:userId", getUserById);

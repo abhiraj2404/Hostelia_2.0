@@ -25,11 +25,12 @@ interface StudentsAnalyticsProps {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
-  // Year Distribution Data
-  const yearData = useMemo(() => {
+  // Hostel Distribution Data
+  const hostelData = useMemo(() => {
     const counts: Record<string, number> = {};
     students.forEach((s) => {
-      counts[s.year] = (counts[s.year] || 0) + 1;
+      const h = (s.hostelName ?? s.hostelId) || "Unassigned";
+      counts[h] = (counts[h] || 0) + 1;
     });
     return sortByPropertyCaseInsensitive(
       Object.entries(counts).map(([name, value]) => ({ name, value })),
@@ -82,17 +83,17 @@ export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {/* Year Distribution Chart */}
+      {/* Hostel Distribution Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Year Distribution</CardTitle>
+          <CardTitle>Hostel Distribution</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={yearData}
+                  data={hostelData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -103,7 +104,7 @@ export function StudentsAnalytics({ students }: StudentsAnalyticsProps) {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {yearData.map((_entry, index) => (
+                  {hostelData.map((_entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}

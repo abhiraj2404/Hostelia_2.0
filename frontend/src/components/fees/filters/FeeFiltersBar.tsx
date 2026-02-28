@@ -10,7 +10,7 @@ import type { FeesFilters } from "@/types/dashboard";
 
 interface FeeFiltersBarProps {
   filters: FeesFilters;
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   userHostel?: string;
   onFiltersChange: (filters: FeesFilters) => void;
 }
@@ -26,7 +26,7 @@ export function FeeFiltersBar({
 
   const handleClearFilters = () => {
     onFiltersChange({
-      hostel: userRole === "admin" ? undefined : userHostel,
+      hostel: userRole === "collegeAdmin" ? undefined : userHostel,
       feeType: undefined,
       status: undefined,
     });
@@ -34,7 +34,7 @@ export function FeeFiltersBar({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {userRole === "admin" && (
+      {userRole === "collegeAdmin" && (
         <Select
           value={filters.hostel || "all"}
           onValueChange={(value) =>

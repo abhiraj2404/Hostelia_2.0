@@ -5,6 +5,7 @@ import { MessStatsView } from "@/components/dashboard/detailed-views/MessDetaile
 import { StudentsStatsView } from "@/components/dashboard/detailed-views/StudentsDetailedView/StudentsStatsView";
 import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView";
 import { WardenMetrics } from "@/components/dashboard/metrics/WardenMetrics";
+import { CollegeBanner } from "@/components/dashboard/CollegeBanner";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,7 @@ export function WardenDashboardLayout() {
   const messState = useAppSelector(selectDetailedMessFeedback);
   const usersState = useAppSelector(selectUsersState);
 
-  const hostel = user?.hostel || "";
+  const hostel = user?.hostelId || "";
 
   // Fetch initial dashboard data
   useEffect(() => {
@@ -266,11 +267,6 @@ export function WardenDashboardLayout() {
       );
     }
 
-    // 2. Filter by Year
-    if (studentsState.filters.year && studentsState.filters.year !== "all") {
-      result = result.filter((s) => s.year === studentsState.filters.year);
-    }
-
     // Sort case-insensitively by name
     return sortByNameCaseInsensitive(result);
   }, [studentsState.items, studentsState.filters]);
@@ -329,6 +325,9 @@ export function WardenDashboardLayout() {
         </div>
       ) : metrics ? (
         <>
+          {/* College Banner */}
+          <CollegeBanner />
+
           {/* Profile Card */}
           <UserProfileCard />
 

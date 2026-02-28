@@ -31,7 +31,7 @@ export function MessStatsView({
 
     // Filter by hostel (for admin)
     if (filters.hostel && filters.hostel !== 'all') {
-      result = result.filter(f => f.studentId?.hostel === filters.hostel);
+      result = result.filter(f => (f.studentId?.hostelId ?? f.user?.hostelId) === filters.hostel);
     }
 
     if (filters.day && filters.day !== 'all') {

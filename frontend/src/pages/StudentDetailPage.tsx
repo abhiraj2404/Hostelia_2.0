@@ -63,8 +63,8 @@ function StudentDetailPage() {
 
       // Check warden access - can only see students from their hostel
       if (currentUser?.role === 'warden') {
-        const studentHostel = userRes.data.user?.hostel;
-        if (studentHostel !== currentUser.hostel) {
+        const studentHostel = userRes.data.user?.hostelId;
+        if (studentHostel !== currentUser.hostelId) {
           toast.error('You can only view students from your hostel');
           navigate('/dashboard');
           return;

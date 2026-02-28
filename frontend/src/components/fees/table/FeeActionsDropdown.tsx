@@ -11,7 +11,7 @@ import { Bell, Check, Eye, MoreVertical, X } from "lucide-react";
 interface FeeActionsDropdownProps {
   fee: FeeSubmission;
   isLoading: boolean;
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   onViewDocument: (
     url: string,
     type: "hostel" | "mess",
@@ -38,7 +38,7 @@ export function FeeActionsDropdown({
   const messPending = fee.messFee.status === "pending";
   const hostelRejected = fee.hostelFee.status === "rejected";
   const messRejected = fee.messFee.status === "rejected";
-  const isAdmin = userRole === "admin";
+  const isAdmin = userRole === "collegeAdmin";
 
   // Show view document only if document exists AND status is not rejected
   const canViewHostelDoc = hasHostelDoc && !hostelRejected;

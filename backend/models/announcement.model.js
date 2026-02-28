@@ -5,7 +5,7 @@ const commentSubSchema = new mongoose.Schema(
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         role: {
             type: String,
-            enum: [ "student", "warden", "admin" ],
+            enum: [ "student", "warden", "collegeAdmin" ],
             required: true,
         },
         message: { type: String, required: true, trim: true, maxlength: 2000 },
@@ -31,6 +31,12 @@ const announcementSchema = new mongoose.Schema({
     fileUrl: {
         type: String,
         default: undefined
+    },
+    collegeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'College',
+        required: true,
+        index: true
     },
     comments: {
         type: [ commentSubSchema ],

@@ -5,6 +5,7 @@ import { useAppSelector } from "@/hooks";
 import { cn } from "@/lib/utils";
 import {
   Bell,
+  Building2,
   DollarSign,
   LayoutDashboard,
   Mail,
@@ -26,7 +27,7 @@ type NavigationItem = {
   to: string;
   icon: React.ComponentType<{ className?: string }>;
   requireAuth: boolean;
-  requireRoles?: ("admin" | "warden" | "student")[];
+  requireRoles?: ("collegeAdmin" | "warden" | "student")[];
 };
 
 const navigation: NavigationItem[] = [
@@ -37,11 +38,17 @@ const navigation: NavigationItem[] = [
     requireAuth: true,
   },
   {
+    label: "College",
+    to: "/college",
+    icon: Building2,
+    requireAuth: true,
+  },
+  {
     label: "User Management",
     to: "/users",
     icon: UserCog,
     requireAuth: true,
-    requireRoles: ["admin", "warden"],
+    requireRoles: ["collegeAdmin", "warden"],
   },
   {
     label: "Complaints",
@@ -77,7 +84,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
             if (!isAuthenticated && item.requireAuth) return false;
             if (item.requireRoles && user?.role) {
               return item.requireRoles.includes(
-                user.role as "admin" | "warden" | "student"
+                user.role as "collegeAdmin" | "warden" | "student"
               );
             }
             return true;

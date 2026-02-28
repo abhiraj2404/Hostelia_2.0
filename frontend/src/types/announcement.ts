@@ -1,6 +1,6 @@
 export interface Comment {
   user: string;
-  role: "student" | "warden" | "admin";
+  role: "student" | "warden" | "collegeAdmin";
   message: string;
   createdAt: string;
 }

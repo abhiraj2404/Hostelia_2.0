@@ -35,7 +35,7 @@ interface TransitEntry {
     _id: string;
     name: string;
     rollNo: string;
-    hostel: string;
+    hostelId: string;
     roomNo: string;
   };
   purpose: string;

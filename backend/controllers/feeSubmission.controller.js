@@ -7,12 +7,22 @@ import User from "../models/user.model.js";
 import { getEmailUser, sendEmail } from "../utils/email-client.js";
 import { notifyUsers } from "../utils/notificationService.js";
 
-// Get fee status - role-based (student sees own, admin sees all)
+// Get fee status - role-based (student sees own, collegeAdmin sees all)
 export async function getFeeStatus(req, res) {
   try {
     const filter = await scopedFeeFilter(req);
-    const feeSubmissions = await FeeSubmission.find(filter).sort({
-      createdAt: -1,
+    const feeSubmissions = await FeeSubmission.find(filter)
+      .populate({
+        path: "studentId",
+        select: "hostelId",
+        populate: { path: "hostelId", select: "name" },
+      })
+      .sort({ createdAt: -1 });
+    const data = feeSubmissions.map((f) => {
+      const plain = f.toObject ? f.toObject() : { ...f };
+      plain.hostelName = f.studentId?.hostelId?.name ?? null;
+      plain.studentId = f.studentId?._id?.toString() ?? f.studentId?.toString();
+      return plain;
     });
     logger.info("Fee status fetched", {
       role: req.user.role,
@@ -21,7 +31,7 @@ export async function getFeeStatus(req, res) {
     return res.status(200).json({
       success: true,
       message: "Fee status fetched successfully",
-      data: feeSubmissions,
+      data,
     });
   } catch (err) {
     logger.error("Failed to fetch fee status", {
@@ -70,7 +80,7 @@ export async function submitHostelFee(req, res) {
 
     // Update FeeSubmission - entry should already exist from signup
     const feeSubmission = await FeeSubmission.findOneAndUpdate(
-      { studentId: userId },
+      { studentId: userId, collegeId: req.user.collegeId },
       {
         "hostelFee.documentUrl": documentUrl,
         "hostelFee.status": "pending",
@@ -83,7 +93,7 @@ export async function submitHostelFee(req, res) {
     if (!feeSubmission) {
       return res.status(404).json({
         success: false,
-        message: "Fee submission entry not found. Please contact admin.",
+        message: "Fee submission entry not found. Please contact college admin.",
       });
     }
 
@@ -94,7 +104,7 @@ export async function submitHostelFee(req, res) {
 
     // Notify admins about hostel fee submission
     try {
-      const admins = await User.find({ role: "admin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin", collegeId: req.user.collegeId }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       if (adminIds.length > 0) {
@@ -169,7 +179,7 @@ export async function submitMessFee(req, res) {
 
     // Update FeeSubmission - entry should already exist from signup
     const feeSubmission = await FeeSubmission.findOneAndUpdate(
-      { studentId: userId },
+      { studentId: userId, collegeId: req.user.collegeId },
       {
         "messFee.documentUrl": documentUrl,
         "messFee.status": "pending",
@@ -182,7 +192,7 @@ export async function submitMessFee(req, res) {
     if (!feeSubmission) {
       return res.status(404).json({
         success: false,
-        message: "Fee submission entry not found. Please contact admin.",
+        message: "Fee submission entry not found. Please contact college admin.",
       });
     }
 
@@ -193,7 +203,7 @@ export async function submitMessFee(req, res) {
 
     // Notify admins about mess fee submission
     try {
-      const admins = await User.find({ role: "admin" }).select("_id");
+      const admins = await User.find({ role: "collegeAdmin", collegeId: req.user.collegeId }).select("_id");
       const adminIds = admins.map((admin) => admin._id.toString());
 
       if (adminIds.length > 0) {
@@ -234,7 +244,7 @@ export async function submitMessFee(req, res) {
   }
 }
 
-// Update fee status (admin only)
+// Update fee status (collegeAdmin only)
 const updateFeeStatusSchema = z.object({
   hostelFeeStatus: z
     .enum([ "documentNotSubmitted", "pending", "approved", "rejected" ])
@@ -259,7 +269,7 @@ export async function updateFeeStatus(req, res) {
 
   try {
     // Verify student exists
-    const student = await User.findById(studentId);
+    const student = await User.findOne({ _id: studentId, collegeId: req.user.collegeId });
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -285,7 +295,7 @@ export async function updateFeeStatus(req, res) {
 
     // Update FeeSubmission
     const feeSubmission = await FeeSubmission.findOneAndUpdate(
-      { studentId },
+      { studentId, collegeId: req.user.collegeId },
       updateFields,
       { new: true, upsert: false }
     );
@@ -375,7 +385,7 @@ export async function sendFeeReminder(req, res) {
   const { studentId, emailType, notes } = parsed.data;
 
   try {
-    const student = await User.findById(studentId);
+    const student = await User.findOne({ _id: studentId, collegeId: req.user.collegeId });
     if (!student) {
       return res.status(404).json({
         success: false,
@@ -448,7 +458,7 @@ export async function sendFeeReminder(req, res) {
     // Attempt to create in-app notification (regardless of email success)
     try {
       // Get fee submission for the student to use as relatedEntityId
-      const feeSubmission = await FeeSubmission.findOne({ studentId });
+      const feeSubmission = await FeeSubmission.findOne({ studentId, collegeId: req.user.collegeId });
 
       if (feeSubmission) {
         const feeTypeMessage =
@@ -558,7 +568,7 @@ export async function sendBulkFeeReminders(req, res) {
   try {
     const sender = req.user;
 
-    const students = await User.find({ _id: { $in: studentIds } });
+    const students = await User.find({ _id: { $in: studentIds }, collegeId: req.user.collegeId });
     if (students.length === 0) {
       return res.status(404).json({
         success: false,

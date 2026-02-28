@@ -30,7 +30,7 @@ export async function submitContactMessage(req, res) {
     const { name, email, subject, message } = parsed.data;
 
     try {
-        const admins = await User.find({ role: "admin" }).select("_id email name");
+        const admins = await User.find({ role: "collegeAdmin" }).select("_id email name");
         const adminIds = admins.map((admin) => admin._id.toString());
         const adminEmails = admins.map((admin) => admin.email).filter(Boolean);
 

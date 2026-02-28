@@ -1,3 +1,4 @@
+import { CollegeBanner } from "@/components/dashboard/CollegeBanner";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
 import { studentQuickActions } from "@/components/dashboard/utils/dashboardConstants";
 import { AnnouncementsWidget } from "@/components/dashboard/widgets/AnnouncementsWidget";
@@ -72,6 +73,9 @@ export function StudentDashboardLayout() {
         </div>
       ) : metrics ? (
         <>
+          {/* College Banner */}
+          <CollegeBanner />
+
           {/* User Profile */}
           <UserProfileCard />
 

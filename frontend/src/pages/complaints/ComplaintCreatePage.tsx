@@ -46,8 +46,9 @@ const createComplaintSchema = z.object({
     ])
     .optional()
     .refine((value) => Boolean(value), "Pick a category"),
-  hostel: z
-    .enum(["BH-1", "BH-2", "BH-3", "BH-4"])
+  hostelId: z
+    .string()
+    .min(1, "Hostel is required")
     .optional()
     .refine((value) => Boolean(value), "Hostel is required"),
   roomNo: z
@@ -82,13 +83,13 @@ function ComplaintCreatePage() {
       problemTitle: "",
       problemDescription: "",
       category: undefined,
-      hostel: undefined,
+      hostelId: undefined,
       roomNo: "",
     },
   });
 
   const { setValue, watch } = form;
-  const hostelValue = watch("hostel");
+  const hostelValue = watch("hostelId");
   const roomNoValue = watch("roomNo");
   const isProfileReady = Boolean(hostelValue && roomNoValue);
 
@@ -96,9 +97,8 @@ function ComplaintCreatePage() {
     let isMounted = true;
 
     const applyProfile = (
-      hostel?: string | null,
+      hostelId?: string | null,
       room?: string | null,
-      year?: string | null,
       rollNo?: string | null,
       name?: string,
       email?: string,
@@ -106,18 +106,17 @@ function ComplaintCreatePage() {
       userId?: string
     ) => {
       if (!isMounted) return;
-      if (hostel) {
-        setValue("hostel", hostel, { shouldDirty: false });
+      if (hostelId) {
+        setValue("hostelId", hostelId, { shouldDirty: false });
       }
       if (room) {
         setValue("roomNo", room, { shouldDirty: false });
       }
-      if (hostel && room) {
+      if (hostelId && room) {
         dispatch(
           updateUser({
-            hostel,
+            hostelId,
             roomNo: room,
-            year: year ?? undefined,
             rollNo: rollNo ?? undefined,
             name: name ?? authUser?.name,
             email: email ?? authUser?.email,
@@ -129,11 +128,10 @@ function ComplaintCreatePage() {
       setHasHydratedProfile(true);
     };
 
-    if (!hasHydratedProfile && authUser?.hostel && authUser?.roomNo) {
+    if (!hasHydratedProfile && authUser?.hostelId && authUser?.roomNo) {
       applyProfile(
-        authUser.hostel,
+        authUser.hostelId,
         authUser.roomNo,
-        authUser.year,
         authUser.rollNo,
         authUser.name,
         authUser.email,
@@ -157,9 +155,8 @@ function ComplaintCreatePage() {
         if (response.data?.success) {
           const userData = response.data.user;
           applyProfile(
-            userData.hostel,
+            userData.hostelId,
             userData.roomNo,
-            userData.year,
             userData.rollNo,
             userData.name,
             userData.email,
@@ -206,8 +203,8 @@ function ComplaintCreatePage() {
       return;
     }
 
-    const { category, hostel, roomNo } = values;
-    if (!category || !hostel || !roomNo) {
+    const { category, hostelId, roomNo } = values;
+    if (!category || !hostelId || !roomNo) {
       toast.error(
         "Hostel or category information is missing. Please contact the administrator."
       );
@@ -215,7 +212,7 @@ function ComplaintCreatePage() {
     }
 
     const categoryValue = category as Complaint["category"];
-    const hostelValue = hostel as string;
+    const hostelValue = hostelId as string;
     const roomValue = roomNo as string;
 
     const resultAction = await dispatch(
@@ -223,7 +220,7 @@ function ComplaintCreatePage() {
         problemTitle: values.problemTitle.trim(),
         problemDescription: values.problemDescription.trim(),
         category: categoryValue,
-        hostel: hostelValue,
+        hostelId: hostelValue,
         roomNo: roomValue,
         file,
       })
@@ -267,6 +264,7 @@ function ComplaintCreatePage() {
           error={error}
           preview={preview}
           profileLoading={profileLoading || !isProfileReady}
+          hostelName={authUser?.hostelName}
           onFilePreview={handleFilePreview}
         />
       </div>

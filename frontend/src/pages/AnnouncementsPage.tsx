@@ -39,7 +39,7 @@ function AnnouncementsPage() {
 
   // Check if user is warden or admin
   const canCreateAnnouncement =
-    isAuthenticated && (user?.role === "warden" || user?.role === "admin");
+    isAuthenticated && (user?.role === "warden" || user?.role === "collegeAdmin");
 
   // Fetch announcements
   const fetchAnnouncements = async () => {

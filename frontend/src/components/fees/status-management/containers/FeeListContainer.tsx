@@ -5,7 +5,7 @@ import { useFeeStatusUpdates } from "../../hooks/useFeeStatusUpdates";
 
 interface FeeListContainerProps {
   fees: FeeSubmission[];
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   emailToHostel: Record<string, string>;
   updateLoading: Record<string, boolean>;
   notificationLoading: Record<string, boolean>;
@@ -48,8 +48,8 @@ export function FeeListContainer({
         updateLoading={updateLoading}
         notificationLoading={notificationLoading}
         onViewDocument={onViewDocument}
-        onApprove={userRole === "admin" ? handleApprove : undefined}
-        onReject={userRole === "admin" ? handleReject : undefined}
+        onApprove={userRole === "collegeAdmin" ? handleApprove : undefined}
+        onReject={userRole === "collegeAdmin" ? handleReject : undefined}
         onSendNotification={onSendNotification}
       />
       <FeePagination

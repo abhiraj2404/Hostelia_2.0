@@ -24,7 +24,7 @@ export default function UserManagementPage() {
   const usersState = useAppSelector(selectUsersState);
 
   const isWarden = user?.role === "warden";
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "collegeAdmin";
 
   // Redirect if not admin or warden
   useEffect(() => {

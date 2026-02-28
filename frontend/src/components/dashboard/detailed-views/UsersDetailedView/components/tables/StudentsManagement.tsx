@@ -1,5 +1,4 @@
 import { formatDate } from "@/components/dashboard/utils/dashboardConstants";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -78,12 +77,8 @@ export function StudentsManagement({
 
     if (filters.hostel && filters.hostel !== "all") {
       filtered = filtered.filter(
-        (student) => student.hostel === filters.hostel
+        (student) => student.hostelId === filters.hostel
       );
-    }
-
-    if (filters.year && filters.year !== "all") {
-      filtered = filtered.filter((student) => student.year === filters.year);
     }
 
     // Sort case-insensitively by name
@@ -164,31 +159,7 @@ export function StudentsManagement({
           className="w-[300px]"
         />
 
-        <Select
-          value={filters.year || "all"}
-          onValueChange={(value) =>
-            onFiltersChange({
-              ...filters,
-              year:
-                value === "all"
-                  ? undefined
-                  : (value as UserManagementFilters["year"]),
-            })
-          }
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Years</SelectItem>
-            <SelectItem value="UG-1">UG-1</SelectItem>
-            <SelectItem value="UG-2">UG-2</SelectItem>
-            <SelectItem value="UG-3">UG-3</SelectItem>
-            <SelectItem value="UG-4">UG-4</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {(filters.hostel || filters.query || filters.year) && (
+        {(filters.hostel || filters.query) && (
           <Button variant="ghost" onClick={() => onFiltersChange({})}>
             Clear
           </Button>
@@ -213,8 +184,8 @@ export function StudentsManagement({
                   <TableHead>Name</TableHead>
                   <TableHead>Roll No</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Year</TableHead>
                   {!isWarden && <TableHead>Hostel</TableHead>}
+                  <TableHead>Mess</TableHead>
                   <TableHead>Room</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
@@ -230,12 +201,16 @@ export function StudentsManagement({
                     <TableCell className="text-muted-foreground text-sm">
                       {student.email}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{student.year}</Badge>
-                    </TableCell>
                     {!isWarden && (
-                      <TableCell>{student.hostel || "N/A"}</TableCell>
+                      <TableCell>{(student.hostelName ?? student.hostelId) || "N/A"}</TableCell>
                     )}
+                    <TableCell>
+                      {student.messId ? (
+                        <span className="text-sm">{student.messId}</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                      )}
+                    </TableCell>
                     <TableCell>{student.roomNo || "N/A"}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatDate(student.createdAt)}

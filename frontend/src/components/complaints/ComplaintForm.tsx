@@ -28,6 +28,7 @@ type ComplaintFormProps = {
   error?: string | null;
   preview: string | null;
   profileLoading: boolean;
+  hostelName?: string | null;
   onFilePreview: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -38,6 +39,7 @@ export function ComplaintForm({
   error,
   preview,
   profileLoading,
+  hostelName,
   onFilePreview,
 }: ComplaintFormProps) {
   const {
@@ -132,23 +134,28 @@ export function ComplaintForm({
               <Label>Hostel</Label>
               <Controller
                 control={control}
-                name="hostel"
+                name="hostelId"
                 render={({ field }) => (
                   <Input
                     {...field}
                     value={field.value ?? ""}
                     readOnly
-                    placeholder={
-                      profileLoading
-                        ? "Fetching hostel details…"
-                        : "Hostel not available"
-                    }
+                    className="hidden"
                   />
                 )}
               />
-              {errors.hostel && (
+              <Input
+                value={
+                  profileLoading
+                    ? "Fetching hostel details…"
+                    : hostelName || form.getValues("hostelId") || "Hostel not available"
+                }
+                readOnly
+                placeholder="Hostel"
+              />
+              {errors.hostelId && (
                 <p className="text-sm text-destructive">
-                  {errors.hostel.message}
+                  {errors.hostelId.message}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">

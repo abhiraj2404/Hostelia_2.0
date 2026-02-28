@@ -8,9 +8,12 @@ export interface UserData {
   email: string;
   token?: string;
   rollNo?: string;
-  hostel?: string;
+  hostelId?: string;
+  hostelName?: string | null;
+  messId?: string | null;
+  messName?: string | null;
   roomNo?: string;
-  year?: string;
+  collegeId?: string;
   role?: string;
   [key: string]: unknown; // Allow for additional fields from backend
 }

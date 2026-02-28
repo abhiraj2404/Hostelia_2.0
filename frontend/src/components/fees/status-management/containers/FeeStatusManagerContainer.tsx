@@ -17,7 +17,7 @@ type TabType = "list" | "analytics";
 
 interface FeeStatusManagerContainerProps {
   fees: FeeSubmission[];
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   userHostel?: string;
 }
 
@@ -28,7 +28,7 @@ export function FeeStatusManagerContainer({
 }: FeeStatusManagerContainerProps) {
   const [activeTab, setActiveTab] = useState<TabType>("list");
   const [filters, setFilters] = useState<FeesFilters>({
-    hostel: userRole === "admin" ? undefined : userHostel,
+    hostel: userRole === "collegeAdmin" ? undefined : userHostel,
     feeType: undefined,
     status: undefined,
   });

@@ -4,11 +4,13 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: "student" | "warden" | "admin";
+  role: "student" | "warden" | "collegeAdmin";
   rollNo?: string;
-  year?: "UG-1" | "UG-2" | "UG-3" | "UG-4";
-  hostel?: "BH-1" | "BH-2" | "BH-3" | "BH-4";
+  hostelId?: string;
+  hostelName?: string | null;
+  messId?: string | null;
   roomNo?: string;
+  collegeId?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -16,19 +18,18 @@ export interface User {
 export interface Student extends User {
   role: "student";
   rollNo: string;
-  year: "UG-1" | "UG-2" | "UG-3" | "UG-4";
-  hostel: "BH-1" | "BH-2" | "BH-3" | "BH-4";
+  hostelId: string;
+  messId?: string | null;
   roomNo: string;
 }
 
 export interface Warden extends User {
   role: "warden";
-  hostel: "BH-1" | "BH-2" | "BH-3" | "BH-4";
+  hostelId: string;
 }
 
 export interface UserManagementFilters {
-  hostel?: "BH-1" | "BH-2" | "BH-3" | "BH-4" | "all";
-  year?: "UG-1" | "UG-2" | "UG-3" | "UG-4" | "all";
+  hostel?: string;
   query?: string;
 }
 
@@ -36,15 +37,15 @@ export interface UserFormData {
   name: string;
   email: string;
   rollNo?: string;
-  year?: "UG-1" | "UG-2" | "UG-3" | "UG-4";
-  hostel?: "BH-1" | "BH-2" | "BH-3" | "BH-4";
+  hostelId?: string;
+  messId?: string | null;
   roomNo?: string;
 }
 
 export interface WardenCreateData {
   name: string;
   email: string;
-  hostel: "BH-1" | "BH-2" | "BH-3" | "BH-4";
+  hostelId: string;
   password: string;
 }
 

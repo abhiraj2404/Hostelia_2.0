@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
     role: {
         type: String,
-        enum: [ 'student', 'admin', 'warden' ],
+        enum: [ 'student', 'collegeAdmin', 'warden' ],
         default: 'student',
         required: true
     },
@@ -21,13 +21,19 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    year: {
-        type: String,
-        enum: [ 'UG-1', 'UG-2', 'UG-3', 'UG-4' ]
+    hostelId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Hostel'
     },
-    hostel: {
-        type: String,
-        enum: [ 'BH-1', 'BH-2', 'BH-3', 'BH-4' ]
+    messId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Mess'
+    },
+    collegeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'College',
+        required: true,
+        index: true
     },
     roomNo: String,
     password: {

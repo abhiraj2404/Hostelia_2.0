@@ -6,6 +6,7 @@ import { StudentsStatsView } from "@/components/dashboard/detailed-views/Student
 import { WardensStatsView } from "@/components/dashboard/detailed-views/WardensDetailedView";
 import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView";
 import { AdminMetrics } from "@/components/dashboard/metrics/AdminMetrics";
+import { CollegeBanner } from "@/components/dashboard/CollegeBanner";
 import { UserProfileCard } from "@/components/dashboard/profile/UserProfileCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { Button } from "@/components/ui/button";
@@ -311,7 +312,7 @@ export function AdminDashboardLayout() {
       studentsState.filters.hostel &&
       studentsState.filters.hostel !== "all"
     ) {
-      result = result.filter((s) => s.hostel === studentsState.filters.hostel);
+      result = result.filter((s) => s.hostelId === studentsState.filters.hostel);
     }
 
     // 2. Filter by Search
@@ -323,11 +324,6 @@ export function AdminDashboardLayout() {
           s.email.toLowerCase().includes(query) ||
           (s.rollNo && s.rollNo.toLowerCase().includes(query))
       );
-    }
-
-    // 3. Filter by Year
-    if (studentsState.filters.year && studentsState.filters.year !== "all") {
-      result = result.filter((s) => s.year === studentsState.filters.year);
     }
 
     // Sort case-insensitively by name
@@ -350,7 +346,7 @@ export function AdminDashboardLayout() {
       wardensState.filters.hostel &&
       wardensState.filters.hostel !== "all"
     ) {
-      result = result.filter((w) => w.hostel === wardensState.filters.hostel);
+      result = result.filter((w) => w.hostelId === wardensState.filters.hostel);
     }
 
     // Filter by Search
@@ -419,6 +415,9 @@ export function AdminDashboardLayout() {
         </div>
       ) : metrics ? (
         <>
+          {/* College Banner */}
+          <CollegeBanner />
+
           {/* Profile Card */}
           <UserProfileCard />
 

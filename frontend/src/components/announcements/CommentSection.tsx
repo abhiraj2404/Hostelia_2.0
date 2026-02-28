@@ -70,7 +70,7 @@ export function CommentSection({
             } catch {
               // If request is forbidden (student trying to fetch other users), fall back to role label
               const role = roleById[id as string];
-              if (role === "admin") return { id, name: "Admin" };
+              if (role === "collegeAdmin") return { id, name: "Admin" };
               if (role === "warden") return { id, name: "Warden" };
               // else undefined name
               return { id, name: undefined };
@@ -122,7 +122,7 @@ export function CommentSection({
                 let displayName: string;
                 if (comment.role === "warden") {
                   displayName = "Warden";
-                } else if (comment.role === "admin") {
+                } else if (comment.role === "collegeAdmin") {
                   displayName = "Admin";
                 } else {
                   let commenterName: string | undefined;

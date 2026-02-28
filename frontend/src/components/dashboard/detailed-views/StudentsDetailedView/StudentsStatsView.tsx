@@ -66,25 +66,7 @@ export function StudentsStatsView({
           className="w-[300px]"
         />
 
-        <Select
-          value={filters.year || 'all'}
-          onValueChange={(value) =>
-            onFiltersChange({ ...filters, year: value === 'all' ? undefined : value })
-          }
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Years</SelectItem>
-            <SelectItem value="UG-1">UG-1</SelectItem>
-            <SelectItem value="UG-2">UG-2</SelectItem>
-            <SelectItem value="UG-3">UG-3</SelectItem>
-            <SelectItem value="UG-4">UG-4</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {(filters.hostel || filters.query || filters.year) && (
+        {(filters.hostel || filters.query) && (
           <Button
             variant="ghost"
             onClick={() => onFiltersChange({})}
