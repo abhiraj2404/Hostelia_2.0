@@ -1,6 +1,5 @@
-import { useState } from "react";
-// import useForm from "react-hook-form";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,17 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { authStart, loginSuccess, authFailure } from "@/features/auth/authSlice";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 
+interface College {
+  _id: string;
+  name: string;
+  emailDomain: string;
+}
+
 // Validation schema for login
 const loginSchema = z.object({
-  email: z
-    .string()
-    .email("Invalid email format")
-    .refine((email) => email.endsWith("@iiits.in"), "Email must be a valid @iiits.in address"),
+  collegeId: z.string().min(1, "Please select your campus"),
+  email: z.string().email("Invalid email format"),
   password: z.string().min(1, "Password is required")
 });
 
@@ -33,14 +37,34 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string>("");
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [loadingColleges, setLoadingColleges] = useState(true);
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting }
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema)
   });
+
+  // Fetch colleges on mount
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const response = await apiClient.get("/college/list");
+        if (response.data.success) {
+          setColleges(response.data.colleges);
+        }
+      } catch {
+        toast.error("Failed to load campus list");
+      } finally {
+        setLoadingColleges(false);
+      }
+    };
+    fetchColleges();
+  }, []);
 
   const onSubmit = async (data: LoginFormData) => {
     dispatch(authStart());
@@ -55,17 +79,17 @@ export default function Login() {
           email: response.data.user.email,
           name: response.data.user.name,
           rollNo: response.data.user.rollNo,
-          hostel: response.data.user.hostel,
+          hostelId: response.data.user.hostelId,
+          hostelName: response.data.user.hostelName,
+          messId: response.data.user.messId,
+          messName: response.data.user.messName,
           roomNo: response.data.user.roomNo,
-          year: response.data.user.year,
+          collegeId: response.data.user.collegeId,
           role: response.data.user.role
-          // token: localStorage.getItem("token") || "", // Token is in httpOnly cookie, but we store a reference
         };
 
         dispatch(loginSuccess(userData));
 
-        // Navigate to dashboard after login is successful
-        // Use setTimeout to ensure Redux state has updated before navigation
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
         }, 0);
@@ -102,10 +126,55 @@ export default function Login() {
                     <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">{displayError}</div>
                   )}
 
+                  {/* Campus Selection */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="college">Campus</Label>
+                    {loadingColleges ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading campuses...
+                      </div>
+                    ) : colleges.length === 0 ? (
+                      <div className="text-sm text-muted-foreground py-2">
+                        No campuses registered yet.{" "}
+                        <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                          Register one
+                        </Link>
+                      </div>
+                    ) : (
+                      <Controller
+                        control={control}
+                        name="collegeId"
+                        render={({ field }) => (
+                          <Select
+                            disabled={isFormLoading}
+                            value={field.value ?? undefined}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              field.onBlur();
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your campus" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {colleges.map((college) => (
+                                <SelectItem key={college._id} value={college._id}>
+                                  {college.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    )}
+                    {errors.collegeId && <p className="text-xs text-red-600">{errors.collegeId.message}</p>}
+                  </div>
+
                   {/* Email Field */}
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="your.name@iiits.in" disabled={isFormLoading} {...register("email")} />
+                    <Input id="email" type="email" placeholder="your.name@campus.edu" disabled={isFormLoading} {...register("email")} />
                     {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
                   </div>
 
@@ -113,9 +182,6 @@ export default function Login() {
                   <div className="grid gap-2">
                     <div className="flex items-center">
                       <Label htmlFor="password">Password</Label>
-                      {/* <Link to="/contact" className="ml-auto text-sm underline-offset-2 hover:underline">
-                        Forgot your password?
-                      </Link> */}
                     </div>
                     <div className="relative">
                       <Input
@@ -139,7 +205,7 @@ export default function Login() {
                   </div>
 
                   {/* Submit Button */}
-                  <Button type="submit" disabled={isFormLoading} className="w-full">
+                  <Button type="submit" disabled={isFormLoading || colleges.length === 0} className="w-full">
                     {isFormLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

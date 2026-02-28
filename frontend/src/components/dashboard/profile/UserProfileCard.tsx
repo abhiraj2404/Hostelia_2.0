@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSelector } from "@/hooks";
-import { User, Mail, Home, Calendar } from "lucide-react";
+import { User, Mail, Home, Store } from "lucide-react";
 
 export function UserProfileCard() {
   const { user } = useAppSelector((state) => state.auth);
@@ -36,21 +36,21 @@ export function UserProfileCard() {
                 <span className="text-sm">{user.email}</span>
               </div>
 
-              {user.hostel && (
+              {user.hostelId && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Home className="h-4 w-4" />
                   <span className="text-sm">
-                    {user.hostel}{user.roomNo ? ` • Room ${user.roomNo}` : ''}
+                    {user.hostelName || user.hostelId}{user.roomNo ? ` • Room ${user.roomNo}` : ''}
                   </span>
                 </div>
               )}
 
-              {user.year && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span className="text-sm">{user.year}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Store className="h-4 w-4" />
+                <span className="text-sm">
+                  Mess: {user.messName || <span className="italic text-muted-foreground/70">Unassigned</span>}
+                </span>
+              </div>
             </div>
           </div>
         </div>

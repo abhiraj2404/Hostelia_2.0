@@ -16,7 +16,7 @@ interface TransitEntry {
     _id: string;
     name: string;
     rollNo: string;
-    hostel: string;
+    hostelId: string;
     roomNo: string;
   };
   purpose: string;
@@ -43,7 +43,7 @@ function TransitPage() {
 
   // Determine if user is student or warden/admin
   const isStudent = user?.role === "student";
-  const isWardenOrAdmin = user?.role === "warden" || user?.role === "admin";
+  const isWardenOrAdmin = user?.role === "warden" || user?.role === "collegeAdmin";
 
   // Fetch transit entries
   const fetchEntries = useCallback(async () => {
@@ -54,9 +54,9 @@ function TransitPage() {
       let allEntries = response.data.transitEntries || [];
 
       // Filter entries by warden's hostel if user is warden
-      if (user?.role === "warden" && user?.hostel) {
+      if (user?.role === "warden" && user?.hostelId) {
         allEntries = allEntries.filter(
-          (entry: TransitEntry) => entry.studentId.hostel === user.hostel
+          (entry: TransitEntry) => entry.studentId.hostelId === user.hostelId
         );
       }
 
@@ -69,7 +69,7 @@ function TransitPage() {
         axiosError.response?.data?.message || "Failed to load records"
       );
     }
-  }, [user?.role, user?.hostel]);
+  }, [user?.role, user?.hostelId]);
 
   useEffect(() => {
     if (isAuthenticated) {

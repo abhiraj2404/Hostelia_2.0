@@ -19,7 +19,7 @@ function FeesPage() {
   const userRole = user?.role;
   const isStudent = userRole === "student";
   const isWarden = userRole === "warden";
-  const isAdmin = userRole === "admin";
+  const isAdmin = userRole === "collegeAdmin";
 
   // For students, find their own fee submission
   const studentFeeSubmission = isStudent
@@ -73,8 +73,8 @@ function FeesPage() {
       ) : isWarden || isAdmin ? (
         <FeeStatusManagerContainer
           fees={fees}
-          userRole={isAdmin ? "admin" : "warden"}
-          userHostel={user?.hostel}
+          userRole={isAdmin ? "collegeAdmin" : "warden"}
+          userHostel={user?.hostelId}
         />
       ) : (
         <Card>

@@ -20,6 +20,7 @@ const updateUserDetailsSchema = z.object({
     rollNo: z.string().trim().min(1, "Roll number cannot be empty").optional(),
     email: z.string().trim().email("Invalid email address").optional(),
     hostelId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid hostel ID format").optional(),
+    messId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid mess ID format").optional().nullable(),
     roomNo: z.string().trim().min(1, "Room number cannot be empty").optional(),
 }).refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided for update",
@@ -62,7 +63,10 @@ export const getUserById = async (req, res) => {
         }
 
         // Find user by ID
-        const user = await User.findById(userId).select("-password");
+        const user = await User.findById(userId)
+            .select("-password")
+            .populate("hostelId", "name")
+            .populate("messId", "name");
 
         if (!user) {
             return res.status(404).json({
@@ -80,7 +84,10 @@ export const getUserById = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 rollNo: user.rollNo,
-                hostelId: user.hostelId,
+                hostelId: user.hostelId?._id || user.hostelId,
+                hostelName: user.hostelId?.name || null,
+                messId: user.messId?._id || user.messId || null,
+                messName: user.messId?.name || null,
                 roomNo: user.roomNo,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,

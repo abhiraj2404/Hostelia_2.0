@@ -417,7 +417,9 @@ export const login = async (req, res) => {
     const { email, password, collegeId } = validationResult.data;
 
     // Find user within specific college
-    const user = await User.findOne({ email, collegeId });
+    const user = await User.findOne({ email, collegeId })
+      .populate("hostelId", "name")
+      .populate("messId", "name");
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -449,7 +451,10 @@ export const login = async (req, res) => {
         rollNo: user.rollNo,
         email: user.email,
         collegeId: user.collegeId,
-        hostelId: user.hostelId,
+        hostelId: user.hostelId?._id || user.hostelId,
+        hostelName: user.hostelId?.name || null,
+        messId: user.messId?._id || user.messId || null,
+        messName: user.messId?.name || null,
         roomNo: user.roomNo,
         role: user.role,
       },

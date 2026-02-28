@@ -12,7 +12,7 @@ interface CommentCardProps {
 
 const getRoleIcon = (role: string) => {
   switch (role) {
-    case "admin":
+    case "collegeAdmin":
       return <Shield className="size-3" />;
     case "warden":
       return <UserIcon className="size-3" />;
@@ -25,7 +25,7 @@ const getRoleIcon = (role: string) => {
 
 const getRoleBadgeVariant = (role: string) => {
   switch (role) {
-    case "admin":
+    case "collegeAdmin":
       return "primary";
     case "warden":
       return "primary";

@@ -1,6 +1,7 @@
 import About from "@/pages/About";
 import AnnouncementDetailPage from "@/pages/AnnouncementDetailPage";
 import AnnouncementsPage from "@/pages/AnnouncementsPage";
+import CollegePage from "@/pages/CollegePage";
 import ComplaintCreatePage from "@/pages/complaints/ComplaintCreatePage";
 import ComplaintDetailPage from "@/pages/complaints/ComplaintDetailPage";
 import ComplaintsListPage from "@/pages/complaints/ComplaintsListPage";
@@ -98,6 +99,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <UserManagementPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/college"
+        element={
+          <RequireAuth>
+            <CollegePage />
           </RequireAuth>
         }
       />

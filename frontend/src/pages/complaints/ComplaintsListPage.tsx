@@ -38,7 +38,7 @@ function ComplaintsListPage() {
   const role = user?.role;
   const isStudent = role === "student";
   const isWarden = role === "warden";
-  const isAdmin = role === "admin";
+  const isAdmin = role === "collegeAdmin";
 
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [page, setPage] = useState(1);
@@ -101,7 +101,7 @@ function ComplaintsListPage() {
     // 3. Apply hostel filter (admin only)
     if (isAdmin && filters.hostel && filters.hostel !== "all") {
       filtered = filtered.filter(
-        (complaint) => complaint.hostel === filters.hostel
+        (complaint) => complaint.hostelId === filters.hostel
       );
     }
 
@@ -170,9 +170,9 @@ function ComplaintsListPage() {
               Monitor, filter, and track every maintenance request in your
               block.
             </p>
-            {(isStudent || isWarden) && user?.hostel && (
+            {(isStudent || isWarden) && user?.hostelId && (
               <p className="text-xs text-muted-foreground">
-                Assigned hostel: {user.hostel}
+                Assigned hostel: {user.hostelId}
               </p>
             )}
           </div>

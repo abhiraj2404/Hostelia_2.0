@@ -18,11 +18,7 @@ export const rollNoSchema = z
 
 export const emailSchema = z
   .string()
-  .email("Invalid email format")
-  .refine(
-    (email) => email.endsWith("@iiits.in"),
-    "Email must be a valid @iiits.in address"
-  );
+  .email("Invalid email format");
 
 export const roomNoSchema = z
   .string()
@@ -32,13 +28,7 @@ export const roomNoSchema = z
     return !isNaN(num) && num >= 100 && num < 1000;
   }, "Enter a valid room-number (100-999)");
 
-export const yearSchema = z.enum(["UG-1", "UG-2", "UG-3", "UG-4"], {
-  errorMap: () => ({ message: "Invalid year selection" }),
-});
-
-export const hostelSchema = z.enum(["BH-1", "BH-2", "BH-3", "BH-4"], {
-  errorMap: () => ({ message: "Invalid hostel selection" }),
-});
+export const hostelIdSchema = z.string().min(1, "Hostel is required");
 
 export const passwordSchema = z
   .string()
@@ -67,8 +57,8 @@ export const updateUserSchema = z.preprocess(
       name: nameSchema.optional(),
       email: emailSchema.optional(),
       rollNo: rollNoSchema.optional(),
-      year: yearSchema.optional(),
-      hostel: hostelSchema.optional(),
+      hostelId: hostelIdSchema.optional(),
+      messId: z.string().optional().nullable(),
       roomNo: roomNoSchema.optional(),
     })
     .transform((data) => {
@@ -92,7 +82,7 @@ export const updateUserSchema = z.preprocess(
 export const createWardenSchema = z.object({
   name: nameSchema,
   email: emailSchema,
-  hostel: hostelSchema,
+  hostelId: hostelIdSchema,
   password: passwordSchema,
 });
 

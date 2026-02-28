@@ -145,20 +145,34 @@ export const fetchStudentDashboardData = createAsyncThunk(
     try {
       console.log("[Dashboard] Fetching student dashboard data...");
 
-      // Fetch core data in parallel
-      const [complaintsRes, feeRes, announcementsRes, menuRes] =
+      // Fetch core data in parallel (except menu which needs messId)
+      const [complaintsRes, feeRes, announcementsRes, messesRes] =
         await Promise.all([
           apiClient.get("/problem"),
           apiClient.get("/fee"),
           apiClient.get("/announcement"),
-          apiClient.get("/mess/menu"),
+          apiClient.get("/mess/list"),
         ]);
+
+      // Fetch menu for first available mess
+      const messes = messesRes.data.messes || [];
+      let messMenu = null;
+      if (messes.length > 0) {
+        try {
+          const menuRes = await apiClient.get(
+            `/mess/menu?messId=${messes[0]._id}`
+          );
+          messMenu = menuRes.data.menu;
+        } catch {
+          // Menu fetch failed — not critical for dashboard
+        }
+      }
 
       console.log("[Dashboard] API Responses:", {
         complaints: complaintsRes.data,
         fees: feeRes.data,
         announcements: announcementsRes.data,
-        menu: menuRes.data,
+        messes: messes.length,
       });
 
       // Extract fee status from array response
@@ -168,7 +182,7 @@ export const fetchStudentDashboardData = createAsyncThunk(
         complaints: complaintsRes.data.problems || [],
         feeStatus: feeData,
         announcements: announcementsRes.data.data || [],
-        messMenu: menuRes.data.menu,
+        messMenu,
       };
     } catch (error) {
       console.error("[Dashboard] Error fetching data:", error);
@@ -426,7 +440,6 @@ export const fetchDetailedStudents = createAsyncThunk(
         limit: "10",
         ...(filters.hostel &&
           filters.hostel !== "all" && { hostel: filters.hostel }),
-        ...(filters.year && filters.year !== "all" && { year: filters.year }),
         ...(filters.query && { search: filters.query }),
       });
 

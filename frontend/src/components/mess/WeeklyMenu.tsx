@@ -81,7 +81,9 @@ export function WeeklyMenu({ menu, menuStatus }: WeeklyMenuProps) {
                         {label}
                       </span>
                       <span className="text-muted-foreground pl-1 text-xs">
-                        {menu[day]?.[value]?.join(", ")}
+                        {menu[day]?.[value]?.length > 0
+                          ? menu[day][value].join(", ")
+                          : <span className="italic">No meals</span>}
                       </span>
                     </div>
                   ))}

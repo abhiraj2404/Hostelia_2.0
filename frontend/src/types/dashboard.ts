@@ -50,9 +50,8 @@ export interface Student {
   name: string;
   email: string;
   rollNo?: string;
-  hostel: string;
+  hostelId: string;
   roomNo: string;
-  year: string;
   role: string;
   createdAt: string;
   updatedAt?: string;
@@ -88,9 +87,8 @@ export interface MessFeedback {
     name: string;
     email?: string;
     rollNo?: string;
-    hostel?: string;
+    hostelId?: string;
     roomNo?: string;
-    year?: string;
   };
   day: string;
   mealType: string;
@@ -148,7 +146,6 @@ export interface ComplaintsFilters {
 
 export interface StudentsFilters {
   hostel?: string;
-  year?: string;
   query?: string;
 }
 
@@ -175,7 +172,7 @@ export interface Warden {
   _id: string;
   name: string;
   email: string;
-  hostel: string;
+  hostelId: string;
   role: string;
   createdAt: string;
   updatedAt?: string;

@@ -52,7 +52,7 @@ export function ComplaintDetailHeader({
         </h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Room {complaint.roomNo} · {complaint.hostel} · {complaint.category}
+          Room {complaint.roomNo} · {complaint.hostelId} · {complaint.category}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2">
@@ -345,7 +345,7 @@ export function ComplaintConversationCard({
                 let displayName: string;
                 if (comment.role === "warden") {
                   displayName = "Warden";
-                } else if (comment.role === "admin") {
+                } else if (comment.role === "collegeAdmin") {
                   displayName = "Admin";
                 } else {
                   const userData = userMap.get(comment.user);

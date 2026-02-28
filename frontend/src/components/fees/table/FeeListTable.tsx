@@ -10,7 +10,7 @@ import { FeeTableRow } from "./FeeTableRow";
 
 interface FeeListTableProps {
   fees: FeeSubmission[];
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   emailToHostel: Record<string, string>;
   updateLoading: Record<string, boolean>;
   notificationLoading: Record<string, boolean>;
@@ -51,7 +51,7 @@ export function FeeListTable({
           <TableRow>
             <TableHead>Student Name</TableHead>
             <TableHead>Email</TableHead>
-            {userRole === "admin" && <TableHead>Hostel</TableHead>}
+            {userRole === "collegeAdmin" && <TableHead>Hostel</TableHead>}
             <TableHead>Hostel Fee</TableHead>
             <TableHead>Mess Fee</TableHead>
             <TableHead>Last Updated</TableHead>

@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
-const mealTypes = [ "Breakfast", "Lunch", "Snacks", "Dinner" ];
 
 const mealArraySchema = {
     type: [
@@ -16,17 +15,17 @@ const mealArraySchema = {
 const menuSchema = new mongoose.Schema(
     {
         day: { type: String, enum: days, required: true },
-        hostelId: {
+        messId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Hostel",
+            ref: "Mess",
             required: true,
-            index: true
+            index: true,
         },
         collegeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "College",
             required: true,
-            index: true
+            index: true,
         },
         meals: {
             Breakfast: mealArraySchema,
@@ -38,8 +37,7 @@ const menuSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Compound index: Each hostel can only have one menu per day
-menuSchema.index({ hostelId: 1, day: 1 }, { unique: true });
+// Each mess can only have one menu entry per day
+menuSchema.index({ messId: 1, day: 1 }, { unique: true });
 
 export default mongoose.model("Menu", menuSchema);
-

@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Hostel'
     },
+    messId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Mess'
+    },
     collegeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'College',

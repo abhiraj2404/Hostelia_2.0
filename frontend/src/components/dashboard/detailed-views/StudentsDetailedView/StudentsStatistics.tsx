@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, Building2, UserCheck } from "lucide-react";
+import { Users, Building2, UserCheck, DoorOpen } from "lucide-react";
 import type { Student } from "@/types/dashboard";
 
 interface StudentsStatisticsProps {
@@ -9,10 +9,11 @@ interface StudentsStatisticsProps {
 export function StudentsStatistics({ students }: StudentsStatisticsProps) {
   // Calculate stats
   const total = students.length;
-  
-  // Year-wise distribution
-  const yearCounts = students.reduce((acc, s) => {
-    acc[s.year] = (acc[s.year] || 0) + 1;
+
+  // Hostel-wise distribution
+  const hostelCounts = students.reduce((acc, s) => {
+    const h = s.hostelId || "Unassigned";
+    acc[h] = (acc[h] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -20,8 +21,8 @@ export function StudentsStatistics({ students }: StudentsStatisticsProps) {
   const uniqueRooms = new Set(students.filter(s => s.roomNo).map(s => s.roomNo));
   const occupiedRooms = uniqueRooms.size;
 
-  // Most populated year
-  const mostPopulatedYear = Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0];
+  // Most populated hostel
+  const mostPopulatedHostel = Object.entries(hostelCounts).sort((a, b) => b[1] - a[1])[0];
 
   const stats = [
     {
@@ -39,10 +40,10 @@ export function StudentsStatistics({ students }: StudentsStatisticsProps) {
       color: "text-green-500",
     },
     {
-      title: "Most Populated Year",
-      value: mostPopulatedYear ? mostPopulatedYear[0] : "N/A",
-      icon: GraduationCap,
-      description: mostPopulatedYear ? `${mostPopulatedYear[1]} students` : "",
+      title: "Most Populated Hostel",
+      value: mostPopulatedHostel ? mostPopulatedHostel[0] : "N/A",
+      icon: DoorOpen,
+      description: mostPopulatedHostel ? `${mostPopulatedHostel[1]} students` : "",
       color: "text-purple-500",
     },
     {

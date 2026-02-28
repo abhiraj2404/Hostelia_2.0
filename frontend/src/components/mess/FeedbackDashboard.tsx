@@ -53,9 +53,8 @@ interface Feedback {
     name: string;
     email: string;
     rollNo: string;
-    hostel: string;
+    hostelId: string;
     roomNo: string;
-    year: number;
   };
   createdAt: string;
 }
@@ -136,8 +135,8 @@ export function FeedbackDashboard() {
     }
 
     // Wardens only see feedback for their assigned hostel
-    if (user?.role === "warden" && user.hostel) {
-      filtered = filtered.filter((f) => f.user.hostel === user.hostel);
+    if (user?.role === "warden" && user.hostelId) {
+      filtered = filtered.filter((f) => f.user.hostelId === user.hostelId);
     }
 
     if (ratingFilter !== "All") {
@@ -145,7 +144,7 @@ export function FeedbackDashboard() {
     }
 
     if (hostelFilter !== "All") {
-      filtered = filtered.filter((f) => f.user.hostel === hostelFilter);
+      filtered = filtered.filter((f) => f.user.hostelId === hostelFilter);
     }
 
     if (dateFrom) {
@@ -174,7 +173,7 @@ export function FeedbackDashboard() {
     dayFilter,
     feedbacks,
     user?.role,
-    user?.hostel,
+    user?.hostelId,
   ]);
 
   // Reset pagination when filters change
@@ -236,13 +235,13 @@ export function FeedbackDashboard() {
   // Get unique hostels
   const hostels = [
     "All",
-    ...Array.from(new Set(feedbacks.map((f) => f.user.hostel))).sort(),
+    ...Array.from(new Set(feedbacks.map((f) => f.user.hostelId))).sort(),
   ];
 
   // If current user is a warden, force hostel filter to their hostel and don't show the select
   useEffect(() => {
-    if (user?.role === "warden" && user.hostel) {
-      setHostelFilter(user.hostel);
+    if (user?.role === "warden" && user.hostelId) {
+      setHostelFilter(user.hostelId);
     }
   }, [user]);
 
@@ -624,13 +623,13 @@ export function FeedbackDashboard() {
                               {feedback.user.name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {feedback.user.rollNo} • Year {feedback.user.year}
+                              {feedback.user.rollNo}
                             </p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="text-xs">
-                            {feedback.user.hostel}
+                            {feedback.user.hostelId}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-md">

@@ -4,7 +4,7 @@ import type { FeeSubmission, FeesFilters } from "@/types/dashboard";
 interface UseFeeFiltersProps {
   fees: FeeSubmission[];
   filters: FeesFilters;
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   userHostel?: string;
   emailToHostel: Record<string, string>;
 }

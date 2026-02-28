@@ -6,6 +6,7 @@ import Hostel from "../models/hostel.model.js";
 import Mess from "../models/mess.model.js";
 import User from "../models/user.model.js";
 import { getEmailUser, sendEmail } from "../utils/email-client.js";
+import { uploadBufferToCloudinary, getSecureUrl } from "../config/cloudinary.js";
 
 const registerCollegeSchema = z.object({
     collegeName: z.string().min(1, "College name is required").trim(),
@@ -31,6 +32,16 @@ const registerCollegeSchema = z.object({
  */
 export const registerCollege = async (req, res) => {
     try {
+        // Normalize FormData array fields (hostels[] -> hostels, messes[] -> messes)
+        if (req.body[ 'hostels[]' ]) {
+            req.body.hostels = Array.isArray(req.body[ 'hostels[]' ]) ? req.body[ 'hostels[]' ] : [ req.body[ 'hostels[]' ] ];
+            delete req.body[ 'hostels[]' ];
+        }
+        if (req.body[ 'messes[]' ]) {
+            req.body.messes = Array.isArray(req.body[ 'messes[]' ]) ? req.body[ 'messes[]' ] : [ req.body[ 'messes[]' ] ];
+            delete req.body[ 'messes[]' ];
+        }
+
         const validationResult = registerCollegeSchema.safeParse(req.body);
         if (!validationResult.success) {
             return res.status(400).json({
@@ -70,12 +81,28 @@ export const registerCollege = async (req, res) => {
             });
         }
 
+        // Upload logo to Cloudinary if provided
+        let logoUrl = null;
+        if (req.file) {
+            try {
+                const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
+                    folder: "hostelia/college-logos",
+                    resource_type: "image",
+                });
+                logoUrl = getSecureUrl(uploadResult);
+            } catch (uploadError) {
+                logger.error("Logo upload failed:", uploadError);
+                // Non-fatal: proceed without logo
+            }
+        }
+
         // Phase 1: Create College
         const newCollege = await College.create({
             name: collegeName,
             emailDomain,
             adminEmail,
             address,
+            ...(logoUrl && { logo: logoUrl }),
         });
 
         // Phase 2: Create Hostels
@@ -171,6 +198,28 @@ export const getCollegesList = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Internal server error fetching colleges",
+        });
+    }
+};
+
+/**
+ * Get hostels for a specific college (public, for signup dropdown)
+ */
+export const getCollegeHostels = async (req, res) => {
+    try {
+        const { collegeId } = req.params;
+        const hostels = await Hostel.find({ collegeId })
+            .select("_id name")
+            .sort({ name: 1 });
+        return res.status(200).json({
+            success: true,
+            hostels,
+        });
+    } catch (error) {
+        logger.error("Error fetching college hostels:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error fetching hostels",
         });
     }
 };

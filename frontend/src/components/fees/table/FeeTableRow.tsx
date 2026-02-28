@@ -6,7 +6,7 @@ import { FeeStatusBadge } from "../status-management";
 
 interface FeeTableRowProps {
   fee: FeeSubmission;
-  userRole: "admin" | "warden";
+  userRole: "collegeAdmin" | "warden";
   studentHostel: string;
   isLoading: boolean;
   onViewDocument: (
@@ -36,7 +36,7 @@ export function FeeTableRow({
       <TableCell className="text-muted-foreground text-sm">
         {fee.studentEmail}
       </TableCell>
-      {userRole === "admin" && <TableCell>{studentHostel}</TableCell>}
+      {userRole === "collegeAdmin" && <TableCell>{studentHostel}</TableCell>}
       <TableCell>
         <FeeStatusBadge status={fee.hostelFee.status} />
       </TableCell>

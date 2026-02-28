@@ -19,7 +19,7 @@ function AnnouncementDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const canDelete =
-    isAuthenticated && (user?.role === "warden" || user?.role === "admin");
+    isAuthenticated && (user?.role === "warden" || user?.role === "collegeAdmin");
 
   useEffect(() => {
     if (!id || !isAuthenticated) {

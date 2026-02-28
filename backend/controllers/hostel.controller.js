@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import Hostel from '../models/hostel.model.js';
+import User from '../models/user.model.js';
 import { logger } from '../middleware/logger.js';
 
 const createHostelSchema = z.object({
@@ -60,3 +61,45 @@ export async function createHostel(req, res) {
         });
     }
 }
+
+/**
+ * List all hostels for the user's college, each with assigned wardens
+ */
+export async function listHostels(req, res) {
+    try {
+        const { collegeId } = req.user;
+
+        const hostels = await Hostel.find({ collegeId }).sort({ name: 1 }).lean();
+
+        // Fetch all wardens for this college and group by hostelId
+        const wardens = await User.find({ role: 'warden', collegeId })
+            .select('_id name email hostelId')
+            .lean();
+
+        const wardensByHostel = {};
+        for (const w of wardens) {
+            const hid = w.hostelId?.toString();
+            if (!hid) continue;
+            if (!wardensByHostel[ hid ]) wardensByHostel[ hid ] = [];
+            wardensByHostel[ hid ].push({ _id: w._id, name: w.name, email: w.email });
+        }
+
+        const result = hostels.map((h) => ({
+            ...h,
+            wardens: wardensByHostel[ h._id.toString() ] || [],
+        }));
+
+        return res.status(200).json({
+            success: true,
+            hostels: result,
+        });
+    } catch (err) {
+        logger.error('Failed to list hostels', { error: err.message });
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to list hostels',
+            error: err.message,
+        });
+    }
+}
+

@@ -90,17 +90,28 @@ export function TodayMenu({ selectedDate, menu, menuStatus }: TodayMenuProps) {
                   <h3 className="font-semibold text-sm">{label}</h3>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {selectedDateMenu[value]?.map((item: string, idx: number) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 text-xs font-medium bg-background border border-border/60 rounded hover:border-primary/50 hover:bg-accent/50 transition-colors"
-                    >
-                      {item}
-                    </span>
-                  ))}
+                  {selectedDateMenu[value]?.length > 0 ? (
+                    selectedDateMenu[value].map((item: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 text-xs font-medium bg-background border border-border/60 rounded hover:border-primary/50 hover:bg-accent/50 transition-colors"
+                      >
+                        {item}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">No items</span>
+                  )}
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {menuStatus === "succeeded" && !selectedDateMenu && (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+            <UtensilsCrossed className="size-8 mb-2 opacity-40" />
+            <p className="text-sm font-medium">No meals available for this day</p>
           </div>
         )}
       </CardContent>

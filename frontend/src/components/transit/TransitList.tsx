@@ -44,7 +44,7 @@ interface TransitEntry {
     _id: string;
     name: string;
     rollNo: string;
-    hostel: string;
+    hostelId: string;
     roomNo: string;
   };
   purpose: string;
@@ -81,7 +81,7 @@ export function TransitList({
 
   // Get unique hostels from entries
   const uniqueHostels = Array.from(
-    new Set(entries.map((entry) => entry.studentId.hostel))
+    new Set(entries.map((entry) => entry.studentId.hostelId))
   ).sort();
 
   const formatDate = (dateStr: string) => {
@@ -102,14 +102,14 @@ export function TransitList({
     const matchesSearch =
       entry.studentId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.studentId.rollNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.studentId.hostel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.studentId.hostelId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.purpose.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === "ALL" || entry.transitStatus === statusFilter;
 
     const matchesHostel =
-      hostelFilter === "ALL" || entry.studentId.hostel === hostelFilter;
+      hostelFilter === "ALL" || entry.studentId.hostelId === hostelFilter;
 
     const matchesDate =
       !dateFilter ||
@@ -385,7 +385,7 @@ export function TransitList({
                               {entry.studentId.rollNo}
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300">
-                              {entry.studentId.hostel}
+                              {entry.studentId.hostelId}
                             </TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300 text-center">
                               {entry.studentId.roomNo}
@@ -466,7 +466,7 @@ export function TransitList({
                             Hostel
                           </p>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">
-                            {entry.studentId.hostel}
+                            {entry.studentId.hostelId}
                           </p>
                         </div>
                         <div>
