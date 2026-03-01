@@ -31,7 +31,7 @@ const transformationPillars = [
       "A single operating picture across hostels, wardens, and administrators.",
     icon: Layers3,
     bullets: [
-      "Complaint routing by hostel (BH-1, BH-2, BH-3, BH-4) and category",
+      "Complaint routing by hostel and category with automatic assignment",
       "Announcements, mess menu, and fee tracking in sync",
       "Real-time status updates and progress tracking",
     ],

@@ -37,13 +37,13 @@ export function FeeStatusManagerContainer({
     (state) => state.fees
   );
 
-  const emailToHostel = useEmailToHostelMapping();
+  const { emailToHostelId, emailToHostelName } = useEmailToHostelMapping();
   const filteredFees = useFeeFilters({
     fees,
     filters,
     userRole,
     userHostel,
-    emailToHostel,
+    emailToHostel: emailToHostelId,
   });
 
   const { paginatedItems, paginationInfo, setCurrentPage } = useFeePagination({
@@ -81,7 +81,7 @@ export function FeeStatusManagerContainer({
           <FeeListContainer
             fees={paginatedItems}
             userRole={userRole}
-            emailToHostel={emailToHostel}
+            emailToHostel={emailToHostelName}
             updateLoading={updateLoading}
             notificationLoading={notificationLoading}
             paginationInfo={paginationInfo}

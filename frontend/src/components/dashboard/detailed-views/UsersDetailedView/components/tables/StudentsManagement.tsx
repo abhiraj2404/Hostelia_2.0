@@ -23,6 +23,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserDeleteDialog } from "../dialogs/UserDeleteDialog";
 import { UserEditDialog } from "../dialogs/UserEditDialog";
+import { useHostels } from "@/hooks/useHostels";
 
 interface StudentsManagementProps {
   students: Student[];
@@ -60,6 +61,7 @@ export function StudentsManagement({
   const [deletingUser, setDeletingUser] = useState<Student | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { hostels } = useHostels();
 
   // Filter students based on filters
   const filteredStudents = useMemo(() => {
@@ -142,10 +144,9 @@ export function StudentsManagement({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Hostels</SelectItem>
-              <SelectItem value="BH-1">BH-1</SelectItem>
-              <SelectItem value="BH-2">BH-2</SelectItem>
-              <SelectItem value="BH-3">BH-3</SelectItem>
-              <SelectItem value="BH-4">BH-4</SelectItem>
+              {hostels.map((h) => (
+                <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
@@ -205,8 +206,8 @@ export function StudentsManagement({
                       <TableCell>{(student.hostelName ?? student.hostelId) || "N/A"}</TableCell>
                     )}
                     <TableCell>
-                      {student.messId ? (
-                        <span className="text-sm">{student.messId}</span>
+                      {student.messName ? (
+                        <span className="text-sm">{student.messName}</span>
                       ) : (
                         <span className="text-xs text-muted-foreground italic">Unassigned</span>
                       )}

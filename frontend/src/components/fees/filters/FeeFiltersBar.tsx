@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { FeesFilters } from "@/types/dashboard";
+import { useHostels } from "@/hooks/useHostels";
 
 interface FeeFiltersBarProps {
   filters: FeesFilters;
@@ -21,6 +22,7 @@ export function FeeFiltersBar({
   userHostel,
   onFiltersChange,
 }: FeeFiltersBarProps) {
+  const { hostels } = useHostels();
   const hasActiveFilters =
     filters.hostel || filters.feeType || filters.status;
 
@@ -49,10 +51,9 @@ export function FeeFiltersBar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Hostels</SelectItem>
-            <SelectItem value="BH-1">BH-1</SelectItem>
-            <SelectItem value="BH-2">BH-2</SelectItem>
-            <SelectItem value="BH-3">BH-3</SelectItem>
-            <SelectItem value="BH-4">BH-4</SelectItem>
+            {hostels.map((h) => (
+              <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       )}

@@ -52,6 +52,8 @@ export interface Student {
   rollNo?: string;
   hostelId: string;
   hostelName?: string | null;
+  messId?: string | null;
+  messName?: string | null;
   roomNo: string;
   role: string;
   createdAt: string;
@@ -106,6 +108,8 @@ export interface MessFeedback {
   mealType: string;
   rating: number;
   comment?: string;
+  messId?: string;
+  messName?: string;
   createdAt: string;
 }
 
@@ -169,6 +173,7 @@ export interface FeesFilters {
 
 export interface MessFilters {
   hostel?: string;
+  mess?: string;
   day?: string;
   mealType?: string;
   dateRange?: string;

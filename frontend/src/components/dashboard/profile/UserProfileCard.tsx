@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSelector } from "@/hooks";
 import { User, Mail, Home, Store } from "lucide-react";
+// Bug 5: Mess section only shown for students
 
 export function UserProfileCard() {
   const { user } = useAppSelector((state) => state.auth);
@@ -45,12 +46,14 @@ export function UserProfileCard() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Store className="h-4 w-4" />
-                <span className="text-sm">
-                  Mess: {user.messName || <span className="italic text-muted-foreground/70">Unassigned</span>}
-                </span>
-              </div>
+              {user.role === "student" && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Store className="h-4 w-4" />
+                  <span className="text-sm">
+                    Mess: {user.messName || <span className="italic text-muted-foreground/70">Unassigned</span>}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

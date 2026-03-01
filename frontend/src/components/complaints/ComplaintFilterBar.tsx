@@ -14,6 +14,7 @@ import type {
   ComplaintCategoryOption,
   ComplaintStatusOption,
 } from "./complaintConstants";
+import { useHostels } from "@/hooks/useHostels";
 
 type ComplaintFilterBarProps = {
   query: string;
@@ -50,6 +51,7 @@ export function ComplaintFilterBar({
   categoryOptions,
   showHostelFilter = false,
 }: ComplaintFilterBarProps) {
+  const { hostels } = useHostels();
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     onQueryChange(event.target.value);
   };
@@ -122,10 +124,9 @@ export function ComplaintFilterBar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Hostels</SelectItem>
-              <SelectItem value="BH-1">BH-1</SelectItem>
-              <SelectItem value="BH-2">BH-2</SelectItem>
-              <SelectItem value="BH-3">BH-3</SelectItem>
-              <SelectItem value="BH-4">BH-4</SelectItem>
+              {hostels.map((h) => (
+                <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
