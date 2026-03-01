@@ -26,7 +26,7 @@ export function useInfiniteScroll({ onLoadMore, isLoading, hasMore, threshold = 
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    let timeoutId: number;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const throttledScroll = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(handleScroll, throttleMs);
