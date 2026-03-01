@@ -56,3 +56,28 @@ export interface PaginationState {
   limit: number;
   total: number;
 }
+
+export interface BulkUploadStudentRow {
+  name: string;
+  rollNo: string;
+  email: string;
+  hostel: string;
+  roomNo: string;
+  mess: string;
+  password: string;
+}
+
+export interface BulkUploadResultItem {
+  row: number;
+  name?: string;
+  email?: string;
+  rollNo?: string;
+  reason?: string;
+}
+
+export interface BulkUploadResult {
+  created: BulkUploadResultItem[];
+  updated: BulkUploadResultItem[];
+  skipped: BulkUploadResultItem[];
+  errors: BulkUploadResultItem[];
+}

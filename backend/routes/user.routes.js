@@ -7,12 +7,17 @@ import {
     deleteUser,
     updateUserDetails,
 } from "../controllers/user.controller.js";
+import { bulkUploadStudents } from "../controllers/bulkUpload.controller.js";
 import { authorizeRoles } from "../middleware/roles.js";
 
 const router = Router();
 
 // Protected routes - require authentication (authMiddleware applied in index.js)
 // Specific routes must come before parameterized routes
+
+// Bulk upload students via CSV (admin and warden)
+router.post("/bulk-upload", authorizeRoles("collegeAdmin", "warden"), bulkUploadStudents);
+
 // Get all students - admin and warden can access
 router.get("/students/all", authorizeRoles("collegeAdmin", "warden"), getAllStudents);
 

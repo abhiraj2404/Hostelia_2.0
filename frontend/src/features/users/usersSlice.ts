@@ -1,5 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import type {
+  BulkUploadResult,
+  BulkUploadStudentRow,
   Student,
   User,
   UserFormData,
@@ -18,6 +20,7 @@ interface UsersState {
   updateLoading: Record<string, boolean>; // userId -> loading state
   deleteLoading: Record<string, boolean>; // userId -> loading state
   createWardenLoading: boolean;
+  bulkUploadLoading: boolean;
   studentsFilters: UserManagementFilters;
   wardensFilters: UserManagementFilters;
   studentsPagination: {
@@ -41,6 +44,7 @@ const initialState: UsersState = {
   updateLoading: {},
   deleteLoading: {},
   createWardenLoading: false,
+  bulkUploadLoading: false,
   studentsFilters: {},
   wardensFilters: {},
   studentsPagination: {
@@ -165,6 +169,30 @@ export const createWarden = createAsyncThunk<
             ?.data?.message
         : undefined;
     return rejectWithValue(errorMessage || "Failed to create warden");
+  }
+});
+
+// Bulk upload students via CSV (admin and warden)
+export const bulkUploadStudents = createAsyncThunk<
+  BulkUploadResult,
+  { students: BulkUploadStudentRow[]; mode: "create" | "upsert" },
+  { rejectValue: string }
+>("users/bulkUploadStudents", async ({ students, mode }, { rejectWithValue }) => {
+  try {
+    const response = await apiClient.post("/user/bulk-upload", { students, mode });
+    if (response.data?.success) {
+      return response.data.results as BulkUploadResult;
+    }
+    return rejectWithValue(
+      response.data?.message || "Failed to bulk upload students"
+    );
+  } catch (error: unknown) {
+    const errorMessage =
+      error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response
+            ?.data?.message
+        : undefined;
+    return rejectWithValue(errorMessage || "Failed to bulk upload students");
   }
 });
 
@@ -297,6 +325,20 @@ const usersSlice = createSlice({
         state.createWardenLoading = false;
         state.error = action.payload || "Failed to create warden";
       });
+
+    // Bulk upload students
+    builder
+      .addCase(bulkUploadStudents.pending, (state) => {
+        state.bulkUploadLoading = true;
+        state.error = null;
+      })
+      .addCase(bulkUploadStudents.fulfilled, (state) => {
+        state.bulkUploadLoading = false;
+      })
+      .addCase(bulkUploadStudents.rejected, (state, action) => {
+        state.bulkUploadLoading = false;
+        state.error = action.payload || "Failed to bulk upload students";
+      });
   },
 });
 
@@ -324,5 +366,7 @@ export const selectDeleteLoading = (state: { users: UsersState }) =>
   state.users.deleteLoading;
 export const selectCreateWardenLoading = (state: { users: UsersState }) =>
   state.users.createWardenLoading;
+export const selectBulkUploadLoading = (state: { users: UsersState }) =>
+  state.users.bulkUploadLoading;
 
 export default usersSlice.reducer;
