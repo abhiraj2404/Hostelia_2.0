@@ -13,7 +13,7 @@ const getUserByIdSchema = z.object({
     userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID format"),
 });
 
-const updateableHostels = [ "BH-1", "BH-2", "BH-3", "BH-4" ];
+
 
 const updateUserDetailsSchema = z.object({
     name: z.string().trim().min(1, "Name cannot be empty").optional(),
@@ -131,6 +131,7 @@ export const getAllStudents = async (req, res) => {
         const students = await User.find(filter)
             .select("-password")
             .populate("hostelId", "name")
+            .populate("messId", "name")
             .sort({ name: 1 });
 
         logger.info("Students retrieved", {
@@ -150,6 +151,8 @@ export const getAllStudents = async (req, res) => {
                 rollNo: student.rollNo,
                 hostelId: student.hostelId?._id?.toString() ?? student.hostelId?.toString(),
                 hostelName: student.hostelId?.name ?? null,
+                messId: student.messId?._id?.toString() ?? student.messId?.toString() ?? null,
+                messName: student.messId?.name ?? null,
                 roomNo: student.roomNo,
                 createdAt: student.createdAt,
                 updatedAt: student.updatedAt,
@@ -289,7 +292,10 @@ export const updateUserDetails = async (req, res) => {
                 runValidators: true,
                 context: "query",
             }
-        ).select("-password");
+        )
+            .select("-password")
+            .populate("hostelId", "name")
+            .populate("messId", "name");
 
         if (!updatedUser) {
             return res.status(404).json({
@@ -335,11 +341,24 @@ export const updateUserDetails = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "User details updated successfully",
-            user: updatedUser,
+            user: {
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                rollNo: updatedUser.rollNo,
+                hostelId: updatedUser.hostelId?._id?.toString() ?? updatedUser.hostelId?.toString(),
+                hostelName: updatedUser.hostelId?.name ?? null,
+                messId: updatedUser.messId?._id?.toString() ?? updatedUser.messId?.toString() ?? null,
+                messName: updatedUser.messId?.name ?? null,
+                roomNo: updatedUser.roomNo,
+                createdAt: updatedUser.createdAt,
+                updatedAt: updatedUser.updatedAt,
+            },
         });
     } catch (error) {
         if (error.code === 11000) {
-            const duplicateField = Object.keys(error.keyPattern || {})[ 0 ] || "field";
+            const duplicateField = Object.keys(error.keyPattern || {})[0] || "field";
             return res.status(409).json({
                 success: false,
                 message: `Duplicate value for ${duplicateField}`,
@@ -395,7 +414,7 @@ export const deleteUser = async (req, res) => {
                 role: user.role,
             };
 
-            const [ problemsDeleted, feedbackDeleted, transitDeleted, notificationsDeleted, feeSubmissionDeleted, announcementDeleted, problemCommentsUpdated, announcementCommentsUpdated ] = await Promise.all([
+            const [problemsDeleted, feedbackDeleted, transitDeleted, notificationsDeleted, feeSubmissionDeleted, announcementDeleted, problemCommentsUpdated, announcementCommentsUpdated] = await Promise.all([
                 Problem.deleteMany({ studentId: userId }, { session }),
                 Feedback.deleteMany({ user: userId }, { session }),
                 Transit.deleteMany({ studentId: userId }, { session }),

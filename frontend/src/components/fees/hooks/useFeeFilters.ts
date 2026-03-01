@@ -70,6 +70,6 @@ export function useFeeFilters({
 
     return result;
   }, [fees, userRole, userHostel, filters, emailToHostel]);
-
+  
   return filteredFees;
 }

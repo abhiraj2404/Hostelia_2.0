@@ -16,7 +16,9 @@ import {
   selectRecentAnnouncements,
   selectRecentComplaints,
 } from "@/features/dashboard/dashboardSlice";
+import { updateUser as updateAuthUser } from "@/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
+import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { isFeeStatus } from "@/types/dashboard";
 import { RefreshCw } from "lucide-react";
@@ -24,6 +26,7 @@ import { useEffect } from "react";
 
 export function StudentDashboardLayout() {
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
   const { loading, error } = useAppSelector(selectDashboardState);
   const metrics = useAppSelector(selectDashboardMetrics);
   const recentComplaints = useAppSelector(selectRecentComplaints);
@@ -33,6 +36,33 @@ export function StudentDashboardLayout() {
   useEffect(() => {
     dispatch(fetchStudentDashboardData());
   }, [dispatch]);
+
+  // Refresh user profile from backend to get latest hostelName/messName
+  useEffect(() => {
+    const refreshUserProfile = async () => {
+      const userId = user?.id;
+      if (!userId) return;
+      try {
+        const res = await apiClient.get(`/user/${userId}`);
+        if (res.data?.success) {
+          const u = res.data.user;
+          // Map backend fields to frontend auth state shape
+          dispatch(updateAuthUser({
+            hostelId: u.hostelId,
+            hostelName: u.hostelName,
+            messId: u.messId,
+            messName: u.messName,
+            roomNo: u.roomNo,
+            name: u.name,
+            rollNo: u.rollNo,
+          }));
+        }
+      } catch {
+        /* ignore errors — profile card will use cached data */
+      }
+    };
+    refreshUserProfile();
+  }, [dispatch, user?.id]);
 
   const handleRefresh = () => {
     dispatch(fetchStudentDashboardData());

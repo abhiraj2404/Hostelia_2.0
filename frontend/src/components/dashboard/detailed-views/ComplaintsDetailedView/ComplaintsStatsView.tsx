@@ -12,6 +12,7 @@ import type { Complaint } from "@/features/complaints/complaintsSlice";
 import type { ComplaintsFilters } from "@/types/dashboard";
 import { ComplaintsList } from "./ComplaintsList";
 import { ComplaintsAnalytics } from "./ComplaintsAnalytics";
+import { useHostels } from "@/hooks/useHostels";
 
 interface ComplaintsStatsViewProps {
   complaints: Complaint[];
@@ -31,6 +32,7 @@ export function ComplaintsStatsView({
   isWarden = false,
 }: ComplaintsStatsViewProps) {
   const [activeTab, setActiveTab] = useState<TabType>('list');
+  const { hostels } = useHostels();
 
   // Client-side filtering
   const filteredComplaints = useMemo(() => {
@@ -70,10 +72,9 @@ export function ComplaintsStatsView({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Hostels</SelectItem>
-                <SelectItem value="BH-1">BH-1</SelectItem>
-                <SelectItem value="BH-2">BH-2</SelectItem>
-                <SelectItem value="BH-3">BH-3</SelectItem>
-                <SelectItem value="BH-4">BH-4</SelectItem>
+                {hostels.map((h) => (
+                  <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}

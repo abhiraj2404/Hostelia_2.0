@@ -228,18 +228,13 @@ export function UserEditDialog({
               <Label htmlFor="hostelId">Hostel</Label>
               <Input
                 id="hostelId"
-                {...register("hostelId")}
+                value={user?.hostelName || user?.hostelId || ""}
                 placeholder="Hostel"
                 disabled
               />
               <p className="text-xs text-muted-foreground">
                 Hostel assignment is managed by the admin.
               </p>
-              {errors.hostelId && (
-                <p className="text-xs text-destructive">
-                  {errors.hostelId.message}
-                </p>
-              )}
             </div>
           )}
 

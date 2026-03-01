@@ -3,7 +3,10 @@ import { apiClient } from "@/lib/api-client";
 import type { Student } from "@/types/dashboard";
 
 export function useEmailToHostelMapping() {
-  const [emailToHostel, setEmailToHostel] = useState<Record<string, string>>(
+  const [emailToHostelId, setEmailToHostelId] = useState<Record<string, string>>(
+    {}
+  );
+  const [emailToHostelName, setEmailToHostelName] = useState<Record<string, string>>(
     {}
   );
 
@@ -13,14 +16,17 @@ export function useEmailToHostelMapping() {
         const res = await apiClient.get("/user/students/all");
         const students: Student[] = res.data.students || [];
 
-        const mapping: Record<string, string> = {};
+        const idMap: Record<string, string> = {};
+        const nameMap: Record<string, string> = {};
         students.forEach((student) => {
-          if (student.email && student.hostelId) {
-            mapping[student.email] = student.hostelId;
+          if (student.email) {
+            if (student.hostelId) idMap[student.email] = student.hostelId;
+            if (student.hostelName) nameMap[student.email] = student.hostelName;
           }
         });
 
-        setEmailToHostel(mapping);
+        setEmailToHostelId(idMap);
+        setEmailToHostelName(nameMap);
       } catch (error) {
         console.error("Failed to fetch students for hostel mapping:", error);
       }
@@ -29,6 +35,5 @@ export function useEmailToHostelMapping() {
     fetchStudents();
   }, []);
 
-  return emailToHostel;
+  return { emailToHostelId, emailToHostelName };
 }
-

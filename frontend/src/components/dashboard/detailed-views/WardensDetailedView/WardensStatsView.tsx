@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Warden, WardenFilters } from "@/types/dashboard";
 import { WardensList } from "./WardensList";
+import { useHostels } from "@/hooks/useHostels";
 
 interface WardensStatsViewProps {
   wardens: Warden[];
@@ -30,6 +31,7 @@ export function WardensStatsView({
 }: WardensStatsViewProps) {
   const totalPages = pagination ? Math.ceil(pagination.total / pagination.limit) : 1;
   const currentPage = pagination?.page || 1;
+  const { hostels } = useHostels();
 
   return (
     <div className="space-y-4 flex flex-col min-h-[550px]">
@@ -46,10 +48,9 @@ export function WardensStatsView({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Hostels</SelectItem>
-            <SelectItem value="BH-1">BH-1</SelectItem>
-            <SelectItem value="BH-2">BH-2</SelectItem>
-            <SelectItem value="BH-3">BH-3</SelectItem>
-            <SelectItem value="BH-4">BH-4</SelectItem>
+            {hostels.map((h) => (
+              <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
