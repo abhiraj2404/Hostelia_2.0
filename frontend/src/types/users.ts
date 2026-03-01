@@ -9,6 +9,7 @@ export interface User {
   hostelId?: string;
   hostelName?: string | null;
   messId?: string | null;
+  messName?: string | null;
   roomNo?: string;
   collegeId?: string;
   createdAt: string;
@@ -20,6 +21,7 @@ export interface Student extends User {
   rollNo: string;
   hostelId: string;
   messId?: string | null;
+  messName?: string | null;
   roomNo: string;
 }
 

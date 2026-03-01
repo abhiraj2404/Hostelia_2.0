@@ -263,6 +263,7 @@ function UserSignupForm() {
       if (res.data.success) {
         setFormSnapshot(data);
         setResendCountdown(60);
+        otpForm.reset({ otp: "" });
         setPhase("otp");
         setSuccessMessage("OTP sent to your email");
         toast.success("OTP sent to your email");
@@ -516,6 +517,8 @@ function UserSignupForm() {
             placeholder="000000"
             disabled={isFormLoading}
             maxLength={6}
+            autoComplete="one-time-code"
+            inputMode="numeric"
             {...otpForm.register("otp")}
             onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, ""); }}
             className="text-center text-2xl tracking-widest"

@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import type { MessFeedback, MessFilters } from "@/types/dashboard";
 import { MessAnalytics } from "./MessAnalytics";
+import { useHostels } from "@/hooks/useHostels";
+import { useMesses } from "@/hooks/useMesses";
 
 interface MessStatsViewProps {
   feedback: MessFeedback[];
@@ -25,6 +27,9 @@ export function MessStatsView({
   loading = false,
   isWarden = false,
 }: MessStatsViewProps) {
+  const { hostels } = useHostels();
+  const { messes } = useMesses();
+
   // Client-side filtering
   const filteredFeedback = useMemo(() => {
     let result = [...feedback];
@@ -32,6 +37,11 @@ export function MessStatsView({
     // Filter by hostel (for admin)
     if (filters.hostel && filters.hostel !== 'all') {
       result = result.filter(f => (f.studentId?.hostelId ?? f.user?.hostelId) === filters.hostel);
+    }
+
+    // Filter by mess
+    if (filters.mess && filters.mess !== 'all') {
+      result = result.filter(f => f.messId === filters.mess);
     }
 
     if (filters.day && filters.day !== 'all') {
@@ -63,13 +73,30 @@ export function MessStatsView({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Hostels</SelectItem>
-                <SelectItem value="BH-1">BH-1</SelectItem>
-                <SelectItem value="BH-2">BH-2</SelectItem>
-                <SelectItem value="BH-3">BH-3</SelectItem>
-                <SelectItem value="BH-4">BH-4</SelectItem>
+                {hostels.map((h) => (
+                  <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
+
+          {/* Mess Filter */}
+          <Select
+            value={filters.mess || 'all'}
+            onValueChange={(value) =>
+              onFiltersChange({ ...filters, mess: value === 'all' ? undefined : value })
+            }
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Mess" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Messes</SelectItem>
+              {messes.map((m) => (
+                <SelectItem key={m._id} value={m._id}>{m.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Select
             value={filters.day || 'all'}
@@ -110,7 +137,7 @@ export function MessStatsView({
             </SelectContent>
           </Select>
 
-          {(filters.hostel || filters.mealType || filters.day) && (
+          {(filters.hostel || filters.mess || filters.mealType || filters.day) && (
             <Button
               variant="ghost"
               onClick={() => onFiltersChange({})}

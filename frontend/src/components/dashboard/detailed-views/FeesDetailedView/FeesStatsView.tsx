@@ -12,6 +12,7 @@ import type { FeeSubmission, FeesFilters, Student } from "@/types/dashboard";
 import { FeesList } from "./FeesList";
 import { FeesAnalytics } from "./FeesAnalytics";
 import { apiClient } from "@/lib/api-client";
+import { useHostels } from "@/hooks/useHostels";
 
 interface FeesStatsViewProps {
   fees: FeeSubmission[];
@@ -33,7 +34,9 @@ export function FeesStatsView({
   students = [],
 }: FeesStatsViewProps) {
   const [activeTab, setActiveTab] = useState<TabType>('list');
-  const [emailToHostel, setEmailToHostel] = useState<Record<string, string>>({});
+  const [emailToHostelName, setEmailToHostelName] = useState<Record<string, string>>({});
+  const [emailToHostelId, setEmailToHostelId] = useState<Record<string, string>>({});
+  const { hostels } = useHostels();
 
   // Fetch students to create email-to-hostel mapping
   useEffect(() => {
@@ -42,15 +45,17 @@ export function FeesStatsView({
         const res = await apiClient.get('/user/students/all');
         const students: Student[] = res.data.students || [];
         
-        // Create mapping from email to hostel
-        const mapping: Record<string, string> = {};
+        const nameMap: Record<string, string> = {};
+        const idMap: Record<string, string> = {};
         students.forEach(student => {
-          if (student.email && student.hostelId) {
-            mapping[student.email] = student.hostelId;
+          if (student.email) {
+            if (student.hostelName) nameMap[student.email] = student.hostelName;
+            if (student.hostelId) idMap[student.email] = student.hostelId;
           }
         });
         
-        setEmailToHostel(mapping);
+        setEmailToHostelName(nameMap);
+        setEmailToHostelId(idMap);
       } catch (error) {
         console.error('Failed to fetch students for hostel mapping:', error);
       }
@@ -85,7 +90,7 @@ export function FeesStatsView({
 
     // For admins: Filter by hostel using emailToHostel mapping
     if (!isWarden && filters.hostel && filters.hostel !== 'all') {
-      result = result.filter(f => emailToHostel[f.studentEmail] === filters.hostel);
+      result = result.filter(f => emailToHostelId[f.studentEmail] === filters.hostel);
     }
 
     // Apply status filter
@@ -116,7 +121,7 @@ export function FeesStatsView({
     }
 
     return result;
-  }, [fees, filters, isWarden, students, emailToHostel]);
+  }, [fees, filters, isWarden, students, emailToHostelId]);
 
   return (
     <div className="space-y-6">
@@ -136,10 +141,9 @@ export function FeesStatsView({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Hostels</SelectItem>
-                <SelectItem value="BH-1">BH-1</SelectItem>
-                <SelectItem value="BH-2">BH-2</SelectItem>
-                <SelectItem value="BH-3">BH-3</SelectItem>
-                <SelectItem value="BH-4">BH-4</SelectItem>
+                {hostels.map((h) => (
+                  <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
@@ -228,7 +232,7 @@ export function FeesStatsView({
           <FeesList 
             fees={filteredFees} 
             loading={loading}
-            emailToHostel={emailToHostel}
+            emailToHostel={emailToHostelName}
             isWarden={isWarden}
           />
         )}

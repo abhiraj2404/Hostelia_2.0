@@ -262,15 +262,27 @@ export const verifyOTP = async (req, res) => {
         }
       );
 
+      // Populate hostel and mess names for the response
+      const populatedUser = await User.findById(newUser._id)
+        .populate("hostelId", "name")
+        .populate("messId", "name");
+
       return res.status(200).json({
         success: true,
         message: "Email verified and account created successfully",
         verified: true,
         user: {
-          userId: newUser._id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
+          userId: populatedUser._id,
+          name: populatedUser.name,
+          email: populatedUser.email,
+          role: populatedUser.role,
+          rollNo: populatedUser.rollNo,
+          hostelId: populatedUser.hostelId?._id || populatedUser.hostelId,
+          hostelName: populatedUser.hostelId?.name || null,
+          messId: populatedUser.messId?._id || populatedUser.messId || null,
+          messName: populatedUser.messId?.name || null,
+          roomNo: populatedUser.roomNo,
+          collegeId: populatedUser.collegeId,
         },
       });
     }
@@ -378,15 +390,26 @@ export const signup = async (req, res) => {
       email: newUser.email,
     });
 
+    // Populate hostel and mess names for the response
+    const populatedUser = await User.findById(newUser._id)
+      .populate("hostelId", "name")
+      .populate("messId", "name");
+
     return res.status(201).json({
       success: true,
       message: "User created successfully",
       user: {
-        userId: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        rollNo: newUser.rollNo,
+        userId: populatedUser._id,
+        name: populatedUser.name,
+        email: populatedUser.email,
+        role: populatedUser.role,
+        rollNo: populatedUser.rollNo,
+        hostelId: populatedUser.hostelId?._id || populatedUser.hostelId,
+        hostelName: populatedUser.hostelId?.name || null,
+        messId: populatedUser.messId?._id || populatedUser.messId || null,
+        messName: populatedUser.messId?.name || null,
+        roomNo: populatedUser.roomNo,
+        collegeId: populatedUser.collegeId,
       },
     });
   } catch (error) {
