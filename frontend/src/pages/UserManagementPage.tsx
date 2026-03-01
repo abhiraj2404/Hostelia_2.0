@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   fetchStudents,
@@ -6,16 +6,20 @@ import {
   updateUser,
   deleteUser,
   createWarden,
+  bulkUploadStudents,
   setStudentsFilters,
   setWardensFilters,
   setStudentsPage,
   setWardensPage,
   selectUsersState,
 } from "@/features/users";
-import type { Student, Warden, WardenCreateData } from "@/types/users";
+import type { Student, Warden, WardenCreateData, BulkUploadStudentRow } from "@/types/users";
 import { UsersStatsView } from "@/components/dashboard/detailed-views/UsersDetailedView";
+import { BulkUploadDialog } from "@/components/dashboard/detailed-views/UsersDetailedView/components/dialogs/BulkUploadDialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { Upload } from "lucide-react";
 
 export default function UserManagementPage() {
   const dispatch = useAppDispatch();
@@ -25,6 +29,8 @@ export default function UserManagementPage() {
 
   const isWarden = user?.role === "warden";
   const isAdmin = user?.role === "collegeAdmin";
+  const emailDomain = user?.email?.substring(user.email.indexOf("@")) || "";
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
 
   // Redirect if not admin or warden
   useEffect(() => {
@@ -135,6 +141,27 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleBulkUpload = async (
+    students: BulkUploadStudentRow[],
+    mode: "create" | "upsert"
+  ) => {
+    const action = await dispatch(bulkUploadStudents({ students, mode }));
+    if (bulkUploadStudents.fulfilled.match(action)) {
+      const result = action.payload;
+      const parts: string[] = [];
+      if (result.created.length > 0) parts.push(`${result.created.length} created`);
+      if (result.updated.length > 0) parts.push(`${result.updated.length} updated`);
+      if (parts.length > 0) {
+        toast.success(`Students: ${parts.join(", ")}`);
+        dispatch(fetchStudents());
+      }
+      return result;
+    }
+    const errorMessage = action.payload || "Failed to bulk upload students";
+    toast.error(errorMessage);
+    throw new Error(errorMessage);
+  };
+
   if (!isAdmin && !isWarden) {
     return null; // Will redirect in useEffect
   }
@@ -159,6 +186,15 @@ export default function UserManagementPage() {
               : "Manage students from your hostel"}
           </p>
         </div>
+        {(isAdmin || isWarden) && (
+          <Button
+            onClick={() => setIsBulkUploadOpen(true)}
+            className="gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Upload CSV
+          </Button>
+        )}
       </div>
 
       {/* User Management Content */}
@@ -193,6 +229,17 @@ export default function UserManagementPage() {
         deleteLoading={usersState.deleteLoading}
         createWardenLoading={usersState.createWardenLoading}
       />
+
+      {(isAdmin || isWarden) && (
+        <BulkUploadDialog
+          open={isBulkUploadOpen}
+          onClose={() => setIsBulkUploadOpen(false)}
+          onUpload={handleBulkUpload}
+          isLoading={usersState.bulkUploadLoading}
+          emailDomain={emailDomain}
+          wardenHostelName={isWarden ? (user?.hostelName as string) || "" : undefined}
+        />
+      )}
     </div>
   );
 }
