@@ -45,6 +45,15 @@ export const domainValidation = async (req, res, next) => {
 
         // Attach college to request for downstream usage
         req.college = college;
+
+        // Block signup/OTP for unapproved colleges (legacy colleges without status are okay)
+        if (college.status && college.status !== 'approved') {
+            return res.status(403).json({
+                success: false,
+                message: "This college's registration is pending approval. Student registration is not yet available.",
+            });
+        }
+
         next();
     } catch (error) {
         logger.error("Error in domainValidation middleware:", error);

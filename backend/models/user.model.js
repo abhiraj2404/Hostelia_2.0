@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
     role: {
         type: String,
-        enum: [ 'student', 'collegeAdmin', 'warden' ],
+        enum: [ 'student', 'collegeAdmin', 'warden', 'manager' ],
         default: 'student',
         required: true
     },
@@ -32,7 +32,6 @@ const userSchema = new mongoose.Schema({
     collegeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'College',
-        required: true,
         index: true
     },
     roomNo: String,
