@@ -94,12 +94,6 @@ const campusSchema = z
     messes: z
       .array(z.object({ name: z.string().min(1, "Mess name cannot be empty").trim() }))
       .min(1, "At least one mess is required"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string()
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"]
   })
   .refine((data) => data.adminEmail.endsWith(data.emailDomain), {
     message: "Admin email must belong to the provided domain",
@@ -566,15 +560,13 @@ function UserSignupForm() {
 // ═══════════════════════════════════════════════════════════════════
 // CAMPUS REGISTRATION FORM
 // ═══════════════════════════════════════════════════════════════════
-const CAMPUS_STEPS = ["College Info", "Infrastructure", "Admin Account", "Review"];
+const CAMPUS_STEPS = ["College Info", "Infrastructure", "Review"];
 
 function CampusRegistrationForm() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -588,8 +580,6 @@ function CampusRegistrationForm() {
       address: "",
       hostels: [{ name: "" }],
       messes: [{ name: "" }],
-      password: "",
-      confirmPassword: ""
     },
     mode: "onTouched"
   });
@@ -602,7 +592,6 @@ function CampusRegistrationForm() {
     switch (step) {
       case 0: fields = ["collegeName", "emailDomain", "adminEmail", "address"]; break;
       case 1: fields = ["hostels", "messes"]; break;
-      case 2: fields = ["password", "confirmPassword"]; break;
     }
     return form.trigger(fields);
   };
@@ -626,7 +615,6 @@ function CampusRegistrationForm() {
       if (data.address) formData.append("address", data.address);
       data.hostels.forEach((h) => formData.append("hostels[]", h.name.trim()));
       data.messes.forEach((m) => formData.append("messes[]", m.name.trim()));
-      formData.append("password", data.password);
       if (logoFile) formData.append("logo", logoFile);
 
       const res = await apiClient.post("/college/register", formData, {
@@ -655,9 +643,10 @@ function CampusRegistrationForm() {
             <Check className="w-6 h-6 text-green-600" />
           </div>
         </div>
-        <h3 className="text-lg font-semibold">Campus Registered!</h3>
+        <h3 className="text-lg font-semibold">Registration Submitted!</h3>
         <p className="text-sm text-muted-foreground">
-          <span className="font-medium">{values.collegeName}</span> has been registered. Login credentials were sent to{" "}
+          <span className="font-medium">{values.collegeName}</span> has been submitted for review.
+          Once approved, login credentials will be sent to{" "}
           <span className="font-mono text-xs">{values.adminEmail}</span>.
         </p>
         <Button onClick={() => navigate("/login")} className="w-full">Go to Login</Button>
@@ -801,37 +790,8 @@ function CampusRegistrationForm() {
         </div>
       )}
 
-      {/* Step 2: Admin Account */}
+      {/* Step 2: Review */}
       {step === 2 && (
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Set the password for the admin account (<span className="font-medium">{values.adminEmail}</span>).
-          </p>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Password</Label>
-            <div className="relative">
-              <Input type={showPassword ? "text" : "password"} placeholder="Minimum 6 characters" disabled={isLoading} {...form.register("password")} className="pr-10" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-            {form.formState.errors.password && <p className="text-xs text-red-600">{form.formState.errors.password.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Confirm Password</Label>
-            <div className="relative">
-              <Input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm password" disabled={isLoading} {...form.register("confirmPassword")} className="pr-10" />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-            {form.formState.errors.confirmPassword && <p className="text-xs text-red-600">{form.formState.errors.confirmPassword.message}</p>}
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Review */}
-      {step === 3 && (
         <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
           <div>
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider mb-1">College</p>
@@ -855,6 +815,9 @@ function CampusRegistrationForm() {
               {values.messes.map((m, i) => <span key={i} className="bg-background border rounded px-2 py-0.5 text-xs">{m.name}</span>)}
             </div>
           </div>
+          <div className="pt-2 border-t">
+            <p className="text-xs text-muted-foreground">After approval, login credentials will be sent to <span className="font-medium">{values.adminEmail}</span>.</p>
+          </div>
         </div>
       )}
 
@@ -863,11 +826,11 @@ function CampusRegistrationForm() {
         {step > 0 && (
           <Button type="button" variant="outline" onClick={handleBack} disabled={isLoading} className="flex-1">Back</Button>
         )}
-        {step < 3 ? (
+        {step < 2 ? (
           <Button type="button" onClick={handleNext} disabled={isLoading} className="flex-1">Next</Button>
         ) : (
           <Button type="button" onClick={handleSubmit} disabled={isLoading} className="flex-1">
-            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Registering...</> : "Register Campus"}
+            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting...</> : "Submit Registration"}
           </Button>
         )}
       </div>

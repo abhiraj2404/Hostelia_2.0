@@ -1,7 +1,4 @@
-import { fetchComplaints } from "@/features/complaints/complaintsSlice";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import apiClient from "@/lib/api-client";
-import { useEffect, useState } from "react";
+import { useAppSelector } from "@/hooks";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -35,129 +32,44 @@ const lifecycle = [
   },
 ];
 
+const metrics = [
+  {
+    label: "Resolution rate",
+    value: "95%",
+    detail: "Complaints resolved efficiently",
+  },
+  {
+    label: "Active colleges",
+    value: "50+",
+    detail: "Registered across the platform",
+  },
+  {
+    label: "Mess rating",
+    value: "4.2/5",
+    detail: "Average student satisfaction",
+  },
+];
+
+const queueSnapshot = [
+  {
+    label: "Pending complaints",
+    value: "12",
+    tone: "bg-primary/15 text-primary",
+  },
+  {
+    label: "In progress",
+    value: "08",
+    tone: "bg-amber-500/15 text-amber-700 dark:text-amber-200",
+  },
+  {
+    label: "Awaiting confirmation",
+    value: "05",
+    tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200",
+  },
+];
+
 function Hero() {
-  const dispatch = useAppDispatch();
-  const { items: complaints } = useAppSelector((state) => state.complaints);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const [metrics, setMetrics] = useState([
-    {
-      label: "Resolution rate",
-      value: "0%",
-      detail: "Calculating...",
-    },
-    {
-      label: "Total students",
-      value: "0",
-      detail: "Loading...",
-    },
-    {
-      label: "Mess rating",
-      value: "0.0/5",
-      detail: "Loading...",
-    },
-  ]);
-
-  useEffect(() => {
-    // Fetch complaints for live tracking
-    dispatch(fetchComplaints(undefined));
-  }, [dispatch]);
-
-  useEffect(() => {
-    // Fetch real-time metrics
-    const fetchMetrics = async () => {
-      try {
-        const [studentsRes, messRes] = await Promise.all([
-          apiClient
-            .get("/user/students/all")
-            .catch(() => ({ data: { students: [], count: 0 } })),
-          apiClient
-            .get("/mess/feedback")
-            .catch(() => ({ data: { feedbacks: [] } })),
-        ]);
-
-        // Calculate resolution rate from complaints
-        const totalComplaints = complaints.length;
-        const resolvedComplaints = complaints.filter(
-          (c) => c.status === "Resolved" || c.status === "ToBeConfirmed"
-        ).length;
-        const resolutionRate =
-          totalComplaints > 0
-            ? Math.round((resolvedComplaints / totalComplaints) * 100)
-            : 0;
-
-        // Get student count
-        const studentCount =
-          studentsRes.data?.count || studentsRes.data?.students?.length || 0;
-
-        // Calculate average mess rating
-        const feedbacks = messRes.data?.feedbacks || [];
-        const avgRating =
-          feedbacks.length > 0
-            ? feedbacks.reduce(
-                (sum: number, f: { rating: number }) => sum + f.rating,
-                0
-              ) / feedbacks.length
-            : 0;
-
-        setMetrics([
-          {
-            label: "Resolution rate",
-            value: `${resolutionRate}%`,
-            detail:
-              totalComplaints > 0
-                ? `${resolvedComplaints} of ${totalComplaints} complaints resolved`
-                : "No complaints tracked yet",
-          },
-          {
-            label: "Total students",
-            value: studentCount.toString(),
-            detail: `Registered across all hostels`,
-          },
-          {
-            label: "Mess rating",
-            value: avgRating > 0 ? `${avgRating.toFixed(1)}/5` : "N/A",
-            detail:
-              feedbacks.length > 0
-                ? `Based on ${feedbacks.length} feedback${
-                    feedbacks.length !== 1 ? "s" : ""
-                  }`
-                : "No feedback submitted yet",
-          },
-        ]);
-      } catch (error) {
-        console.error("Error fetching metrics:", error);
-      }
-    };
-
-    fetchMetrics();
-  }, [complaints]);
-
-  // Calculate real complaint statistics
-  const pendingCount = complaints.filter((c) => c.status === "Pending").length;
-  const inProgressCount = complaints.filter(
-    (c) => c.status === "Pending" || c.status === "ToBeConfirmed"
-  ).length;
-  const awaitingConfirmationCount = complaints.filter(
-    (c) => c.status === "ToBeConfirmed"
-  ).length;
-
-  const queueSnapshot = [
-    {
-      label: "Pending complaints",
-      value: pendingCount.toString().padStart(2, "0"),
-      tone: "bg-primary/15 text-primary",
-    },
-    {
-      label: "In progress",
-      value: inProgressCount.toString().padStart(2, "0"),
-      tone: "bg-amber-500/15 text-amber-700 dark:text-amber-200",
-    },
-    {
-      label: "Awaiting confirmation",
-      value: awaitingConfirmationCount.toString().padStart(2, "0"),
-      tone: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200",
-    },
-  ];
   return (
     <section className="relative overflow-hidden border-b border-border bg-background">
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-60 [background:radial-gradient(800px_260px_at_50%_-40%,hsl(var(--primary)/0.22),transparent_70%)]" />

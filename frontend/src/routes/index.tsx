@@ -10,13 +10,17 @@ import Dashboard from "@/pages/Dashboard";
 import FeesPage from "@/pages/FeesPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
+import ManagerColleges from "@/pages/manager/ManagerColleges";
+import ManagerDashboard from "@/pages/manager/ManagerDashboard";
+import ManagerLogin from "@/pages/manager/ManagerLogin";
+import ManagerPending from "@/pages/manager/ManagerPending";
 import MessPage from "@/pages/MessPage";
 import Signup from "@/pages/Signup";
 import StudentDetailPage from "@/pages/StudentDetailPage";
 import TransitPage from "@/pages/TransitPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import { Route, Routes } from "react-router-dom";
-import  OnlyGuests from "./guards/OnlyGuests";
+import OnlyGuests from "./guards/OnlyGuests";
 import RequireAuth from "./guards/RequireAuth";
 import StudentOnly from "./guards/StudentOnly";
 
@@ -107,6 +111,39 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <CollegePage />
+          </RequireAuth>
+        }
+      />
+      {/* Manager routes */}
+      <Route
+        path="/manager-login"
+        element={
+          <OnlyGuests>
+            <ManagerLogin />
+          </OnlyGuests>
+        }
+      />
+      <Route
+        path="/manager/dashboard"
+        element={
+          <RequireAuth>
+            <ManagerDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/manager/colleges"
+        element={
+          <RequireAuth>
+            <ManagerColleges />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/manager/pending"
+        element={
+          <RequireAuth>
+            <ManagerPending />
           </RequireAuth>
         }
       />
