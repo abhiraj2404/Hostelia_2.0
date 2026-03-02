@@ -172,7 +172,7 @@ function ComplaintsListPage() {
             </p>
             {(isStudent || isWarden) && user?.hostelId && (
               <p className="text-xs text-muted-foreground">
-                Assigned hostel: {user.hostelId}
+                Assigned hostel: {user.hostelName || user.hostelId}
               </p>
             )}
           </div>

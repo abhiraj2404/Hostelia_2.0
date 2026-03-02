@@ -66,7 +66,8 @@ export const getUserById = async (req, res) => {
         const user = await User.findById(userId)
             .select("-password")
             .populate("hostelId", "name")
-            .populate("messId", "name");
+            .populate("messId", "name")
+            .populate("collegeId", "name");
 
         if (!user) {
             return res.status(404).json({
@@ -89,6 +90,8 @@ export const getUserById = async (req, res) => {
                 messId: user.messId?._id || user.messId || null,
                 messName: user.messId?.name || null,
                 roomNo: user.roomNo,
+                collegeId: user.collegeId?._id || user.collegeId,
+                collegeName: user.collegeId?.name || null,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
             },

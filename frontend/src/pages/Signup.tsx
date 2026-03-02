@@ -295,6 +295,14 @@ function UserSignupForm() {
           id: res.data.user.userId,
           email: res.data.user.email,
           name: res.data.user.name,
+          rollNo: res.data.user.rollNo,
+          hostelId: res.data.user.hostelId,
+          hostelName: res.data.user.hostelName,
+          messId: res.data.user.messId,
+          messName: res.data.user.messName,
+          roomNo: res.data.user.roomNo,
+          collegeId: res.data.user.collegeId,
+          collegeName: res.data.user.collegeName,
           role: res.data.user.role
         }));
         setPhase("success");
