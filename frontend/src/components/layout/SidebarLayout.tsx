@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   Bell,
   Building2,
+  Clock,
   DollarSign,
   LayoutDashboard,
   Mail,
@@ -27,7 +28,7 @@ type NavigationItem = {
   to: string;
   icon: React.ComponentType<{ className?: string }>;
   requireAuth: boolean;
-  requireRoles?: ("collegeAdmin" | "warden" | "student")[];
+  requireRoles?: ("collegeAdmin" | "warden" | "student" | "manager")[];
 };
 
 const navigation: NavigationItem[] = [
@@ -73,18 +74,43 @@ const navigation: NavigationItem[] = [
   { label: "Contact", to: "/contact", icon: Mail, requireAuth: false },
 ];
 
+// Manager gets a completely different sidebar
+const managerNavigation: NavigationItem[] = [
+  {
+    label: "Dashboard",
+    to: "/manager/dashboard",
+    icon: LayoutDashboard,
+    requireAuth: true,
+  },
+  {
+    label: "Colleges",
+    to: "/manager/colleges",
+    icon: Building2,
+    requireAuth: true,
+  },
+  {
+    label: "Pending Approvals",
+    to: "/manager/pending",
+    icon: Clock,
+    requireAuth: true,
+  },
+];
+
 export function SidebarLayout({ children }: SidebarLayoutProps) {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+
+  const isManager = user?.role === "manager";
+  const navItems = isManager ? managerNavigation : navigation;
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-background">
       <nav className="flex-1 space-y-1.5 px-5 pt-6">
-        {navigation
+        {navItems
           .filter((item) => {
             if (!isAuthenticated && item.requireAuth) return false;
             if (item.requireRoles && user?.role) {
               return item.requireRoles.includes(
-                user.role as "collegeAdmin" | "warden" | "student"
+                user.role as "collegeAdmin" | "warden" | "student" | "manager"
               );
             }
             return true;

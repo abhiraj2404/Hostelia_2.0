@@ -10,7 +10,8 @@ import wardenRouter from "./warden.routes.js";
 import notificationRouter from "./notification.routes.js";
 import contactRouter from "./contact.routes.js";
 import collegeRouter from "./college.routes.js";
-import hostelRouter from "./hostel.routes.js"; // Added this line
+import hostelRouter from "./hostel.routes.js";
+import managerRouter from "./manager.routes.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -28,5 +29,7 @@ router.use("/notifications", authMiddleware, notificationRouter);
 router.use("/contact", contactRouter);
 router.use("/college", collegeRouter);
 router.use("/hostel", authMiddleware, hostelRouter);
+router.use("/manager", authMiddleware, managerRouter);
 
 export default router;
+

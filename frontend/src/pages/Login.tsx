@@ -224,6 +224,11 @@ export default function Login() {
                         Sign up
                       </Link>
                     </p>
+                    <p className="text-muted-foreground mt-2">
+                      <Link to="/manager-login" className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4">
+                        Manager Login
+                      </Link>
+                    </p>
                   </div>
                 </div>
               </form>

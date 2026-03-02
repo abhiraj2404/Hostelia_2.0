@@ -12,8 +12,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret";
 /**
  * Generate JWT token and set cookie
  */
-export const generateToken = (userID, collegeId, res) => {
-  const token = jwt.sign({ userID, collegeId }, JWT_SECRET, {
+export const generateToken = (userID, res) => {
+  const token = jwt.sign({ userID }, JWT_SECRET, {
     expiresIn: "7d",
   });
 
@@ -265,6 +265,7 @@ export const verifyOTP = async (req, res) => {
       // Populate hostel and mess names for the response
       const populatedUser = await User.findById(newUser._id)
         .populate("hostelId", "name")
+        .populate("collegeId", "name")
         .populate("messId", "name");
 
       return res.status(200).json({
@@ -282,7 +283,8 @@ export const verifyOTP = async (req, res) => {
           messId: populatedUser.messId?._id || populatedUser.messId || null,
           messName: populatedUser.messId?.name || null,
           roomNo: populatedUser.roomNo,
-          collegeId: populatedUser.collegeId,
+          collegeId: populatedUser.collegeId?._id || populatedUser.collegeId || null,
+          collegeName: populatedUser.collegeId?.name || null,
         },
       });
     }
@@ -380,7 +382,7 @@ export const signup = async (req, res) => {
     });
 
     // Generate token and set cookies
-    generateToken(newUser._id, college._id, res);
+    generateToken(newUser._id, res);
     res.cookie("userid", newUser._id.toString());
     res.cookie("collegeId", newUser.collegeId.toString());
     res.cookie("role", newUser.role);
@@ -393,6 +395,7 @@ export const signup = async (req, res) => {
     // Populate hostel and mess names for the response
     const populatedUser = await User.findById(newUser._id)
       .populate("hostelId", "name")
+      .populate("collegeId", "name")
       .populate("messId", "name");
 
     return res.status(201).json({
@@ -409,7 +412,8 @@ export const signup = async (req, res) => {
         messId: populatedUser.messId?._id || populatedUser.messId || null,
         messName: populatedUser.messId?.name || null,
         roomNo: populatedUser.roomNo,
-        collegeId: populatedUser.collegeId,
+        collegeId: populatedUser.collegeId?._id || populatedUser.collegeId || null,
+        collegeName: populatedUser.collegeId?.name || null,
       },
     });
   } catch (error) {
@@ -442,11 +446,21 @@ export const login = async (req, res) => {
     // Find user within specific college
     const user = await User.findOne({ email, collegeId })
       .populate("hostelId", "name")
+      .populate("collegeId", "name status")
       .populate("messId", "name");
     if (!user) {
       return res.status(400).json({
         success: false,
         message: "Invalid Credentials",
+      });
+    }
+
+    // Block login if college is not approved
+    const collegeDoc = user.collegeId;
+    if (collegeDoc && typeof collegeDoc === 'object' && collegeDoc.status && collegeDoc.status !== 'approved') {
+      return res.status(403).json({
+        success: false,
+        message: "Your college registration is pending approval. Please contact the platform administrators.",
       });
     }
 
@@ -460,10 +474,10 @@ export const login = async (req, res) => {
     }
 
     // Generate token and set cookies
-    generateToken(user._id, user.collegeId, res);
+    generateToken(user._id, res);
     res.cookie("role", user.role);
     res.cookie("userid", user._id.toString());
-    res.cookie("collegeId", user.collegeId.toString());
+    res.cookie("collegeId", (collegeDoc?._id || user.collegeId || "").toString());
 
     return res.status(200).json({
       success: true,
@@ -473,7 +487,8 @@ export const login = async (req, res) => {
         name: user.name,
         rollNo: user.rollNo,
         email: user.email,
-        collegeId: user.collegeId,
+        collegeId: collegeDoc?._id || user.collegeId || null,
+        collegeName: collegeDoc?.name || null,
         hostelId: user.hostelId?._id || user.hostelId,
         hostelName: user.hostelId?.name || null,
         messId: user.messId?._id || user.messId || null,
@@ -484,6 +499,66 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     logger.error("ERROR in login controller:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+/**
+ * Manager login (no collegeId required)
+ */
+const managerLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const managerLogin = async (req, res) => {
+  try {
+    const validationResult = managerLoginSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: z.treeifyError(validationResult.error),
+      });
+    }
+
+    const { email, password } = validationResult.data;
+
+    const user = await User.findOne({ email, role: "manager" });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
+    }
+
+    generateToken(user._id, res);
+    res.cookie("role", user.role);
+    res.cookie("userid", user._id.toString());
+
+    return res.status(200).json({
+      success: true,
+      message: "Manager login successful",
+      user: {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    logger.error("ERROR in managerLogin controller:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",

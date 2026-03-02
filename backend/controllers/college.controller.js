@@ -1,11 +1,8 @@
-import bcrypt from "bcrypt";
 import z from "zod";
 import { logger } from "../middleware/logger.js";
 import College from "../models/college.model.js";
 import Hostel from "../models/hostel.model.js";
 import Mess from "../models/mess.model.js";
-import User from "../models/user.model.js";
-import { getEmailUser, sendEmail } from "../utils/email-client.js";
 import { uploadBufferToCloudinary, getSecureUrl } from "../config/cloudinary.js";
 
 const registerCollegeSchema = z.object({
@@ -18,7 +15,6 @@ const registerCollegeSchema = z.object({
         .regex(/^@/, "Email domain must start with @"),
     adminEmail: z.string().email("Invalid admin email format").trim().toLowerCase(),
     address: z.string().optional(),
-    password: z.string(),
     hostels: z
         .array(z.string().min(1, "Hostel name cannot be empty").trim())
         .min(1, "At least one hostel is required"),
@@ -58,7 +54,6 @@ export const registerCollege = async (req, res) => {
             address,
             hostels,
             messes,
-            password,
         } = validationResult.data;
 
         // Check if college/domain already exists
@@ -119,46 +114,7 @@ export const registerCollege = async (req, res) => {
         }));
         await Mess.insertMany(messDocs);
 
-        // Phase 4: Create Admin User
-        // const plainPassword =
-        //     Math.random().toString(36).slice(-8) +
-        //     Math.random().toString(36).slice(-4);
-        const plainPassword = password;
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(plainPassword, salt);
-
-        await User.create({
-            name: "College Admin",
-            email: adminEmail,
-            password: hashedPassword,
-            role: "collegeAdmin",
-            collegeId: newCollege._id,
-            // rollNo, hostelId, roomNo are intentionally omitted
-        });
-
-        // Phase 5: Send Credentials via Email
-        const mailOptions = {
-            from: `"Hostelia Platform" <${getEmailUser()}>`,
-            to: adminEmail,
-            subject: "Welcome to Hostelia - Campus Registration Successful!",
-            html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e4; border-radius: 5px;">
-          <h2 style="color: #4f46e5;">Welcome to Hostelia!</h2>
-          <p>Dear ${collegeName} Administrator,</p>
-          <p>Your campus has been successfully registered on our platform.</p>
-          <p>Here are your admin login credentials:</p>
-          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p><strong>Email:</strong> ${adminEmail}</p>
-            <p><strong>Password:</strong> <span style="font-family: monospace;">${plainPassword}</span></p>
-          </div>
-          <p style="color: #ef4444;"><strong>Important:</strong> Please log in and change your password immediately.</p>
-          <p>Best regards,<br>Hostelia Team</p>
-        </div >
-    `,
-        };
-
-        await sendEmail(mailOptions);
-        logger.info("College registered successfully", {
+        logger.info("College registration submitted (pending approval)", {
             collegeId: newCollege._id,
             emailDomain,
         });
@@ -166,11 +122,12 @@ export const registerCollege = async (req, res) => {
         return res.status(201).json({
             success: true,
             message:
-                "College registered successfully. Login credentials sent to the admin email.",
+                "College registration submitted successfully. It will be reviewed by the platform team.",
             college: {
                 id: newCollege._id,
                 name: newCollege.name,
                 emailDomain: newCollege.emailDomain,
+                status: "pending",
             },
         });
     } catch (error) {
@@ -188,7 +145,10 @@ export const registerCollege = async (req, res) => {
  */
 export const getCollegesList = async (req, res) => {
     try {
-        const colleges = await College.find({}).sort({ name: 1 });
+        // Include approved AND legacy colleges (those without a status field)
+        const colleges = await College.find({
+            $or: [ { status: 'approved' }, { status: { $exists: false } } ]
+        }).sort({ name: 1 });
         return res.status(200).json({
             success: true,
             colleges,
