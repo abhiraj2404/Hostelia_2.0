@@ -85,6 +85,7 @@ export default function Login() {
           messName: response.data.user.messName,
           roomNo: response.data.user.roomNo,
           collegeId: response.data.user.collegeId,
+          collegeName: response.data.user.collegeName,
           role: response.data.user.role
         };
 

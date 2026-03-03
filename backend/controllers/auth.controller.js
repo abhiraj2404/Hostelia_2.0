@@ -250,8 +250,9 @@ export const verifyOTP = async (req, res) => {
       });
 
       // Generate token and set cookies
-      generateToken(newUser._id, college._id, res);
+      generateToken(newUser._id, res);
       res.cookie("userid", newUser._id.toString());
+      res.cookie("collegeId", college._id.toString());
       res.cookie("role", newUser.role);
 
       logger.info(
