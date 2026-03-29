@@ -55,6 +55,7 @@ export function StudentDashboardLayout() {
             roomNo: u.roomNo,
             name: u.name,
             rollNo: u.rollNo,
+            collegeName: u.collegeName,
           }));
         }
       } catch {

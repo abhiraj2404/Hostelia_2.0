@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Mail, User2, Hash, Hotel, DoorClosed } from 'lucide-react';
+import { Mail, User2, Hash, Home, DoorClosed, Store } from 'lucide-react';
 
 interface StudentDetailHeaderProps {
   student: any;
@@ -25,8 +25,8 @@ export function StudentDetailHeader({ student }: StudentDetailHeaderProps) {
 
           {/* Email */}
           <div className="flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-500/10">
-              <Mail className="h-7 w-7 text-blue-500" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Mail className="h-7 w-7 text-primary" />
             </div>
             <div className="min-w-0">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Email</p>
@@ -36,8 +36,8 @@ export function StudentDetailHeader({ student }: StudentDetailHeaderProps) {
 
           {/* Roll Number */}
           <div className="flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-500/10">
-              <Hash className="h-7 w-7 text-purple-500" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Hash className="h-7 w-7 text-primary" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Roll Number</p>
@@ -47,8 +47,8 @@ export function StudentDetailHeader({ student }: StudentDetailHeaderProps) {
 
           {/* Hostel */}
           <div className="flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500/10">
-              <Hotel className="h-7 w-7 text-green-500" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Home className="h-7 w-7 text-primary" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Hostel</p>
@@ -58,12 +58,25 @@ export function StudentDetailHeader({ student }: StudentDetailHeaderProps) {
 
           {/* Room Number */}
           <div className="flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-500/10">
-              <DoorClosed className="h-7 w-7 text-orange-500" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <DoorClosed className="h-7 w-7 text-primary" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Room Number</p>
               <p className="text-xl font-bold mt-1">{student.roomNo || 'N/A'}</p>
+            </div>
+          </div>
+
+          {/* Mess */}
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Store className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Mess</p>
+              <p className="text-xl font-bold mt-1">
+                {student.messName || <span className="text-muted-foreground italic font-normal text-base">Unassigned</span>}
+              </p>
             </div>
           </div>
         </div>

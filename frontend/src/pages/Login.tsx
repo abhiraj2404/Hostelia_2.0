@@ -85,6 +85,7 @@ export default function Login() {
           messName: response.data.user.messName,
           roomNo: response.data.user.roomNo,
           collegeId: response.data.user.collegeId,
+          collegeName: response.data.user.collegeName,
           role: response.data.user.role
         };
 
@@ -222,6 +223,11 @@ export default function Login() {
                       Don&apos;t have an account?{" "}
                       <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
                         Sign up
+                      </Link>
+                    </p>
+                    <p className="text-muted-foreground mt-2">
+                      <Link to="/manager-login" className="text-muted-foreground hover:text-foreground text-xs underline underline-offset-4">
+                        Manager Login
                       </Link>
                     </p>
                   </div>

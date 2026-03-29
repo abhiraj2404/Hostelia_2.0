@@ -29,6 +29,12 @@ const collegeSchema = new mongoose.Schema(
             type: String, // Cloudinary URL
             trim: true,
         },
+        status: {
+            type: String,
+            enum: [ "pending", "approved", "rejected" ],
+            default: "pending",
+        },
+
         subscriptionStatus: {
             type: String,
             enum: [ "trial", "active", "inactive" ],

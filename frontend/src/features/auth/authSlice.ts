@@ -14,6 +14,7 @@ export interface UserData {
   messName?: string | null;
   roomNo?: string;
   collegeId?: string;
+  collegeName?: string | null;
   role?: string;
   [key: string]: unknown; // Allow for additional fields from backend
 }

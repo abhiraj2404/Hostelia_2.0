@@ -9,9 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { fetchComplaints } from "@/features/complaints/complaintsSlice";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import apiClient from "@/lib/api-client";
+import { useAppSelector } from "@/hooks";
 import {
   ArrowUpRight,
   Building2,
@@ -21,7 +19,6 @@ import {
   Timer,
   Users2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 const transformationPillars = [
@@ -208,77 +205,6 @@ function WorkflowShowcase() {
 }
 
 function OperatingIntelligence() {
-  const dispatch = useAppDispatch();
-  const { items: complaints } = useAppSelector((state) => state.complaints);
-  const [feeCount, setFeeCount] = useState(0);
-  const [messFeedbackCount, setMessFeedbackCount] = useState(0);
-  const [messAvgRating, setMessAvgRating] = useState(0);
-  const [transitCount, setTransitCount] = useState(0);
-  const [announcementCount, setAnnouncementCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch complaints for overview
-    dispatch(fetchComplaints(undefined));
-  }, [dispatch]);
-
-  useEffect(() => {
-    // Fetch all metrics for overview
-    const fetchMetrics = async () => {
-      try {
-        setLoading(true);
-        const [feesRes, messRes, transitRes, announcementRes] =
-          await Promise.all([
-            apiClient.get("/fee").catch(() => ({ data: { data: [] } })),
-            apiClient
-              .get("/mess/feedback")
-              .catch(() => ({ data: { feedbacks: [] } })),
-            apiClient
-              .get("/transit")
-              .catch(() => ({ data: { transitEntries: [] } })),
-            apiClient
-              .get("/announcement")
-              .catch(() => ({ data: { data: [] } })),
-          ]);
-
-        // Calculate fee count
-        const fees = feesRes.data?.data || [];
-        setFeeCount(fees.length);
-
-        // Calculate mess feedback count and average rating
-        const feedbacks = messRes.data?.feedbacks || [];
-        setMessFeedbackCount(feedbacks.length);
-        if (feedbacks.length > 0) {
-          const avgRating =
-            feedbacks.reduce(
-              (sum: number, f: { rating: number }) => sum + f.rating,
-              0
-            ) / feedbacks.length;
-          setMessAvgRating(avgRating);
-        }
-
-        // Calculate transit count
-        const transitEntries = transitRes.data?.transitEntries || [];
-        setTransitCount(transitEntries.length);
-
-        // Calculate announcement count
-        const announcements = announcementRes.data?.data || [];
-        setAnnouncementCount(announcements.length);
-      } catch (error) {
-        console.error("Error fetching metrics:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMetrics();
-  }, []);
-
-  const totalComplaints = complaints.length;
-  const pendingComplaints = complaints.filter(
-    (c) => c.status === "Pending"
-  ).length;
-
   return (
     <section className="border-b border-border bg-muted/20">
       <div className="mx-auto max-w-6xl px-6 py-20 lg:px-12">
@@ -333,60 +259,35 @@ function OperatingIntelligence() {
                 Platform features at a glance
               </CardTitle>
               <CardDescription>
-                Real-time statistics across all system modules.
+                Key statistics across all system modules.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <div className="flex items-start justify-between gap-4 rounded-xl border border-dashed border-border/70 bg-background/70 p-4">
                 <div>
                   <p className="font-medium text-foreground">Complaints</p>
-                  <p>
-                    {totalComplaints} total complaint
-                    {totalComplaints !== 1 ? "s" : ""} tracked.
-                    {pendingComplaints > 0 &&
-                      ` ${pendingComplaints} pending review.`}
-                  </p>
+                  <p>Track, resolve, and verify complaints across all hostels.</p>
                 </div>
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                  {totalComplaints}
+                  24/7
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4 rounded-xl border border-dashed border-border/70 bg-background/70 p-4">
                 <div>
                   <p className="font-medium text-foreground">Fee Management</p>
-                  <p>
-                    {loading
-                      ? "Loading..."
-                      : feeCount > 0
-                      ? `${feeCount} fee submission${
-                          feeCount !== 1 ? "s" : ""
-                        } tracked.`
-                      : "Submit and track hostel fee and mess fee receipts."}
-                  </p>
+                  <p>Submit and track hostel fee and mess fee receipts.</p>
                 </div>
                 <span className="rounded-full bg-blue-500/15 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-200">
-                  {loading ? "..." : feeCount}
+                  Tracked
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4 rounded-xl border border-dashed border-border/70 bg-background/70 p-4">
                 <div>
                   <p className="font-medium text-foreground">Mess Services</p>
-                  <p>
-                    {loading
-                      ? "Loading..."
-                      : messFeedbackCount > 0
-                      ? `${messFeedbackCount} feedback${
-                          messFeedbackCount !== 1 ? "s" : ""
-                        } submitted. ${
-                          messAvgRating > 0
-                            ? `Avg: ${messAvgRating.toFixed(1)}⭐`
-                            : ""
-                        }`
-                      : "View weekly menu and submit feedback."}
-                  </p>
+                  <p>View weekly menu, submit feedback, and rate meals.</p>
                 </div>
                 <span className="rounded-full bg-purple-500/15 px-3 py-1 text-xs font-medium text-purple-700 dark:text-purple-200">
-                  {loading ? "..." : messFeedbackCount}
+                  Live
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4 rounded-xl border border-dashed border-border/70 bg-background/70 p-4">
@@ -394,18 +295,10 @@ function OperatingIntelligence() {
                   <p className="font-medium text-foreground">
                     Transit & Announcements
                   </p>
-                  <p>
-                    {loading
-                      ? "Loading..."
-                      : `${transitCount} transit entr${
-                          transitCount !== 1 ? "ies" : "y"
-                        }, ${announcementCount} announcement${
-                          announcementCount !== 1 ? "s" : ""
-                        }.`}
-                  </p>
+                  <p>Log transit entries and broadcast campus-wide updates.</p>
                 </div>
                 <span className="rounded-full bg-green-500/15 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-200">
-                  {loading ? "..." : `${transitCount}/${announcementCount}`}
+                  Active
                 </span>
               </div>
             </CardContent>
@@ -430,8 +323,8 @@ function MomentumCTA() {
               Get started with Hostelia today.
             </h2>
             <p className="text-base text-primary-foreground/80 md:text-lg">
-              Submit complaints, track fees, view mess menu, and manage transit
-              requests. Everything you need for hostel management in one place.
+              Register your college, get approved, and manage hostel
+              operations — complaints, fees, mess, transit, and more — all in one place.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
