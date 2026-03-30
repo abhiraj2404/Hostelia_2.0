@@ -80,6 +80,14 @@ A full-stack hostel management web application built for efficient administratio
 
 Open two terminals and run the backend and frontend servers in parallel, or use a process manager.
 
+### API Documentation (Swagger)
+
+- Swagger UI: `http://localhost:3000/api-docs`
+- OpenAPI JSON: `http://localhost:3000/api/docs.json`
+
+Swagger docs are always enabled in this backend (no extra env toggle required).
+
+
 ## Tech Stack
 
 ### Frontend
