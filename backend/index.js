@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/database.js";
+import { setupSwagger } from "./config/swagger.js";
 import apiRoutes from "./routes/index.js";
 import { logger } from "./middleware/logger.js";
 
@@ -38,6 +39,9 @@ connectDB()
         app.use(express.json());
         app.use(cookieParser());
         app.use(express.urlencoded({ extended: true }));
+
+        // API documentation
+        setupSwagger(app);
 
         // Routes
         app.get("/", (req, res) => {

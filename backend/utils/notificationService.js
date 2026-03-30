@@ -1,4 +1,5 @@
 import Notification from '../models/notification.model.js';
+import User from '../models/user.model.js';
 import { logger } from '../middleware/logger.js';
 
 // Map to store active SSE connections: userId -> Set of response objects
@@ -212,10 +213,49 @@ export async function getUnreadCount(userId) {
  * @param {Object} notificationData - Notification data (without userId)
  */
 export async function notifyUsers(userIds, notificationData) {
-    const notifications = userIds.map((userId) => ({
-        ...notificationData,
-        userId,
-    }));
+    const uniqueUserIds = Array.from(new Set((userIds || []).filter(Boolean)));
+
+    if (uniqueUserIds.length === 0) {
+        return [];
+    }
+
+    // Notification schema requires collegeId. Most call-sites don't pass it,
+    // so we derive it from the target users to keep controller code minimal.
+    let collegeIdByUserId = null;
+    if (!notificationData?.collegeId) {
+        const users = await User.find({ _id: { $in: uniqueUserIds } })
+            .select('_id collegeId')
+            .lean();
+
+        collegeIdByUserId = new Map(
+            users
+                .filter((u) => u.collegeId)
+                .map((u) => [ u._id.toString(), u.collegeId ])
+        );
+    }
+
+    const notifications = uniqueUserIds
+        .map((userId) => {
+            const collegeId = notificationData?.collegeId ?? collegeIdByUserId?.get(userId);
+            if (!collegeId) {
+                logger.warn('Skipping notification: missing collegeId for user', { userId });
+                return null;
+            }
+            return {
+                ...notificationData,
+                collegeId,
+                userId,
+            };
+        })
+        .filter(Boolean);
+
+    if (notifications.length === 0) {
+        logger.warn('No notifications created (all missing collegeId)', {
+            type: notificationData?.type,
+            requestedUsers: uniqueUserIds.length,
+        });
+        return [];
+    }
 
     try {
         const createdNotifications = await Notification.insertMany(notifications);

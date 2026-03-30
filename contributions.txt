@@ -1,0 +1,40 @@
+Hostelia - Group 52 Contributions
+
+1) Rohan Dubey (Roll No: S20230010207)
+   - Dashboard & Analytics
+   - Authorization System
+   - Hostelia Manager role (RBAC) and manager-side UI flows
+   - Manager dashboard pages: manage colleges (list, view, approve/reject, status)
+   - Analytics views across colleges (system-wide insights)
+
+2) Saurav Singh (Roll No: S20230010219)
+   - User Management
+   - Warden Management
+   - Complaints Module
+   - College Admin role (RBAC) integration across modules
+   - Update authorization rules and API guards for multi-college environment
+   - Ensure user/warden/complaints flows are correctly scoped per college
+
+3) Ashutosh Sinha (Roll No: S20230010027)
+   - Mess Management
+   - Feedback System
+   - Transit Module
+   - Update student/mess/transit flows to work correctly per selected/assigned college
+   - Backend logic for multi-college isolation in Mess/Transit/Feedback modules (enforce `collegeId` scoping in queries, validation, and role-based access)
+   - College-scoped analytics for mess feedback (aggregation endpoints/queries per mess + per college)
+
+4) Abhiraj Singh Chauhan (Roll No: S20230010002)
+   - Announcements
+   - Fee Management
+   - Project Setup & Backend Architecture
+   - Email & Real-time Notification System
+   - Backend multi-college architecture updates (college scoping, indexes, data integrity)
+   - College registration APIs and persistence (College model usage, approval lifecycle)
+   - Notification + email integration for registration/approval events
+
+5) C. Venkata Sivaji (Roll No: S20230010063)
+   - Contact Page
+   - About Page
+   - Homepage
+   - College registration UX (frontend): registration form, validation, status feedback
+   - College-level onboarding flows (create college, select domain, logo upload if used)
