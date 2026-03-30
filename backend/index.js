@@ -6,6 +6,9 @@ import connectDB from "./config/database.js";
 import { setupSwagger } from "./config/swagger.js";
 import apiRoutes from "./routes/index.js";
 import { logger } from "./middleware/logger.js";
+import { authMiddleware } from "./middleware/auth.middleware.js";
+import { createHandler } from "graphql-http/lib/use/express";
+import { schema, rootValue } from "./graphql/schema.js";
 
 dotenv.config();
 
@@ -47,6 +50,22 @@ connectDB()
         app.get("/", (req, res) => {
             res.send("Welcome to backend server of Hostelia");
         });
+
+        // GraphQL (mounted under /api to match frontend baseURL)
+        app.all(
+            "/api/graphql",
+            authMiddleware,
+            createHandler({
+                schema,
+                rootValue,
+                context: (request) => ({
+                    req: request.raw,
+                    res: request.context?.res,
+                    user: request.raw?.user ?? null,
+                }),
+                graphiql: process.env.NODE_ENV !== "production",
+            })
+        );
 
         app.use("/api", apiRoutes);
 

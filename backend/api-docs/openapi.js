@@ -1,5 +1,6 @@
 const tags = [
   { name: "Health", description: "Service health endpoints" },
+  { name: "GraphQL", description: "GraphQL endpoint" },
   { name: "Auth", description: "Authentication and session management" },
   { name: "Users", description: "User management endpoints" },
   { name: "Mess", description: "Mess, menu, and feedback endpoints" },
@@ -51,6 +52,59 @@ export function buildOpenApiSpec(serverUrl) {
           properties: {
             success: { type: "boolean", example: true },
             message: { type: "string", example: "Operation completed" },
+          },
+        },
+        GraphQLRequest: {
+          type: "object",
+          required: ["query"],
+          properties: {
+            query: {
+              type: "string",
+              example: "query { health me { _id name email role } }",
+            },
+            variables: {
+              type: "object",
+              nullable: true,
+              additionalProperties: true,
+              example: {},
+            },
+            operationName: {
+              type: "string",
+              nullable: true,
+              example: null,
+            },
+          },
+        },
+        GraphQLError: {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            path: {
+              type: "array",
+              items: {
+                oneOf: [{ type: "string" }, { type: "number" }],
+              },
+            },
+            extensions: {
+              type: "object",
+              additionalProperties: true,
+            },
+          },
+        },
+        GraphQLResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "object",
+              nullable: true,
+              additionalProperties: true,
+              example: { health: "ok" },
+            },
+            errors: {
+              type: "array",
+              items: { $ref: "#/components/schemas/GraphQLError" },
+              nullable: true,
+            },
           },
         },
         ApiError: {
@@ -119,6 +173,35 @@ export function buildOpenApiSpec(serverUrl) {
                 },
               },
             },
+          },
+        },
+      },
+      "/api/graphql": {
+        post: {
+          tags: ["GraphQL"],
+          summary: "GraphQL endpoint",
+          description:
+            "GraphQL endpoint. Requires the `jwt` HTTP-only cookie (login first, or paste cookie value via Authorize).",
+          security: cookieAuth,
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/GraphQLRequest" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "GraphQL response",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/GraphQLResponse" },
+                },
+              },
+            },
+            401: { $ref: "#/components/responses/Unauthorized" },
+            500: { $ref: "#/components/responses/ServerError" },
           },
         },
       },
@@ -437,6 +520,15 @@ export function buildOpenApiSpec(serverUrl) {
           tags: ["Mess"],
           summary: "Get menu",
           security: cookieAuth,
+          parameters: [
+            {
+              name: "messId",
+              in: "query",
+              required: true,
+              description: "Mess ID to fetch menu for (required).",
+              schema: { $ref: "#/components/schemas/ObjectIdParam" },
+            },
+          ],
           responses: { 200: { description: "Menu fetched" } },
         },
         put: {
@@ -518,6 +610,51 @@ export function buildOpenApiSpec(serverUrl) {
           tags: ["Problems"],
           summary: "List problems",
           security: cookieAuth,
+          parameters: [
+            {
+              name: "query",
+              in: "query",
+              required: false,
+              description: "Free-text search across title, description, room, category, roll number, or student name.",
+              schema: { type: "string" },
+            },
+            {
+              name: "status",
+              in: "query",
+              required: false,
+              schema: {
+                type: "string",
+                enum: ["Pending", "Resolved", "Rejected", "ToBeConfirmed"],
+              },
+            },
+            {
+              name: "category",
+              in: "query",
+              required: false,
+              schema: {
+                type: "string",
+                enum: [
+                  "Electrical",
+                  "Plumbing",
+                  "Painting",
+                  "Carpentry",
+                  "Cleaning",
+                  "Internet",
+                  "Furniture",
+                  "Pest Control",
+                  "Student Misconduct",
+                  "Other",
+                ],
+              },
+            },
+            {
+              name: "hostelId",
+              in: "query",
+              required: false,
+              description: "Optional hostel filter (applies for collegeAdmin).",
+              schema: { $ref: "#/components/schemas/ObjectIdParam" },
+            },
+          ],
           responses: { 200: { description: "Problems fetched" } },
         },
       },
@@ -597,7 +734,7 @@ export function buildOpenApiSpec(serverUrl) {
                 schema: {
                   type: "object",
                   properties: {
-                    studentStatus: { type: "string", enum: ["Resolved", "Rejected"] },
+                    studentStatus: { type: "string", enum: ["NotResolved", "Resolved", "Rejected"] },
                   },
                 },
               },
@@ -752,13 +889,15 @@ export function buildOpenApiSpec(serverUrl) {
                 schema: {
                   type: "object",
                   properties: {
-                    feeType: { type: "string", enum: ["hostelFee", "messFee"] },
-                    status: {
+                    hostelFeeStatus: {
+                      type: "string",
+                      enum: ["documentNotSubmitted", "pending", "approved", "rejected"],
+                    },
+                    messFeeStatus: {
                       type: "string",
                       enum: ["documentNotSubmitted", "pending", "approved", "rejected"],
                     },
                   },
-                  required: ["feeType", "status"],
                 },
               },
             },
@@ -777,10 +916,11 @@ export function buildOpenApiSpec(serverUrl) {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["studentId", "feeType"],
+                  required: ["studentId", "emailType"],
                   properties: {
                     studentId: { $ref: "#/components/schemas/ObjectIdParam" },
-                    feeType: { type: "string", enum: ["hostelFee", "messFee", "both"] },
+                    emailType: { type: "string", enum: ["hostelFee", "messFee", "both"] },
+                    notes: { type: "string" },
                   },
                 },
               },
@@ -801,7 +941,7 @@ export function buildOpenApiSpec(serverUrl) {
                 schema: {
                   type: "object",
                   properties: {
-                    feeType: { type: "string", enum: ["hostelFee", "messFee", "both"] },
+                    emailType: { type: "string", enum: ["hostelFee", "messFee", "both"] },
                   },
                 },
               },
@@ -821,7 +961,7 @@ export function buildOpenApiSpec(serverUrl) {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["purpose", "transitStatus"],
+                  required: ["purpose", "transitStatus", "date"],
                   properties: {
                     purpose: { type: "string" },
                     transitStatus: { type: "string", enum: ["ENTRY", "EXIT"] },
@@ -860,10 +1000,12 @@ export function buildOpenApiSpec(serverUrl) {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["userId", "hostelId"],
+                  required: ["name", "email", "hostelId", "password"],
                   properties: {
-                    userId: { $ref: "#/components/schemas/ObjectIdParam" },
+                    name: { type: "string" },
+                    email: { type: "string", format: "email" },
                     hostelId: { $ref: "#/components/schemas/ObjectIdParam" },
+                    password: { type: "string", minLength: 6 },
                   },
                 },
               },
@@ -894,6 +1036,29 @@ export function buildOpenApiSpec(serverUrl) {
           tags: ["Notifications"],
           summary: "Get notifications",
           security: cookieAuth,
+          parameters: [
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              description: "Number of records to return (default 50).",
+              schema: { type: "integer", minimum: 1, example: 50 },
+            },
+            {
+              name: "skip",
+              in: "query",
+              required: false,
+              description: "Number of records to skip for pagination (default 0).",
+              schema: { type: "integer", minimum: 0, example: 0 },
+            },
+            {
+              name: "unreadOnly",
+              in: "query",
+              required: false,
+              description: "Set to true to fetch only unread notifications.",
+              schema: { type: "boolean", example: false },
+            },
+          ],
           responses: { 200: { description: "Notifications fetched" } },
         },
       },
