@@ -9,7 +9,7 @@ function OnlyGuests({ children }: OnlyGuestsProps) {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

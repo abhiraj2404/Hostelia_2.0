@@ -27,7 +27,14 @@ import StudentOnly from "./guards/StudentOnly";
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={
+          <RequireAuth>
+            <Home />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/dashboard"
         element={

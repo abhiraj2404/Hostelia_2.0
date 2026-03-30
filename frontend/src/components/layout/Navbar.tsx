@@ -48,7 +48,7 @@ export function Navbar() {
       // ignore
     } finally {
       dispatch(logout());
-      navigate("/");
+      navigate("/login");
       toast.success("Logged out successfully");
     }
   };
