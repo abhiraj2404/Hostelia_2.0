@@ -391,6 +391,49 @@ export const createMess = async (req, res) => {
     }
 };
 
+// Delete a mess (collegeAdmin only)
+export const deleteMess = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const collegeId = req.user.collegeId;
+
+        const mess = await Mess.findOne({ _id: id, collegeId });
+        if (!mess) {
+            return res.status(404).json({
+                success: false,
+                message: "Mess not found in your college",
+            });
+        }
+
+        // Unset messId/messName for any users assigned to this mess
+        await User.updateMany(
+            { messId: mess._id, collegeId },
+            { $unset: { messId: "", messName: "" } }
+        );
+
+        // Remove related menus and feedback
+        await Promise.all([
+            Menu.deleteMany({ messId: mess._id, collegeId }),
+            Feedback.deleteMany({ messId: mess._id, collegeId }),
+        ]);
+
+        await Mess.findByIdAndDelete(mess._id);
+
+        logger.info("Mess deleted", { messId: id, deletedBy: req.user._id });
+
+        return res.status(200).json({
+            success: true,
+            message: "Mess deleted successfully",
+        });
+    } catch (error) {
+        logger.error("Failed to delete mess:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete mess",
+        });
+    }
+};
+
 // List all messes for the user's college
 export const listMesses = async (req, res) => {
     try {
