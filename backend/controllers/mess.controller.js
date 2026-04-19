@@ -6,6 +6,7 @@ import Menu from "../models/menu.model.js";
 import { authorizeRoles } from '../middleware/roles.js';
 import { logger } from '../middleware/logger.js';
 import { notifyUsers } from '../utils/notificationService.js';
+import { invalidateCacheByPrefix } from "../middleware/cache.middleware.js";
 
 const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
 const mealTypes = [ "Breakfast", "Lunch", "Snacks", "Dinner" ];
@@ -180,6 +181,7 @@ export const updateMenu = async (req, res) => {
             modifiedCount: bulkResult.modifiedCount,
             upsertedCount: bulkResult.upsertedCount,
         });
+        await invalidateCacheByPrefix(`cache:mess:menu:${req.user.collegeId.toString()}:`);
 
         // Send notification to all students about the batch update
         try {
@@ -370,6 +372,7 @@ export const createMess = async (req, res) => {
             capacity: capacity || 0,
             collegeId,
         });
+        await invalidateCacheByPrefix(`cache:mess:list:${collegeId.toString()}:`);
 
         return res.status(201).json({
             success: true,

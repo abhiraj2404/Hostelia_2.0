@@ -157,39 +157,18 @@ export async function listProblems(req, res) {
       filter.hostelId = hostelId;
     }
 
-    // If there's a search query, search across multiple fields
+    let sort = { createdAt: -1 };
+
+    // If there's a search query, use text index search with relevance ranking.
     if (query && query.trim()) {
       const searchTerm = query.trim();
-
-      // Try to find users by roll number or name
-      const User = (await import("../models/user.model.js")).default;
-      const userFilter = {
-        collegeId: req.user.collegeId,
-        $or: [
-          { rollNo: { $regex: searchTerm, $options: "i" } },
-          { name: { $regex: searchTerm, $options: "i" } },
-        ],
-      };
-
-      const matchingUsers = await User.find(userFilter).select("_id");
-      const userIds = matchingUsers.map((u) => u._id);
-
-      // Search in problems by title, description, room number, or matching student IDs
-      filter.$or = [
-        { problemTitle: { $regex: searchTerm, $options: "i" } },
-        { problemDescription: { $regex: searchTerm, $options: "i" } },
-        { roomNo: { $regex: searchTerm, $options: "i" } },
-        { category: { $regex: searchTerm, $options: "i" } },
-      ];
-
-      if (userIds.length > 0) {
-        filter.$or.push({ studentId: { $in: userIds } });
-      }
+      filter.$text = { $search: searchTerm };
+      sort = { score: { $meta: "textScore" }, createdAt: -1 };
     }
 
     const problems = await Problem.find(filter)
       .populate("hostelId", "name")
-      .sort({ createdAt: -1 })
+      .sort(sort)
       .lean();
     const problemsWithHostelName = problems.map((p) => ({
       ...p,
