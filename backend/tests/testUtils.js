@@ -5,6 +5,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import College from "../models/college.model.js";
 import Hostel from "../models/hostel.model.js";
 import User from "../models/user.model.js";
+import Mess from "../models/mess.model.js";
+import Notification from "../models/notification.model.js";
 
 let mongoServer;
 
@@ -84,6 +86,34 @@ export async function createTestWarden(collegeId, hostelId, overrides = {}) {
     role: "warden",
     hostelId,
     collegeId,
+    ...overrides,
+  });
+}
+
+export async function createTestManager(overrides = {}) {
+  const password = await bcrypt.hash("password123", 1);
+  return User.create({
+    name: "Test Manager",
+    email: "manager@hostelia.com",
+    password,
+    role: "manager",
+    ...overrides,
+  });
+}
+
+export async function createTestMess(collegeId, overrides = {}) {
+  return Mess.create({ name: "Central Mess", collegeId, capacity: 200, ...overrides });
+}
+
+export async function createTestNotification(userId, collegeId, overrides = {}) {
+  return Notification.create({
+    userId,
+    collegeId,
+    type: "problem_created",
+    title: "Test Notification",
+    message: "This is a test notification",
+    relatedEntityId: new mongoose.Types.ObjectId(),
+    relatedEntityType: "problem",
     ...overrides,
   });
 }
