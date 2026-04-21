@@ -108,53 +108,66 @@ Swagger docs are always enabled in this backend (no extra env toggle required).
 - **MongoDB** with Mongoose ODM
 - **JWT** - Authentication
 - **Bcrypt** - Password hashing
-- **Nodemailer/Resend** - Email services (OTP)
+- **Resend** - Transactional email services (OTP, reminders)
 - **Cloudinary** - File/image uploads
+- **GraphQL** - Alternative query API (`graphql-http`)
+- **Swagger/OpenAPI** - Interactive API documentation
 - **Zod** - Request validation
 - **Winston** - Logging
+- **Docker** - Containerized deployment
 
 ## Features
 
 - **User Authentication** - JWT-based login/signup with OTP verification
-- **Role-based Access** - Student, Warden, and Admin roles
+- **Role-based Access** - Student, Warden, Admin, and Manager roles
+- **Platform Manager Portal** - College approval/rejection, platform-wide analytics
 - **Dashboard & Analytics** - Visual statistics and insights
-- **User Management** - CRUD operations for students
+- **User Management** - CRUD operations for students + bulk CSV upload
 - **Warden Management** - Warden assignment and management
-- **Complaints System** - Submit, track, and resolve complaints
+- **Complaints System** - Submit, track, and resolve complaints with dual-status verification
 - **Mess Management** - Weekly menu display and editing
 - **Feedback System** - Student feedback collection and analytics
 - **Transit Management** - Track student check-in/check-out
 - **Announcements** - Post and view hostel announcements with attachments
 - **Fee Management** - Fee submission tracking with document uploads
-- **Email Notifications** - OTP and real-time notification system
+- **Real-time Notifications** - SSE-based notification system
+- **Email Notifications** - OTP, fee reminders, credential emails via Resend
+- **GraphQL API** - Health check and user profile queries
 
 ## Project Structure
 
 ```
-Hostelia_FFSD_Project/
+Hostelia_2.0/
 ├── backend/
-│   ├── config/          # Database configuration
-│   ├── controllers/     # Route handlers
-│   ├── middleware/      # Auth, logging, error handling
+│   ├── api-docs/        # OpenAPI 3.0.3 specification
+│   ├── config/          # Database, Cloudinary, Swagger configuration
+│   ├── controllers/     # Route handlers & business logic
+│   ├── graphql/         # GraphQL schema and resolvers
+│   ├── middleware/      # Auth, logging, roles, error handling
 │   ├── models/          # Mongoose schemas
 │   ├── routes/          # API route definitions
-│   ├── script/          # Utility scripts (seeding, admin setup)
+│   ├── script/          # Utility scripts (seeding manager)
 │   ├── utils/           # Email client, notification service
+│   ├── Dockerfile       # Docker image definition
 │   └── index.js         # Server entry point
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── components/  # Reusable UI components
 │   │   ├── features/    # Redux slices
-│   │   ├── hooks.ts     # Custom React hooks
+│   │   ├── hooks/       # Custom data-fetching hooks
+│   │   ├── hooks.ts     # Typed Redux hooks
 │   │   ├── lib/         # API client, utilities
-│   │   ├── pages/       # Page components
+│   │   ├── pages/       # Page components (including manager/)
 │   │   ├── routes/      # Route definitions & guards
 │   │   ├── store.ts     # Redux store configuration
 │   │   ├── types/       # TypeScript type definitions
 │   │   └── utils/       # Helper functions
+│   ├── Dockerfile       # Docker image definition
 │   └── package.json
 │
+├── docs/                # Project documentation
+├── docker-compose.yaml  # Full-stack Docker Compose
 └── .github/workflows/   # CI/CD pipelines
 ```
 
@@ -169,9 +182,25 @@ Hostelia_FFSD_Project/
 | Mess           | `/api/mess`           |
 | Transit        | `/api/transit`        |
 | Announcements  | `/api/announcement`   |
-| Fees           | `/api/fee-submission` |
+| Fees           | `/api/fee`            |
 | Contact        | `/api/contact`        |
-| Notifications  | `/api/notification`   |
+| Notifications  | `/api/notifications`  |
+| Colleges       | `/api/college`        |
+| Hostels        | `/api/hostel`         |
+| Manager        | `/api/manager`        |
+| GraphQL        | `/api/graphql`        |
+
+## Documentation
+
+Detailed documentation is available in the `docs/` directory:
+
+| Document | Description |
+| --- | --- |
+| [API Reference](docs/api_reference.md) | Complete REST + GraphQL API documentation |
+| [Backend Documentation](docs/backend_documentation.md) | Backend architecture, models, middleware |
+| [Frontend Documentation](docs/frontend_documentation.md) | Frontend architecture, components, routing |
+| [Deployment Guide](docs/deployment_guide.md) | Docker, CI/CD, VPS deployment, production checklist |
+| [Swagger Guide](docs/swagger_presentation_guide.md) | Swagger/OpenAPI usage and presentation guide |
 
 ---
 
