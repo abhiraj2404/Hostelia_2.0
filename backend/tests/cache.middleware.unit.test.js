@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const redisGet = jest.fn();
 const redisSet = jest.fn();
@@ -45,14 +45,17 @@ function createRes() {
 }
 
 describe("cache.middleware unit", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => {
     getRedisClient.mockReturnValue({
       get: redisGet,
       set: redisSet,
       scan: redisScan,
       del: redisDel,
     });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it("bypasses when redis is not ready", async () => {

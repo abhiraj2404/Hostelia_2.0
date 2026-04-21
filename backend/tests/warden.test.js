@@ -9,7 +9,6 @@ await jest.unstable_mockModule("../utils/email-client.js", () => ({
 }));
 
 const { app } = await import("../index.js");
-import User from "../models/user.model.js";
 import {
   authCookieFor,
   clearTestDatabase,
