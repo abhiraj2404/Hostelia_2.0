@@ -7,10 +7,12 @@ export default {
   reporters: [
     "default",
     [
-      "jest-html-reporter",
+      "jest-stare",
       {
-        pageTitle: "Hostelia Backend Test Report",
-        outputPath: "./coverage/test-report.html",
+        resultDir: "./coverage/jest-stare",
+        reportTitle: "Hostelia 2.0 — Backend Test Report",
+        reportHeadline: "API Endpoint Test Results",
+        coverageLink: "../lcov-report/index.html",
       },
     ],
   ],

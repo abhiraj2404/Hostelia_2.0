@@ -1,7 +1,14 @@
 import request from "supertest";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "@jest/globals";
+import { afterAll, afterEach, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import mongoose from "mongoose";
-import { app } from "../index.js";
+
+// Mock email before importing app (fee reminders send emails)
+await jest.unstable_mockModule("../utils/email-client.js", () => ({
+  sendEmail: jest.fn(async () => ({ messageId: "mock-id" })),
+  getEmailUser: jest.fn(() => "test@hostelia.local"),
+}));
+
+const { app } = await import("../index.js");
 import FeeSubmission from "../models/feeSubmission.model.js";
 import {
   authCookieFor,
@@ -180,5 +187,280 @@ describe("Fee Submission API", () => {
       .send({ hostelFeeStatus: "approved" });
 
     expect(res.status).toBe(403);
+  });
+
+  // ===== Fee Reminder Tests =====
+
+  it("admin can send single fee reminder → 200", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+    await seedFeeRecord(student._id, college._id);
+
+    const res = await request(app)
+      .post("/api/fee/email/reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({
+        studentId: student._id.toString(),
+        emailType: "hostelFee",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("rejects reminder with missing studentId → 400", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+
+    const res = await request(app)
+      .post("/api/fee/email/reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({ emailType: "both" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for unknown student reminder", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+    const fakeId = new mongoose.Types.ObjectId();
+
+    const res = await request(app)
+      .post("/api/fee/email/reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({
+        studentId: fakeId.toString(),
+        emailType: "hostelFee",
+      });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("admin can send bulk fee reminders → 200", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student1 = await createTestStudent(college._id, hostel._id);
+    const student2 = await createTestStudent(college._id, hostel._id, {
+      email: "s2@test.edu",
+      rollNo: "302",
+      roomNo: "15",
+    });
+
+    const res = await request(app)
+      .post("/api/fee/email/bulk-reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({
+        studentIds: [student1._id.toString(), student2._id.toString()],
+        emailType: "both",
+        notes: "Please pay by end of month",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.results.success.length).toBe(2);
+  });
+
+  it("rejects bulk with empty studentIds array → 400", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+
+    const res = await request(app)
+      .post("/api/fee/email/bulk-reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({ studentIds: [], emailType: "hostelFee" });
+
+    expect(res.status).toBe(400);
+  });
+
+  // --- Additional coverage: updateFeeStatus, warden scope, more reminder types ---
+
+  it("admin can update hostel fee status → 200", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await FeeSubmission.create({
+      studentId: student._id,
+      studentName: student.name,
+      studentEmail: student.email,
+      collegeId: college._id,
+      hostelFee: { status: "pending" },
+      messFee: { status: "documentNotSubmitted" },
+    });
+
+    const res = await request(app)
+      .patch(`/api/fee/${student._id}/status`)
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({ hostelFeeStatus: "approved" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.hostelFee.status).toBe("approved");
+  });
+
+  it("admin can update both fee statuses at once → 200", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await FeeSubmission.create({
+      studentId: student._id,
+      studentName: student.name,
+      studentEmail: student.email,
+      collegeId: college._id,
+      hostelFee: { status: "pending" },
+      messFee: { status: "pending" },
+    });
+
+    const res = await request(app)
+      .patch(`/api/fee/${student._id}/status`)
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({ hostelFeeStatus: "approved", messFeeStatus: "rejected" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.hostelFee.status).toBe("approved");
+    expect(res.body.data.messFee.status).toBe("rejected");
+  });
+
+  it("rejects fee status update with no fields → 400", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await FeeSubmission.create({
+      studentId: student._id,
+      studentName: student.name,
+      studentEmail: student.email,
+      collegeId: college._id,
+      hostelFee: { status: "pending" },
+      messFee: { status: "documentNotSubmitted" },
+    });
+
+    const res = await request(app)
+      .patch(`/api/fee/${student._id}/status`)
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({});
+
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 when updating fee for non-existent student → 404", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+    const fakeId = new mongoose.Types.ObjectId();
+
+    const res = await request(app)
+      .patch(`/api/fee/${fakeId}/status`)
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({ hostelFeeStatus: "approved" });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("admin can send messFee reminder → 200", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await FeeSubmission.create({
+      studentId: student._id,
+      studentName: student.name,
+      studentEmail: student.email,
+      collegeId: college._id,
+      hostelFee: { status: "documentNotSubmitted" },
+      messFee: { status: "documentNotSubmitted" },
+    });
+
+    const res = await request(app)
+      .post("/api/fee/email/reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({
+        studentId: student._id.toString(),
+        emailType: "messFee",
+        notes: "Please pay mess fee",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("admin can send 'both' type reminder → 200", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const admin = await createTestAdmin(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await FeeSubmission.create({
+      studentId: student._id,
+      studentName: student.name,
+      studentEmail: student.email,
+      collegeId: college._id,
+      hostelFee: { status: "documentNotSubmitted" },
+      messFee: { status: "documentNotSubmitted" },
+    });
+
+    const res = await request(app)
+      .post("/api/fee/email/reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({
+        studentId: student._id.toString(),
+        emailType: "both",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("bulk reminder returns 404 when no students found", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+    const fakeId = new mongoose.Types.ObjectId();
+
+    const res = await request(app)
+      .post("/api/fee/email/bulk-reminder")
+      .set("Cookie", [authCookieFor(admin._id)])
+      .send({
+        studentIds: [fakeId.toString()],
+        emailType: "hostelFee",
+      });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("warden-scoped fee view returns only their hostel students → 200", async () => {
+    const college = await createTestCollege();
+    const hostelA = await createTestHostel(college._id, { name: "A Block" });
+    const hostelB = await createTestHostel(college._id, { name: "B Block" });
+    const warden = await createTestWarden(college._id, hostelA._id);
+    const studentA = await createTestStudent(college._id, hostelA._id);
+    const studentB = await createTestStudent(college._id, hostelB._id, {
+      email: "sb@test.edu", rollNo: "303", roomNo: "20",
+    });
+
+    await FeeSubmission.create({
+      studentId: studentA._id, studentName: "A", studentEmail: "a@test.edu",
+      collegeId: college._id,
+      hostelFee: { status: "pending" }, messFee: { status: "documentNotSubmitted" },
+    });
+    await FeeSubmission.create({
+      studentId: studentB._id, studentName: "B", studentEmail: "b@test.edu",
+      collegeId: college._id,
+      hostelFee: { status: "pending" }, messFee: { status: "documentNotSubmitted" },
+    });
+
+    const res = await request(app)
+      .get("/api/fee")
+      .set("Cookie", [authCookieFor(warden._id)]);
+
+    expect(res.status).toBe(200);
+    // Warden should only see fee submissions for their hostel's students
+    expect(res.body.data.length).toBe(1);
   });
 });
