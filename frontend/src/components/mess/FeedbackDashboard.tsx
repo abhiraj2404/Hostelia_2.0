@@ -233,10 +233,20 @@ export function FeedbackDashboard() {
 
   // numbered pagination helper removed — using simple anchored footer for consistency
 
-  // Get unique hostels
-  const hostels = [
-    "All",
-    ...Array.from(new Set(feedbacks.map((f) => f.user.hostelId))).sort(),
+  // Build unique hostel options using readable names.
+  const hostelOptions = [
+    { value: "All", label: "All" },
+    ...Array.from(
+      new Map(
+        feedbacks.map((f) => [
+          f.user.hostelId,
+          {
+            value: f.user.hostelId,
+            label: f.user.hostelName ?? f.user.hostelId,
+          },
+        ])
+      ).values()
+    ).sort((a, b) => a.label.localeCompare(b.label)),
   ];
 
   // If current user is a warden, force hostel filter to their hostel and don't show the select
@@ -516,9 +526,9 @@ export function FeedbackDashboard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {hostels.map((hostel) => (
-                      <SelectItem key={hostel} value={hostel}>
-                        {hostel}
+                    {hostelOptions.map((hostel) => (
+                      <SelectItem key={hostel.value} value={hostel.value}>
+                        {hostel.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
