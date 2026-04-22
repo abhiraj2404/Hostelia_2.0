@@ -44,6 +44,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface Feedback {
   _id: string;
+  messId?: string | null;
   date: string;
   day: string;
   mealType: string;
@@ -80,7 +81,13 @@ const dayOptions = [
   "Sunday",
 ];
 
-export function FeedbackDashboard() {
+interface FeedbackDashboardProps {
+  selectedMessId?: string | null;
+}
+
+export function FeedbackDashboard({
+  selectedMessId,
+}: FeedbackDashboardProps) {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,6 +134,10 @@ export function FeedbackDashboard() {
   useEffect(() => {
     let filtered = [...feedbacks];
 
+    if (selectedMessId) {
+      filtered = filtered.filter((f) => String(f.messId || "") === selectedMessId);
+    }
+
     if (mealFilter !== "All") {
       filtered = filtered.filter((f) => f.mealType === mealFilter);
     }
@@ -166,6 +177,7 @@ export function FeedbackDashboard() {
 
     setFilteredFeedbacks(filtered);
   }, [
+    selectedMessId,
     mealFilter,
     ratingFilter,
     hostelFilter,
@@ -180,7 +192,7 @@ export function FeedbackDashboard() {
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo, dayFilter]);
+  }, [selectedMessId, mealFilter, ratingFilter, hostelFilter, dateFrom, dateTo, dayFilter]);
 
   // Calculate stats
   const calculateStats = () => {
