@@ -49,6 +49,24 @@ describe("Transit API", () => {
     expect(res.body.transit.transitStatus).toBe("EXIT");
   });
 
+  it("rejects first ENTRY without prior EXIT → 400", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    const res = await request(app)
+      .post("/api/transit")
+      .set("Cookie", [authCookieFor(student._id)])
+      .send({
+        transitStatus: "ENTRY",
+        date: new Date().toISOString(),
+        time: "10:00:00",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/first transit record must be EXIT/i);
+  });
+
   it("rejects wrong sequence → EXIT after EXIT gives 400", async () => {
     const college = await createTestCollege();
     const hostel = await createTestHostel(college._id);
@@ -107,6 +125,63 @@ describe("Transit API", () => {
 
     expect(res.status).toBe(201);
     expect(res.body.transit.transitStatus).toBe("ENTRY");
+  });
+
+  it("copies purpose from previous EXIT when creating ENTRY → 201", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await Transit.create({
+      studentId: student._id,
+      collegeId: college._id,
+      purpose: "Going out for errands",
+      transitStatus: "EXIT",
+      date: new Date("2025-01-02"),
+      time: "09:00:00",
+    });
+
+    const res = await request(app)
+      .post("/api/transit")
+      .set("Cookie", [authCookieFor(student._id)])
+      .send({
+        transitStatus: "ENTRY",
+        date: "2025-01-02",
+        time: "18:00:00",
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.transit.transitStatus).toBe("ENTRY");
+    expect(res.body.transit.purpose).toBe("Going out for errands");
+  });
+
+  it("ignores client purpose for ENTRY and keeps previous EXIT purpose → 201", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    await Transit.create({
+      studentId: student._id,
+      collegeId: college._id,
+      purpose: "Medical appointment",
+      transitStatus: "EXIT",
+      date: new Date("2025-01-03"),
+      time: "09:00:00",
+    });
+
+    const res = await request(app)
+      .post("/api/transit")
+      .set("Cookie", [authCookieFor(student._id)])
+      .send({
+        purpose: "Some different entry reason",
+        transitStatus: "ENTRY",
+        date: "2025-01-03",
+        time: "18:00:00",
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.transit.transitStatus).toBe("ENTRY");
+    expect(res.body.transit.purpose).toBe("Medical appointment");
   });
 
   it("rejects transit with time before last record → 400", async () => {
