@@ -53,6 +53,13 @@ function chain(value) {
   };
 }
 
+function withPopulate(doc) {
+  return {
+    ...doc,
+    populate: jest.fn().mockResolvedValue(doc),
+  };
+}
+
 describe("problem.controller unit", () => {
   afterEach(() => jest.clearAllMocks());
 
@@ -83,7 +90,7 @@ describe("problem.controller unit", () => {
 
     uploadBufferToCloudinary.mockResolvedValueOnce({ secure_url: "x" });
     getSecureUrl.mockReturnValueOnce("https://img");
-    Problem.create.mockResolvedValueOnce({ _id: "p1" });
+    Problem.create.mockResolvedValueOnce(withPopulate({ _id: "p1" }));
     User.find
       .mockReturnValueOnce({ select: jest.fn().mockResolvedValue([{ _id: { toString: () => "a1" } }]) })
       .mockReturnValueOnce({ select: jest.fn().mockResolvedValue([{ _id: { toString: () => "w1" } }]) });
@@ -93,7 +100,7 @@ describe("problem.controller unit", () => {
 
     uploadBufferToCloudinary.mockResolvedValueOnce({ secure_url: "x" });
     getSecureUrl.mockReturnValueOnce("https://img");
-    Problem.create.mockResolvedValueOnce({ _id: "p2" });
+    Problem.create.mockResolvedValueOnce(withPopulate({ _id: "p2" }));
     User.find
       .mockReturnValueOnce({ select: jest.fn().mockResolvedValue([]) })
       .mockReturnValueOnce({ select: jest.fn().mockResolvedValue([]) });
@@ -135,7 +142,11 @@ describe("problem.controller unit", () => {
     await addProblemComment(req, res);
     expect(res.statusCode).toBe(404);
 
-    const doc = { _id: { toString: () => "p1" }, comments: { push: jest.fn() }, save: jest.fn().mockResolvedValue() };
+    const doc = withPopulate({
+      _id: { toString: () => "p1" },
+      comments: { push: jest.fn() },
+      save: jest.fn().mockResolvedValue(),
+    });
     isProblemInScope.mockReturnValueOnce(false);
     Problem.findOne.mockResolvedValueOnce(doc);
     await addProblemComment(req, res);
@@ -162,19 +173,21 @@ describe("problem.controller unit", () => {
     await updateProblemStatus(req, res);
     expect(res.statusCode).toBe(403);
 
-    const pdoc = {
+    const pdoc = withPopulate({
       _id: { toString: () => "p1" },
       problemTitle: "Broken Fan",
       studentId: { toString: () => "stu1" },
       hostelId: { toString: () => "h1" },
       save: jest.fn().mockResolvedValue(),
-    };
+    });
     Problem.findOne.mockResolvedValueOnce(pdoc);
     notifyUsers.mockResolvedValueOnce();
     await updateProblemStatus(req, res);
     expect(res.statusCode).toBe(200);
 
-    Problem.findOne.mockResolvedValueOnce({ ...pdoc, save: jest.fn().mockResolvedValue() });
+    Problem.findOne.mockResolvedValueOnce(
+      withPopulate({ ...pdoc, save: jest.fn().mockResolvedValue() })
+    );
     notifyUsers.mockRejectedValueOnce(new Error("notif"));
     await updateProblemStatus({ ...req, body: { status: "Pending" } }, res);
     expect(res.statusCode).toBe(200);
@@ -195,12 +208,18 @@ describe("problem.controller unit", () => {
     await verifyProblemResolution(vreq, res);
     expect(res.statusCode).toBe(403);
 
-    const vdoc = { _id: { toString: () => "p1" }, studentId: "stu1", save: jest.fn().mockResolvedValue() };
+    const vdoc = withPopulate({
+      _id: { toString: () => "p1" },
+      studentId: "stu1",
+      save: jest.fn().mockResolvedValue(),
+    });
     Problem.findOne.mockResolvedValueOnce(vdoc);
     await verifyProblemResolution(vreq, res);
     expect(res.statusCode).toBe(200);
 
-    Problem.findOne.mockResolvedValueOnce({ ...vdoc, save: jest.fn().mockResolvedValue() });
+    Problem.findOne.mockResolvedValueOnce(
+      withPopulate({ ...vdoc, save: jest.fn().mockResolvedValue() })
+    );
     await verifyProblemResolution({ ...vreq, body: { studentStatus: "Rejected" } }, res);
     expect(res.statusCode).toBe(200);
 
