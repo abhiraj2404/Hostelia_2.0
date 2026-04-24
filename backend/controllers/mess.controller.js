@@ -54,6 +54,9 @@ const updateMenuSchema = z.object({
     ),
 });
 
+const stripObjectIdSuffix = (value = "") =>
+    value.replace(/\s*\([a-f0-9]{24}\)\s*$/i, "").trim();
+
 export const getMenu = async (req, res) => {
     try {
         const collegeId = req.user.collegeId;
@@ -272,10 +275,11 @@ export const submitFeedback = async (req, res) => {
             const notifyUserIds = [ ...adminIds, ...wardenIds ];
 
             if (notifyUserIds.length > 0) {
+                const studentName = stripObjectIdSuffix(req.user.name || "A student");
                 await notifyUsers(notifyUserIds, {
                     type: 'mess_feedback_submitted',
                     title: 'New Mess Feedback',
-                    message: `${req.user.name} (${req.user.hostelId}) submitted ${mealType} feedback with rating ${rating}/5`,
+                    message: `${studentName} submitted ${mealType} feedback with rating ${rating}/5`,
                     relatedEntityId: feedback._id,
                     relatedEntityType: 'mess',
                 });
@@ -421,6 +425,10 @@ export const deleteMess = async (req, res) => {
         ]);
 
         await Mess.findByIdAndDelete(mess._id);
+        await Promise.all([
+            invalidateCacheByPrefix(`cache:mess:list:${collegeId.toString()}:`),
+            invalidateCacheByPrefix(`cache:mess:menu:${collegeId.toString()}:`),
+        ]);
 
         logger.info("Mess deleted", { messId: id, deletedBy: req.user._id });
 

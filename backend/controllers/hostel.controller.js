@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import Hostel from '../models/hostel.model.js';
 import User from '../models/user.model.js';
+import Problem from '../models/problem.model.js';
+import FeeSubmission from '../models/feeSubmission.model.js';
+import Transit from '../models/transit.model.js';
+import Feedback from '../models/feedback.model.js';
+import Notification from '../models/notification.model.js';
 import { logger } from '../middleware/logger.js';
 import { invalidateCacheByPrefix } from '../middleware/cache.middleware.js';
 
@@ -100,6 +105,103 @@ export async function listHostels(req, res) {
         return res.status(500).json({
             success: false,
             message: 'Failed to list hostels',
+            error: err.message,
+        });
+    }
+}
+
+/**
+ * Delete a hostel and cascade delete related hostel data
+ */
+export async function deleteHostel(req, res) {
+    const { id } = req.params;
+    const { collegeId, _id: adminId } = req.user;
+
+    try {
+        const hostel = await Hostel.findOne({ _id: id, collegeId }).lean();
+        if (!hostel) {
+            return res.status(404).json({
+                success: false,
+                message: 'Hostel not found in your college',
+            });
+        }
+
+        const usersInHostel = await User.find({ collegeId, hostelId: hostel._id })
+            .select('_id role')
+            .lean();
+
+        const userIds = usersInHostel.map((u) => u._id);
+        const studentCount = usersInHostel.filter((u) => u.role === 'student').length;
+        const wardenCount = usersInHostel.filter((u) => u.role === 'warden').length;
+
+        const [ problemCount, feeSubmissionCount, transitCount, feedbackCount, notificationCount ] = await Promise.all([
+            Problem.countDocuments({ collegeId, hostelId: hostel._id }),
+            userIds.length > 0
+                ? FeeSubmission.countDocuments({ collegeId, studentId: { $in: userIds } })
+                : 0,
+            userIds.length > 0
+                ? Transit.countDocuments({ collegeId, studentId: { $in: userIds } })
+                : 0,
+            userIds.length > 0
+                ? Feedback.countDocuments({ collegeId, user: { $in: userIds } })
+                : 0,
+            userIds.length > 0
+                ? Notification.countDocuments({ collegeId, userId: { $in: userIds } })
+                : 0,
+        ]);
+
+        await Promise.all([
+            Problem.deleteMany({ collegeId, hostelId: hostel._id }),
+            userIds.length > 0 ? FeeSubmission.deleteMany({ collegeId, studentId: { $in: userIds } }) : Promise.resolve(),
+            userIds.length > 0 ? Transit.deleteMany({ collegeId, studentId: { $in: userIds } }) : Promise.resolve(),
+            userIds.length > 0 ? Feedback.deleteMany({ collegeId, user: { $in: userIds } }) : Promise.resolve(),
+            userIds.length > 0 ? Notification.deleteMany({ collegeId, userId: { $in: userIds } }) : Promise.resolve(),
+            userIds.length > 0 ? User.deleteMany({ collegeId, hostelId: hostel._id }) : Promise.resolve(),
+            Hostel.deleteOne({ _id: hostel._id, collegeId }),
+        ]);
+
+        await invalidateCacheByPrefix(`cache:hostel:list:${collegeId.toString()}:`);
+
+        logger.info('Hostel deleted with cascade cleanup', {
+            hostelId: hostel._id.toString(),
+            collegeId: collegeId.toString(),
+            adminId: adminId.toString(),
+            deleted: {
+                hostels: 1,
+                students: studentCount,
+                wardens: wardenCount,
+                problems: problemCount,
+                feeSubmissions: feeSubmissionCount,
+                transits: transitCount,
+                feedbacks: feedbackCount,
+                notifications: notificationCount,
+            },
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Hostel and related data deleted successfully',
+            deleted: {
+                hostels: 1,
+                students: studentCount,
+                wardens: wardenCount,
+                problems: problemCount,
+                feeSubmissions: feeSubmissionCount,
+                transits: transitCount,
+                feedbacks: feedbackCount,
+                notifications: notificationCount,
+            },
+        });
+    } catch (err) {
+        logger.error('Failed to delete hostel', {
+            error: err.message,
+            hostelId: id,
+            collegeId: collegeId?.toString?.(),
+            adminId: adminId?.toString?.(),
+        });
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to delete hostel',
             error: err.message,
         });
     }

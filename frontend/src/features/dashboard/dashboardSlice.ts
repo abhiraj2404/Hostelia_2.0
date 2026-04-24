@@ -141,26 +141,25 @@ const initialState: DashboardState = {
 // Async thunks - Student
 export const fetchStudentDashboardData = createAsyncThunk(
   "dashboard/fetchStudentDashboardData",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       console.log("[Dashboard] Fetching student dashboard data...");
+      const state = getState() as RootState;
+      const assignedMessId = state.auth.user?.messId;
 
-      // Fetch core data in parallel (except menu which needs messId)
-      const [complaintsRes, feeRes, announcementsRes, messesRes] =
+      // Fetch core data in parallel
+      const [complaintsRes, feeRes, announcementsRes] =
         await Promise.all([
           apiClient.get("/problem"),
           apiClient.get("/fee"),
           apiClient.get("/announcement"),
-          apiClient.get("/mess/list"),
         ]);
 
-      // Fetch menu for first available mess
-      const messes = messesRes.data.messes || [];
       let messMenu = null;
-      if (messes.length > 0) {
+      if (assignedMessId) {
         try {
           const menuRes = await apiClient.get(
-            `/mess/menu?messId=${messes[0]._id}`
+            `/mess/menu?messId=${assignedMessId}`
           );
           messMenu = menuRes.data.menu;
         } catch {
@@ -172,7 +171,7 @@ export const fetchStudentDashboardData = createAsyncThunk(
         complaints: complaintsRes.data,
         fees: feeRes.data,
         announcements: announcementsRes.data,
-        messes: messes.length,
+        hasAssignedMess: Boolean(assignedMessId),
       });
 
       // Extract fee status from array response

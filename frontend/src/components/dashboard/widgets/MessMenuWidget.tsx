@@ -8,6 +8,7 @@ import type { MessMenu } from "@/types/dashboard";
 
 interface MessMenuWidgetProps {
   menu: MessMenu | null;
+  hasAssignedMess?: boolean;
 }
 
 const mealIcons = {
@@ -17,11 +18,12 @@ const mealIcons = {
   Dinner: Moon,
 };
 
-export function MessMenuWidget({ menu }: MessMenuWidgetProps) {
+export function MessMenuWidget({ menu, hasAssignedMess = true }: MessMenuWidgetProps) {
   const currentDay = getCurrentDay();
   const todayMenu = menu?.[currentDay];
 
   if (!todayMenu) {
+    const emptyMessage = hasAssignedMess ? "Menu not available" : "No mess assigned";
     return (
       <Card className="border-border/60">
         <CardHeader>
@@ -31,7 +33,7 @@ export function MessMenuWidget({ menu }: MessMenuWidgetProps) {
           <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 text-center">
             <Utensils className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              Menu not available
+              {emptyMessage}
             </p>
           </div>
         </CardContent>

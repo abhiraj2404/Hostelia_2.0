@@ -142,7 +142,7 @@ export function StudentDashboardLayout() {
               <ComplaintsWidget complaints={recentComplaints.slice(0, 2)} />
             </div>
             <div>
-              <MessMenuWidget menu={messMenu} />
+              <MessMenuWidget menu={messMenu} hasAssignedMess={Boolean(user?.messId)} />
             </div>
           </div>
         </>

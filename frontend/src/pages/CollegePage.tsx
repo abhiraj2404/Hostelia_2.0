@@ -64,11 +64,12 @@ export default function CollegePage() {
   >(null);
   const [creatingWarden, setCreatingWarden] = useState(false);
 
-  // Removing warden
-  const [removingWardenId, setRemovingWardenId] = useState<string | null>(null);
 
   // Deleting mess
   const [deletingMessId, setDeletingMessId] = useState<string | null>(null);
+  // Deleting hostel
+  const [deletingHostelId, setDeletingHostelId] = useState<string | null>(null);
+  const [hostelToDelete, setHostelToDelete] = useState<Hostel | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -170,29 +171,6 @@ export default function CollegePage() {
     }
   };
 
-  // Remove warden
-  const handleRemoveWarden = async (wardenId: string) => {
-    setRemovingWardenId(wardenId);
-    try {
-      const res = await apiClient.delete(`/user/${wardenId}`);
-      if (res.data?.success) {
-        toast.success("Warden removed successfully");
-        fetchData();
-      }
-    } catch (error: unknown) {
-      const msg =
-        error &&
-        typeof error === "object" &&
-        "response" in error
-          ? (error as { response?: { data?: { message?: string } } }).response
-              ?.data?.message
-          : "Failed to remove warden";
-      toast.error(msg || "Failed to remove warden");
-    } finally {
-      setRemovingWardenId(null);
-    }
-  };
-
   // Delete mess
   const handleDeleteMess = async (messId: string) => {
     setDeletingMessId(messId);
@@ -213,6 +191,30 @@ export default function CollegePage() {
       toast.error(msg || "Failed to delete mess");
     } finally {
       setDeletingMessId(null);
+    }
+  };
+
+  // Delete hostel
+  const handleDeleteHostel = async (hostelId: string) => {
+    setDeletingHostelId(hostelId);
+    try {
+      const res = await apiClient.delete(`/hostel/${hostelId}`);
+      if (res.data?.success) {
+        toast.success("Hostel and related data deleted successfully");
+        setHostelToDelete(null);
+        fetchData();
+      }
+    } catch (error: unknown) {
+      const msg =
+        error &&
+        typeof error === "object" &&
+        "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : "Failed to delete hostel";
+      toast.error(msg || "Failed to delete hostel");
+    } finally {
+      setDeletingHostelId(null);
     }
   };
 
@@ -281,9 +283,27 @@ export default function CollegePage() {
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                         {hostel.name}
                       </CardTitle>
-                      {isUserHostel && (
-                        <Badge className="text-xs">Your Hostel</Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isUserHostel && (
+                          <Badge className="text-xs">Your Hostel</Badge>
+                        )}
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            disabled={deletingHostelId === hostel._id}
+                            title="Delete hostel"
+                            onClick={() => setHostelToDelete(hostel)}
+                          >
+                            {deletingHostelId === hostel._id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -310,29 +330,6 @@ export default function CollegePage() {
                                   {w.email}
                                 </span>
                               </div>
-                              {isAdmin && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  disabled={
-                                    removingWardenId === w._id ||
-                                    hostel.wardens.length <= 1
-                                  }
-                                  title={
-                                    hostel.wardens.length <= 1
-                                      ? "Cannot remove the only warden"
-                                      : "Remove warden"
-                                  }
-                                  onClick={() => handleRemoveWarden(w._id)}
-                                >
-                                  {removingWardenId === w._id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  )}
-                                </Button>
-                              )}
                             </li>
                           ))}
                         </ul>
@@ -534,6 +531,53 @@ export default function CollegePage() {
         isLoading={creatingWarden}
         preselectedHostelId={assignWardenHostelId || undefined}
       />
+
+      {/* ───── Delete Hostel Warning Dialog ───── */}
+      <Dialog
+        open={!!hostelToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deletingHostelId) setHostelToDelete(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Hostel</DialogTitle>
+            <DialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {hostelToDelete?.name}
+              </span>
+              {" "}and all related data (students, wardens, complaints, fee records, transit records, feedback, and notifications).
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setHostelToDelete(null)}
+              disabled={!!deletingHostelId}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!hostelToDelete || !!deletingHostelId}
+              onClick={() =>
+                hostelToDelete && handleDeleteHostel(hostelToDelete._id)
+              }
+            >
+              {deletingHostelId ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Hostel"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

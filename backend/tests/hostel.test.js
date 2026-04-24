@@ -1,6 +1,14 @@
 import request from "supertest";
+import mongoose from "mongoose";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "@jest/globals";
 import { app } from "../index.js";
+import Problem from "../models/problem.model.js";
+import FeeSubmission from "../models/feeSubmission.model.js";
+import Transit from "../models/transit.model.js";
+import Feedback from "../models/feedback.model.js";
+import Notification from "../models/notification.model.js";
+import User from "../models/user.model.js";
+import Hostel from "../models/hostel.model.js";
 import {
   authCookieFor,
   clearTestDatabase,
@@ -111,5 +119,114 @@ describe("Hostel API", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.hostels[0].wardens).toEqual([]);
+  });
+
+  // --- DELETE /api/hostel/:id ---
+
+  it("admin can delete hostel and related hostel data → 200", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+    const hostel = await createTestHostel(college._id, { name: "Delete Block" });
+    const student = await createTestStudent(college._id, hostel._id, {
+      email: "delete.student@test.edu",
+      rollNo: "202",
+    });
+    const warden = await createTestWarden(college._id, hostel._id, {
+      email: "delete.warden@test.edu",
+    });
+
+    await Problem.create({
+      problemTitle: "Broken fan",
+      problemDescription: "Fan not working",
+      problemImage: "https://example.com/problem.jpg",
+      hostelId: hostel._id,
+      collegeId: college._id,
+      roomNo: "201",
+      category: "Electrical",
+      studentId: student._id,
+    });
+
+    await FeeSubmission.create({
+      studentId: student._id,
+      studentName: student.name,
+      studentEmail: student.email,
+      collegeId: college._id,
+    });
+
+    await Transit.create({
+      studentId: student._id,
+      collegeId: college._id,
+      purpose: "Going to market",
+      transitStatus: "EXIT",
+      date: new Date(),
+      time: "10:30:00",
+    });
+
+    await Feedback.create({
+      date: new Date(),
+      day: "Monday",
+      mealType: "Lunch",
+      rating: 4,
+      comment: "Nice food",
+      user: student._id,
+      collegeId: college._id,
+    });
+
+    await Notification.create({
+      userId: student._id,
+      collegeId: college._id,
+      type: "problem_created",
+      title: "Problem Notification",
+      message: "A problem was created",
+      relatedEntityId: new mongoose.Types.ObjectId(),
+      relatedEntityType: "problem",
+    });
+
+    const res = await request(app)
+      .delete(`/api/hostel/${hostel._id}`)
+      .set("Cookie", [authCookieFor(admin._id)]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.deleted.hostels).toBe(1);
+    expect(res.body.deleted.students).toBe(1);
+    expect(res.body.deleted.wardens).toBe(1);
+    expect(res.body.deleted.problems).toBe(1);
+    expect(res.body.deleted.feeSubmissions).toBe(1);
+    expect(res.body.deleted.transits).toBe(1);
+    expect(res.body.deleted.feedbacks).toBe(1);
+    expect(res.body.deleted.notifications).toBe(1);
+
+    expect(await Hostel.countDocuments({ _id: hostel._id })).toBe(0);
+    expect(await User.countDocuments({ _id: { $in: [student._id, warden._id] } })).toBe(0);
+    expect(await Problem.countDocuments({ hostelId: hostel._id })).toBe(0);
+    expect(await FeeSubmission.countDocuments({ studentId: student._id })).toBe(0);
+    expect(await Transit.countDocuments({ studentId: student._id })).toBe(0);
+    expect(await Feedback.countDocuments({ user: student._id })).toBe(0);
+    expect(await Notification.countDocuments({ userId: student._id })).toBe(0);
+  });
+
+  it("student cannot delete hostel → 403", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const student = await createTestStudent(college._id, hostel._id);
+
+    const res = await request(app)
+      .delete(`/api/hostel/${hostel._id}`)
+      .set("Cookie", [authCookieFor(student._id)]);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("delete hostel returns 404 for unknown hostel", async () => {
+    const college = await createTestCollege();
+    const admin = await createTestAdmin(college._id);
+    const fakeHostelId = new mongoose.Types.ObjectId();
+
+    const res = await request(app)
+      .delete(`/api/hostel/${fakeHostelId}`)
+      .set("Cookie", [authCookieFor(admin._id)]);
+
+    expect(res.status).toBe(404);
   });
 });
