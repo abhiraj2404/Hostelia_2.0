@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authorizeRoles } from '../middleware/roles.js';
-import { createHostel, listHostels } from '../controllers/hostel.controller.js';
+import { createHostel, deleteHostel, listHostels } from '../controllers/hostel.controller.js';
 import { cacheResponse } from '../middleware/cache.middleware.js';
 
 const router = Router();
@@ -10,5 +10,8 @@ router.get('/list', cacheResponse({ namespace: 'hostel:list', ttlSeconds: 120 })
 
 // Create a new hostel (collegeAdmin only)
 router.post('/create', authorizeRoles('collegeAdmin'), createHostel);
+
+// Delete a hostel with related hostel data (collegeAdmin only)
+router.delete('/:id', authorizeRoles('collegeAdmin'), deleteHostel);
 
 export default router;

@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "@jest/glob
 import { app } from "../index.js";
 import Mess from "../models/mess.model.js";
 import Menu from "../models/menu.model.js";
+import Notification from "../models/notification.model.js";
 import {
   authCookieFor,
   clearTestDatabase,
@@ -188,6 +189,75 @@ describe("Mess API", () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.feedback.rating).toBe(4);
+  });
+
+  it("feedback notification message does not expose raw hostel/user IDs", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const student = await createTestStudent(college._id, hostel._id, {
+      name: "Amit Kumar",
+      email: "amit.feedback@test.edu",
+      rollNo: "303",
+    });
+    await createTestAdmin(college._id, { email: "admin.feedback@test.edu" });
+
+    const res = await request(app)
+      .post("/api/mess/feedback")
+      .set("Cookie", [authCookieFor(student._id)])
+      .send({
+        date: new Date().toISOString(),
+        mealType: "Dinner",
+        rating: 5,
+        comment: "Great dinner",
+      });
+
+    expect(res.status).toBe(201);
+
+    const notifications = await Notification.find({
+      collegeId: college._id,
+      type: "mess_feedback_submitted",
+    }).lean();
+
+    expect(notifications.length).toBeGreaterThan(0);
+    for (const notification of notifications) {
+      expect(notification.message).toContain("Amit Kumar submitted Dinner feedback");
+      expect(notification.message).not.toContain(student._id.toString());
+      expect(notification.message).not.toContain(hostel._id.toString());
+      expect(notification.message).not.toMatch(/[a-f0-9]{24}/i);
+    }
+  });
+
+  it("feedback notification strips ObjectId suffix from student name", async () => {
+    const college = await createTestCollege();
+    const hostel = await createTestHostel(college._id);
+    const student = await createTestStudent(college._id, hostel._id, {
+      name: "Saurav Singh (69a357df6432d85927768bfc)",
+      email: "saurav.feedback@test.edu",
+      rollNo: "404",
+    });
+    await createTestAdmin(college._id, { email: "admin.stripid@test.edu" });
+
+    const res = await request(app)
+      .post("/api/mess/feedback")
+      .set("Cookie", [authCookieFor(student._id)])
+      .send({
+        date: new Date().toISOString(),
+        mealType: "Dinner",
+        rating: 5,
+        comment: "Great dinner",
+      });
+
+    expect(res.status).toBe(201);
+
+    const notification = await Notification.findOne({
+      collegeId: college._id,
+      type: "mess_feedback_submitted",
+    }).lean();
+
+    expect(notification).toBeTruthy();
+    expect(notification.message).toContain("Saurav Singh submitted Dinner feedback");
+    expect(notification.message).not.toContain("(69a357df6432d85927768bfc)");
+    expect(notification.message).not.toMatch(/[a-f0-9]{24}/i);
   });
 
   it("rejects feedback with invalid rating (>5) → 400", async () => {
